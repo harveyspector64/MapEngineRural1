@@ -34,8 +34,12 @@ export default class RoadGenerator {
         console.log(`Creating road from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
         
         setTimeout(() => {
-            this.createRoad(startPoint, endPoint);
-            this.generateRoadsIncrementally(edges, index + 1);
+            const roadCreated = this.createRoad(startPoint, endPoint);
+            if (roadCreated) {
+                this.generateRoadsIncrementally(edges, index + 1);
+            } else {
+                console.warn(`Failed to create road from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
+            }
         }, 50);  // Adjust the delay as needed to prevent freezing
     }
 
@@ -84,15 +88,18 @@ export default class RoadGenerator {
             if (path) {
                 if (path.length > 20) { // Prevent excessively long paths
                     console.warn(`Path too long from (${start.x}, ${start.y}) to (${end.x}, ${end.y}): ${path.length} steps`);
-                    return;
+                    return false;
                 }
                 this.applyRoadToTerrain(path);
                 console.log('Road applied to terrain:', path);
+                return true;
             } else {
                 console.log(`No path found from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
+                return false;
             }
         } catch (error) {
             console.error('Error during pathfinding:', error);
+            return false;
         }
     }
 
