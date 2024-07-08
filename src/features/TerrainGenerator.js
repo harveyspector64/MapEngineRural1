@@ -1,3 +1,5 @@
+// src/features/TerrainGenerator.js
+
 export const TILES = {
     GRASS: 'grass',
     WATER: 'water',
@@ -12,6 +14,17 @@ export default class TerrainGenerator {
         this.width = width;
         this.height = height;
         this.noiseSeed = Math.random();
+        
+        // Initialize the permutation array
+        this.p = new Array(512);
+        const permutation = Array.from({length: 256}, (_, i) => i);
+        for (let i = 0; i < 256; i++) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [permutation[i], permutation[j]] = [permutation[j], permutation[i]];
+        }
+        for (let i = 0; i < 512; i++) {
+            this.p[i] = permutation[i & 255];
+        }
     }
 
     generate() {
@@ -107,23 +120,5 @@ export default class TerrainGenerator {
         const u = h < 8 ? x : y;
         const v = h < 4 ? y : h === 12 || h === 14 ? x : 0;
         return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
-    }
-
-    p = new Array(512);
-
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.noiseSeed = Math.random();
-        
-        // Initialize the permutation array
-        const permutation = Array.from({length: 256}, (_, i) => i);
-        for (let i = 0; i < 256; i++) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [permutation[i], permutation[j]] = [permutation[j], permutation[i]];
-        }
-        for (let i = 0; i < 512; i++) {
-            this.p[i] = permutation[i & 255];
-        }
     }
 }
