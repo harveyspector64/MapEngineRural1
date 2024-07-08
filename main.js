@@ -1,3 +1,4 @@
+// main.js
 import TerrainGenerator from './src/features/TerrainGenerator.js';
 import Renderer from './src/rendering/Renderer.js';
 import { TILES } from './src/features/TerrainGenerator.js';
@@ -18,6 +19,8 @@ async function init() {
     const terrain = terrainGenerator.generate();
 
     renderer.render(terrain);
+    
+    console.log('Map generated with dimensions:', mapWidth, 'x', mapHeight);
 }
 
 window.addEventListener('load', init);
