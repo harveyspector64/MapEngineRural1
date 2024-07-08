@@ -15,7 +15,7 @@ export default class StructureGenerator {
     generate() {
         const structures = [];
         
-        // Place barns
+        // Place barns on farmland
         for (let i = 0; i < 3; i++) {
             const position = this.findSuitablePosition(STRUCTURES.BARN);
             if (position) {
@@ -24,7 +24,7 @@ export default class StructureGenerator {
             }
         }
 
-        // Place silos
+        // Place silos on farmland
         for (let i = 0; i < 2; i++) {
             const position = this.findSuitablePosition(STRUCTURES.SILO);
             if (position) {
@@ -50,27 +50,9 @@ export default class StructureGenerator {
     }
 
     isSuitableForStructure(x, y, structureType) {
-        // Check if the surrounding area is suitable for the structure
-        // For simplicity, we'll just check if it's on grass and near a field
-        if (this.terrain[y][x] !== TILES.GRASS) return false;
-
-        const surroundings = this.getSurroundings(x, y);
-        return surroundings.some(tile => tile === TILES.FIELD);
-    }
-
-    getSurroundings(x, y) {
-        const surroundings = [];
-        for (let dy = -1; dy <= 1; dy++) {
-            for (let dx = -1; dx <= 1; dx++) {
-                if (dx === 0 && dy === 0) continue;
-                const nx = x + dx;
-                const ny = y + dy;
-                if (nx >= 0 && nx < this.terrain[0].length && ny >= 0 && ny < this.terrain.length) {
-                    surroundings.push(this.terrain[ny][nx]);
-                }
-            }
-        }
-        return surroundings;
+        // Ensure the structure is placed on farmland tiles (dirt or crop)
+        const suitableTiles = [TILES.FIELD, TILES.CROP];
+        return suitableTiles.includes(this.terrain[y][x]);
     }
 
     applyStructureToTerrain(position, structureType) {
