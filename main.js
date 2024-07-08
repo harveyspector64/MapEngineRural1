@@ -1,18 +1,25 @@
 // File: main.js
-import MapGenerator from './src/core/MapGenerator.js';
+import TerrainGenerator from './src/features/TerrainGenerator.js';
 import Renderer from './src/rendering/Renderer.js';
+import { TILES } from './src/features/TerrainGenerator.js';
 
 const canvas = document.getElementById('mapCanvas');
-const mapGenerator = new MapGenerator(50, 50); // Adjust size as needed
 const renderer = new Renderer(canvas);
 
-function generateAndRenderMap() {
-    const { terrain, structures } = mapGenerator.generate();
+async function init() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const mapWidth = Math.ceil(canvas.width / renderer.tileSize);
+    const mapHeight = Math.ceil(canvas.height / renderer.tileSize);
+
+    await renderer.loadSprites(Object.values(TILES));
+
+    const terrainGenerator = new TerrainGenerator(mapWidth, mapHeight);
+    const terrain = terrainGenerator.generate();
+
     renderer.render(terrain);
-    console.log('Structures:', structures);
 }
 
-document.getElementById('generateButton').addEventListener('click', generateAndRenderMap);
-
-// Initial generation
-generateAndRenderMap();
+window.addEventListener('load', init);
+window.addEventListener('resize', init);
