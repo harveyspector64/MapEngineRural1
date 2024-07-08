@@ -308,3 +308,4 @@ export default class TerrainGenerator {
         }
     }
 }
+
