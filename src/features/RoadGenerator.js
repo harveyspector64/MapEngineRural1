@@ -13,27 +13,30 @@ export default class RoadGenerator {
         const edgePoints = this.findFieldEdges();
         console.log(`Field edges found: ${edgePoints.length} points`);
 
-        if (edgePoints.length > 1) {
-            const startPoint = edgePoints[0];
-            const endPoint = edgePoints[1];
-            console.log(`Creating road from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
+        // Limit the number of edges to process
+        const maxEdges = 10;  // Adjust this number as needed
+        const prioritizedEdges = this.prioritizeEdges(edgePoints).slice(0, maxEdges);
+        console.log(`Prioritized and limited edges to process: ${prioritizedEdges.length} points`);
 
-            const path = this.astar.findPath(startPoint, endPoint, {
-                heuristic: this.roadHeuristic.bind(this),
-                costFunction: this.roadCostFunction.bind(this)
-            });
+        // Generate roads incrementally
+        this.generateRoadsIncrementally(prioritizedEdges, 0);
+    }
 
-            if (path) {
-                console.log('Path found:', path);
-            } else {
-                console.log('No path found.');
-            }
-        } else {
-            console.log('Not enough edge points to create a road.');
+    generateRoadsIncrementally(edges, index) {
+        if (index >= edges.length - 1) {
+            console.log('Road generation completed.');
+            this.renderer.render(this.terrain);  // Render the updated terrain
+            return;
         }
 
-        console.log('Road generation completed.');
-        this.renderer.render(this.terrain);  // Render the updated terrain
+        const startPoint = edges[index];
+        const endPoint = edges[index + 1];
+        console.log(`Creating road from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
+        
+        setTimeout(() => {
+            this.createRoad(startPoint, endPoint);
+            this.generateRoadsIncrementally(edges, index + 1);
+        }, 50);  // Adjust the delay as needed to prevent freezing
     }
 
     findFieldEdges() {
@@ -47,6 +50,11 @@ export default class RoadGenerator {
         }
         console.log(`findFieldEdges: Detected ${edges.length} edges`);
         return edges;
+    }
+
+    prioritizeEdges(edges) {
+        // For now, return the edges sorted by their x and y coordinates
+        return edges.sort((a, b) => a.y - b.y || a.x - b.x);
     }
 
     isFieldEdge(x, y) {
@@ -65,6 +73,24 @@ export default class RoadGenerator {
         return x >= 0 && x < this.terrain[0].length && y >= 0 && y < this.terrain.length;
     }
 
+    createRoad(start, end) {
+        console.log(`Creating road from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
+        try {
+            const path = this.astar.findPath(start, end, {
+                heuristic: this.roadHeuristic.bind(this),
+                costFunction: this.roadCostFunction.bind(this)
+            });
+            if (path) {
+                this.applyRoadToTerrain(path);
+                console.log('Road applied to terrain:', path);
+            } else {
+                console.log(`No path found from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
+            }
+        } catch (error) {
+            console.error('Error during pathfinding:', error);
+        }
+    }
+
     roadHeuristic(a, b) {
         return this.astar.manhattanDistance(a, b);
     }
@@ -76,5 +102,13 @@ export default class RoadGenerator {
         if (neighborTile === TILES.FIELD) return 2;
         if (neighborTile === TILES.HILL) return 5;
         return 1;
+    }
+
+    applyRoadToTerrain(path) {
+        path.forEach(point => {
+            if (this.isWithinBounds(point.x, point.y)) {
+                this.terrain[point.y][point.x] = TILES.ROAD;
+            }
+        });
     }
 }
