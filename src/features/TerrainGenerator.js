@@ -21,7 +21,7 @@ export default class TerrainGenerator {
         this.width = width;
         this.height = height;
         this.noiseSeed = Math.random();
-        this.gridSize = 64; // Increased for more variation
+        this.gridSize = 64; // Defines the size of regions
         
         this.p = new Array(512);
         const permutation = Array.from({length: 256}, (_, i) => i);
@@ -39,6 +39,7 @@ export default class TerrainGenerator {
         const regions = this.assignRegions();
         terrain = this.generateRegionFeatures(terrain, regions);
         terrain = this.smoothTransitions(terrain);
+        terrain = this.addNaturalElements(terrain);
         return terrain;
     }
 
@@ -151,6 +152,26 @@ export default class TerrainGenerator {
                     terrain[y][x] = TILES.WATER;
                 }
             }
+        }
+    }
+
+    addNaturalElements(terrain) {
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (terrain[y][x] === TILES.GRASS) {
+                    this.addTreesAndBushes(terrain, x, y);
+                }
+            }
+        }
+        return terrain;
+    }
+
+    addTreesAndBushes(terrain, x, y) {
+        const chance = Math.random();
+        if (chance < 0.05) {
+            terrain[y][x] = TILES.TREE;
+        } else if (chance < 0.1) {
+            terrain[y][x] = TILES.BUSH;
         }
     }
 
