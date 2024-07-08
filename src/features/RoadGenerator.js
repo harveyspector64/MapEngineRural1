@@ -16,12 +16,17 @@ export default class RoadGenerator {
     generateRoads() {
         console.log('Starting road generation...');
         const edgePoints = this.findFieldEdges();
-        console.log('Field edges found:', edgePoints.length);
+        console.log(`Field edges found: ${edgePoints.length} points`);
+
+        // Limit the number of paths to generate for debugging
+        const maxPaths = 5;
+        let pathsGenerated = 0;
 
         edgePoints.forEach((startPoint, index) => {
-            if (index < edgePoints.length - 1) {
+            if (index < edgePoints.length - 1 && pathsGenerated < maxPaths) {
                 const endPoint = edgePoints[index + 1];
                 this.createRoad(startPoint, endPoint);
+                pathsGenerated++;
             }
         });
 
@@ -41,6 +46,7 @@ export default class RoadGenerator {
                 }
             }
         }
+        console.log(`findFieldEdges: Detected ${edges.length} edges`);
         return edges;
     }
 
