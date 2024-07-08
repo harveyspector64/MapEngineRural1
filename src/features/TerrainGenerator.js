@@ -9,11 +9,19 @@ export const TILES = {
     BUSH: 'bush'
 };
 
+const REGION_TYPES = {
+    FARMLAND: 'farmland',
+    FOREST: 'forest',
+    MIXED: 'mixed',
+    LAKESIDE: 'lakeside'
+};
+
 export default class TerrainGenerator {
     constructor(width, height) {
         this.width = width;
         this.height = height;
         this.noiseSeed = Math.random();
+        this.gridSize = 50; // Size of each grid section
         
         this.p = new Array(512);
         const permutation = Array.from({length: 256}, (_, i) => i);
@@ -28,61 +36,110 @@ export default class TerrainGenerator {
 
     generate() {
         let terrain = this.generateBaseTerrain();
-        terrain = this.generateWaterBodies(terrain);
-        terrain = this.generateFields(terrain);
-        terrain = this.generateForests(terrain);
+        const regions = this.assignRegions();
+        terrain = this.generateRegionFeatures(terrain, regions);
         return terrain;
     }
 
     generateBaseTerrain() {
-        const terrain = [];
-        for (let y = 0; y < this.height; y++) {
-            terrain[y] = [];
-            for (let x = 0; x < this.width; x++) {
-                terrain[y][x] = TILES.GRASS;
+        return Array(this.height).fill().map(() => Array(this.width).fill(TILES.GRASS));
+    }
+
+    assignRegions() {
+        const regions = [];
+        for (let y = 0; y < this.height; y += this.gridSize) {
+            for (let x = 0; x < this.width; x += this.gridSize) {
+                const regionType = this.getRandomRegionType();
+                regions.push({x, y, type: regionType});
             }
         }
+        return regions;
+    }
+
+    getRandomRegionType() {
+        const types = Object.values(REGION_TYPES);
+        return types[Math.floor(Math.random() * types.length)];
+    }
+
+    generateRegionFeatures(terrain, regions) {
+        regions.forEach(region => {
+            switch (region.type) {
+                case REGION_TYPES.FARMLAND:
+                    this.generateFarmland(terrain, region);
+                    break;
+                case REGION_TYPES.FOREST:
+                    this.generateForest(terrain, region);
+                    break;
+                case REGION_TYPES.MIXED:
+                    this.generateMixedRegion(terrain, region);
+                    break;
+                case REGION_TYPES.LAKESIDE:
+                    this.generateLakeside(terrain, region);
+                    break;
+            }
+        });
         return terrain;
     }
 
-    generateWaterBodies(terrain) {
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
-                const value = this.noise(x / 50 + 1000, y / 50 + 1000);
-                if (value > 0.7) {
+    generateFarmland(terrain, region) {
+        const fieldSize = 10;
+        for (let y = region.y; y < region.y + this.gridSize; y += fieldSize) {
+            for (let x = region.x; x < region.x + this.gridSize; x += fieldSize) {
+                if (Math.random() > 0.3) {
+                    this.placeRectangularField(terrain, x, y, fieldSize, fieldSize);
+                }
+            }
+        }
+    }
+
+    placeRectangularField(terrain, x, y, width, height) {
+        const isCrop = Math.random() > 0.5;
+        for (let dy = 0; dy < height; dy++) {
+            for (let dx = 0; dx < width; dx++) {
+                const tx = x + dx;
+                const ty = y + dy;
+                if (tx < this.width && ty < this.height) {
+                    terrain[ty][tx] = isCrop ? TILES.CROP : TILES.FIELD;
+                }
+            }
+        }
+    }
+
+    generateForest(terrain, region) {
+        for (let y = region.y; y < region.y + this.gridSize; y++) {
+            for (let x = region.x; x < region.x + this.gridSize; x++) {
+                if (Math.random() > 0.3) {
+                    terrain[y][x] = Math.random() > 0.7 ? TILES.TREE : TILES.BUSH;
+                }
+            }
+        }
+    }
+
+    generateMixedRegion(terrain, region) {
+        this.generateForest(terrain, region);
+        this.generateFarmland(terrain, region);
+    }
+
+    generateLakeside(terrain, region) {
+        this.generateLake(terrain, region);
+        this.generateForest(terrain, region);
+    }
+
+    generateLake(terrain, region) {
+        const centerX = region.x + this.gridSize / 2;
+        const centerY = region.y + this.gridSize / 2;
+        const maxRadius = this.gridSize / 2;
+
+        for (let y = region.y; y < region.y + this.gridSize; y++) {
+            for (let x = region.x; x < region.x + this.gridSize; x++) {
+                const dx = x - centerX;
+                const dy = y - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < maxRadius * (0.5 + this.noise(x / 20, y / 20) * 0.5)) {
                     terrain[y][x] = TILES.WATER;
                 }
             }
         }
-        return terrain;
-    }
-
-    generateFields(terrain) {
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
-                const value = this.noise(x / 40 + 2000, y / 40 + 2000);
-                if (value > 0.5 && terrain[y][x] === TILES.GRASS) {
-                    if (Math.random() > 0.5) {
-                        terrain[y][x] = TILES.FIELD;
-                    } else {
-                        terrain[y][x] = TILES.CROP;
-                    }
-                }
-            }
-        }
-        return terrain;
-    }
-
-    generateForests(terrain) {
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
-                const value = this.noise(x / 30 + 3000, y / 30 + 3000);
-                if (value > 0.6 && terrain[y][x] === TILES.GRASS) {
-                    terrain[y][x] = Math.random() > 0.3 ? TILES.TREE : TILES.BUSH;
-                }
-            }
-        }
-        return terrain;
     }
 
     noise(x, y) {
