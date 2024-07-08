@@ -1,8 +1,10 @@
+// src/rendering/Renderer.js
+
 export default class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.tileSize = 16; // Changed from 32 to 16
+        this.tileSize = 16;
         this.sprites = {};
     }
 
