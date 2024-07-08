@@ -19,35 +19,18 @@ export default class RoadGenerator {
         const edgePoints = this.findFieldEdges();
         console.log(`Field edges found: ${edgePoints.length} points`);
 
-        // Limit the number of edges to process
-        const maxEdges = 10;  // Adjust this number as needed
-        const prioritizedEdges = this.prioritizeEdges(edgePoints).slice(0, maxEdges);
-        console.log(`Prioritized and limited edges to process: ${prioritizedEdges.length} points`);
+        if (edgePoints.length > 1) {
+            const startPoint = edgePoints[0];
+            const endPoint = edgePoints[1];
+            console.log(`Creating road from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
 
-        // Generate roads incrementally
-        this.generateRoadsIncrementally(prioritizedEdges, 0);
-    }
-
-    /**
-     * Generates roads incrementally to avoid browser freezes.
-     * @param {Array} edges - The edges to process.
-     * @param {number} index - The current index in the edges array.
-     */
-    generateRoadsIncrementally(edges, index) {
-        if (index >= edges.length - 1) {
-            console.log('Road generation completed.');
-            this.renderer.render(this.terrain);  // Render the updated terrain
-            return;
+            this.createRoad(startPoint, endPoint);
+        } else {
+            console.log('Not enough edge points to create a road.');
         }
 
-        const startPoint = edges[index];
-        const endPoint = edges[index + 1];
-        console.log(`Creating road from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
-        
-        setTimeout(() => {
-            this.createRoad(startPoint, endPoint);
-            this.generateRoadsIncrementally(edges, index + 1);
-        }, 50);  // Adjust the delay as needed to prevent freezing
+        console.log('Road generation completed.');
+        this.renderer.render(this.terrain);  // Render the updated terrain
     }
 
     /**
@@ -65,16 +48,6 @@ export default class RoadGenerator {
         }
         console.log(`findFieldEdges: Detected ${edges.length} edges`);
         return edges;
-    }
-
-    /**
-     * Prioritizes edges based on their location or importance.
-     * @param {Array} edges - The edges to prioritize.
-     * @returns {Array} The prioritized edges.
-     */
-    prioritizeEdges(edges) {
-        // For now, return the edges sorted by their x and y coordinates
-        return edges.sort((a, b) => a.y - b.y || a.x - b.x);
     }
 
     /**
@@ -118,6 +91,7 @@ export default class RoadGenerator {
         });
         if (path) {
             this.applyRoadToTerrain(path);
+            console.log('Road applied to terrain:', path);
         } else {
             console.log(`No path found from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
         }
@@ -156,6 +130,5 @@ export default class RoadGenerator {
         path.forEach(point => {
             this.terrain[point.y][point.x] = TILES.ROAD;
         });
-        console.log('Road applied to terrain:', path);
     }
 }
