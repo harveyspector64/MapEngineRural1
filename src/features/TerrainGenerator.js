@@ -167,7 +167,7 @@ export default class TerrainGenerator {
     }
 
         addVegetationNearFarmland(terrain, region) {
-        const openGrassChance = 0.7; // Higher chance for open grass near farmland
+        const openGrassChance = 0.9; // Higher chance for open grass near farmland
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 if (terrain[y][x] === TILES.GRASS) {
