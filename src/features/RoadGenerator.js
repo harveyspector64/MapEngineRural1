@@ -18,15 +18,15 @@ export default class RoadGenerator {
         const edgePoints = this.findFieldEdges();
         console.log(`Field edges found: ${edgePoints.length} points`);
 
-        // Limit the number of paths to generate for debugging
-        const maxPaths = 5;
-        let pathsGenerated = 0;
+        // Limit the number of edges to process
+        const maxEdges = 10;  // Adjust this number as needed
+        const prioritizedEdges = this.prioritizeEdges(edgePoints).slice(0, maxEdges);
+        console.log(`Prioritized and limited edges to process: ${prioritizedEdges.length} points`);
 
-        edgePoints.forEach((startPoint, index) => {
-            if (index < edgePoints.length - 1 && pathsGenerated < maxPaths) {
-                const endPoint = edgePoints[index + 1];
+        prioritizedEdges.forEach((startPoint, index) => {
+            if (index < prioritizedEdges.length - 1) {
+                const endPoint = prioritizedEdges[index + 1];
                 this.createRoad(startPoint, endPoint);
-                pathsGenerated++;
             }
         });
 
@@ -48,6 +48,16 @@ export default class RoadGenerator {
         }
         console.log(`findFieldEdges: Detected ${edges.length} edges`);
         return edges;
+    }
+
+    /**
+     * Prioritizes edges based on their location or importance.
+     * @param {Array} edges - The edges to prioritize.
+     * @returns {Array} The prioritized edges.
+     */
+    prioritizeEdges(edges) {
+        // For now, return the edges sorted by their x and y coordinates
+        return edges.sort((a, b) => a.y - b.y || a.x - b.x);
     }
 
     /**
