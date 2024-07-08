@@ -1,4 +1,5 @@
-// File: src/features/StructureGenerator.js
+// src/features/StructureGenerator.js
+
 import { TILES } from './TerrainGenerator.js';
 
 export const STRUCTURES = {
