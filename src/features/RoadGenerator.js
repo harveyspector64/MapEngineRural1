@@ -95,14 +95,16 @@ export default class RoadGenerator {
      */
     createRoad(start, end) {
         console.log(`Creating road from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
+        const maxPathLength = 50; // Limit to avoid excessive paths
         const path = this.astar.findPath(start, end, {
             heuristic: this.roadHeuristic.bind(this),
-            costFunction: this.roadCostFunction.bind(this)
+            costFunction: this.roadCostFunction.bind(this),
+            maxPathLength: maxPathLength // New option to limit path length
         });
-        if (path) {
+        if (path && path.length <= maxPathLength) {
             this.applyRoadToTerrain(path);
         } else {
-            console.log(`No path found from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
+            console.log(`Path too long or not found from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
         }
     }
 
