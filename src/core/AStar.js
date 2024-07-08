@@ -4,7 +4,7 @@ class AStar {
     }
 
     findPath(start, goal, options = {}) {
-        const { heuristic = this.manhattanDistance, costFunction = () => 1 } = options;
+        const { heuristic = this.manhattanDistance, costFunction = () => 1, maxIterations = 1000 } = options;
 
         const openSet = [start];
         const cameFrom = {};
@@ -12,7 +12,6 @@ class AStar {
         const fScore = { [this.key(start)]: heuristic(start, goal) };
 
         let iterations = 0;
-        const maxIterations = 1000; // Safety check to avoid infinite loops
 
         while (openSet.length > 0) {
             iterations++;
