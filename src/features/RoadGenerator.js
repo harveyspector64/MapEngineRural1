@@ -1,8 +1,11 @@
+import AStar from '../core/AStar.js';
 import { TILES } from './TerrainGenerator.js';
 
 export default class RoadGenerator {
-    constructor(terrain) {
+    constructor(terrain, renderer) {
         this.terrain = terrain;
+        this.renderer = renderer;
+        this.astar = new AStar(terrain);
     }
 
     generateRoads() {
@@ -11,12 +14,26 @@ export default class RoadGenerator {
         console.log(`Field edges found: ${edgePoints.length} points`);
 
         if (edgePoints.length > 1) {
-            console.log(`Edge points:`, edgePoints.slice(0, 10)); // Log first 10 edge points for debugging
+            const startPoint = edgePoints[0];
+            const endPoint = edgePoints[1];
+            console.log(`Creating road from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
+
+            const path = this.astar.findPath(startPoint, endPoint, {
+                heuristic: this.roadHeuristic.bind(this),
+                costFunction: this.roadCostFunction.bind(this)
+            });
+
+            if (path) {
+                console.log('Path found:', path);
+            } else {
+                console.log('No path found.');
+            }
         } else {
             console.log('Not enough edge points to create a road.');
         }
 
         console.log('Road generation completed.');
+        this.renderer.render(this.terrain);  // Render the updated terrain
     }
 
     findFieldEdges() {
@@ -46,5 +63,18 @@ export default class RoadGenerator {
 
     isWithinBounds(x, y) {
         return x >= 0 && x < this.terrain[0].length && y >= 0 && y < this.terrain.length;
+    }
+
+    roadHeuristic(a, b) {
+        return this.astar.manhattanDistance(a, b);
+    }
+
+    roadCostFunction(current, neighbor) {
+        const neighborTile = this.terrain[neighbor.y][neighbor.x];
+        if (neighborTile === TILES.WATER) return 100;
+        if (neighborTile === TILES.GRASS) return 1;
+        if (neighborTile === TILES.FIELD) return 2;
+        if (neighborTile === TILES.HILL) return 5;
+        return 1;
     }
 }
