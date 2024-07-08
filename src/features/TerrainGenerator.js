@@ -21,7 +21,7 @@ export default class TerrainGenerator {
         this.width = width;
         this.height = height;
         this.noiseSeed = Math.random();
-        this.gridSize = 50; // Size of each grid section
+        this.gridSize = 64; // Increased for more variation
         
         this.p = new Array(512);
         const permutation = Array.from({length: 256}, (_, i) => i);
@@ -38,6 +38,7 @@ export default class TerrainGenerator {
         let terrain = this.generateBaseTerrain();
         const regions = this.assignRegions();
         terrain = this.generateRegionFeatures(terrain, regions);
+        terrain = this.smoothTransitions(terrain);
         return terrain;
     }
 
@@ -82,18 +83,27 @@ export default class TerrainGenerator {
     }
 
     generateFarmland(terrain, region) {
-        const fieldSize = 10;
-        for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y += fieldSize) {
-            for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x += fieldSize) {
-                if (Math.random() > 0.3) {
-                    this.placeRectangularField(terrain, x, y, fieldSize, fieldSize);
+        const minFieldSize = 8;
+        const maxFieldSize = 16;
+        let y = region.y;
+        while (y < Math.min(region.y + this.gridSize, this.height)) {
+            let x = region.x;
+            while (x < Math.min(region.x + this.gridSize, this.width)) {
+                if (Math.random() > 0.2) {
+                    const fieldWidth = minFieldSize + Math.floor(Math.random() * (maxFieldSize - minFieldSize));
+                    const fieldHeight = minFieldSize + Math.floor(Math.random() * (maxFieldSize - minFieldSize));
+                    this.placeRectangularField(terrain, x, y, fieldWidth, fieldHeight);
+                    x += fieldWidth;
+                } else {
+                    x += minFieldSize;
                 }
             }
+            y += maxFieldSize;
         }
     }
 
     placeRectangularField(terrain, x, y, width, height) {
-        const isCrop = Math.random() > 0.5;
+        const isCrop = Math.random() > 0.3;
         for (let dy = 0; dy < height; dy++) {
             for (let dx = 0; dx < width; dx++) {
                 const tx = x + dx;
@@ -106,9 +116,11 @@ export default class TerrainGenerator {
     }
 
     generateForest(terrain, region) {
+        const isDenseForest = Math.random() > 0.5;
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
-                if (Math.random() > 0.3) {
+                const noiseValue = this.noise(x / 20, y / 20);
+                if (isDenseForest && noiseValue > 0.3 || (!isDenseForest && noiseValue > 0.6)) {
                     terrain[y][x] = Math.random() > 0.7 ? TILES.TREE : TILES.BUSH;
                 }
             }
@@ -128,17 +140,52 @@ export default class TerrainGenerator {
     generateLake(terrain, region) {
         const centerX = region.x + this.gridSize / 2;
         const centerY = region.y + this.gridSize / 2;
-        const maxRadius = this.gridSize / 2;
+        const maxRadius = this.gridSize * 0.6;
 
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 const dx = x - centerX;
                 const dy = y - centerY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < maxRadius * (0.5 + this.noise(x / 20, y / 20) * 0.5)) {
+                if (distance < maxRadius * (0.5 + this.noise(x / 30, y / 30) * 0.5)) {
                     terrain[y][x] = TILES.WATER;
                 }
             }
+        }
+    }
+
+    smoothTransitions(terrain) {
+        const smoothed = JSON.parse(JSON.stringify(terrain));
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (terrain[y][x] === TILES.GRASS) {
+                    this.smoothGrassTransition(terrain, smoothed, x, y);
+                }
+            }
+        }
+        return smoothed;
+    }
+
+    smoothGrassTransition(terrain, smoothed, x, y) {
+        const neighborhoodSize = 2;
+        let treesCount = 0;
+        let bushesCount = 0;
+
+        for (let dy = -neighborhoodSize; dy <= neighborhoodSize; dy++) {
+            for (let dx = -neighborhoodSize; dx <= neighborhoodSize; dx++) {
+                const nx = x + dx;
+                const ny = y + dy;
+                if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height) {
+                    if (terrain[ny][nx] === TILES.TREE) treesCount++;
+                    if (terrain[ny][nx] === TILES.BUSH) bushesCount++;
+                }
+            }
+        }
+
+        if (treesCount > 0 && Math.random() < treesCount / 10) {
+            smoothed[y][x] = TILES.TREE;
+        } else if (bushesCount > 0 && Math.random() < bushesCount / 8) {
+            smoothed[y][x] = TILES.BUSH;
         }
     }
 
