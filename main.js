@@ -8,8 +8,8 @@ const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
 
 async function init() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = 300;  // Smaller width for testing
+    canvas.height = 200;  // Smaller height for testing
 
     const mapWidth = Math.ceil(canvas.width / renderer.tileSize);
     const mapHeight = Math.ceil(canvas.height / renderer.tileSize);
