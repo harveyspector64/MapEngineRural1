@@ -1,28 +1,28 @@
 // File: src/rendering/Renderer.js
-import { TILES } from '../features/TerrainGenerator.js';
-import { STRUCTURES } from '../features/StructureGenerator.js';
-
 export default class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.tileSize = 32; // Size of our sprite tiles
-        this.loadSprites();
+        this.tileSize = 32;
+        this.sprites = {};
     }
 
-    loadSprites() {
-        this.sprites = {};
-        const spriteNames = [...Object.values(TILES), ...Object.values(STRUCTURES)];
-        spriteNames.forEach(name => {
-            const img = new Image();
-            img.src = `assets/sprites/${name}.png`;
-            this.sprites[name] = img;
-        });
+    async loadSprites(tileTypes) {
+        const loadPromises = tileTypes.map(type => 
+            new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    this.sprites[type] = img;
+                    resolve();
+                };
+                img.onerror = reject;
+                img.src = `assets/sprites/${type}.png`;
+            })
+        );
+        await Promise.all(loadPromises);
     }
 
     render(terrain) {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
         for (let y = 0; y < terrain.length; y++) {
             for (let x = 0; x < terrain[y].length; x++) {
                 const tile = terrain[y][x];
