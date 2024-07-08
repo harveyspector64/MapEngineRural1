@@ -78,7 +78,8 @@ export default class RoadGenerator {
         try {
             const path = this.astar.findPath(start, end, {
                 heuristic: this.roadHeuristic.bind(this),
-                costFunction: this.roadCostFunction.bind(this)
+                costFunction: this.roadCostFunction.bind(this),
+                maxIterations: 1000 // Safety check to avoid infinite loops
             });
             if (path) {
                 this.applyRoadToTerrain(path);
