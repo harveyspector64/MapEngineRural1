@@ -7,7 +7,9 @@ export const TILES = {
     CROP: 'crop',
     TREE: 'tree',
     BUSH: 'bush',
+    ROAD: 'road'  // Add road tile
 };
+
 
 
 const REGION_TYPES = {
