@@ -6,7 +6,8 @@ export const TILES = {
     FIELD: 'dirt',
     CROP: 'crop',
     TREE: 'tree',
-    BUSH: 'bush'
+    BUSH: 'bush',
+    ROAD: 'road' // Add road tile
 };
 
 const REGION_TYPES = {
@@ -34,12 +35,13 @@ export default class TerrainGenerator {
         }
     }
 
-  generate() {
+    generate() {
         let terrain = this.generateBaseTerrain();
         const regions = this.assignRegions();
         terrain = this.generateRegionFeatures(terrain, regions);
         terrain = this.smoothTransitions(terrain);
         terrain = this.addNaturalElements(terrain, regions);
+        terrain = this.generateRoads(terrain);
         return terrain;
     }
 
@@ -166,7 +168,7 @@ export default class TerrainGenerator {
         return terrain;
     }
 
-        addVegetationNearFarmland(terrain, region) {
+    addVegetationNearFarmland(terrain, region) {
         const openGrassChance = 1.5; // Higher chance for open grass near farmland
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
@@ -177,7 +179,7 @@ export default class TerrainGenerator {
         }
     }
 
-        addGeneralVegetation(terrain, region) {
+    addGeneralVegetation(terrain, region) {
         const openGrassChance = 0.3; // Lower chance for open grass in other regions
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
@@ -198,7 +200,6 @@ export default class TerrainGenerator {
             terrain[y][x] = TILES.GRASS;
         }
     }
-
 
     smoothTransitions(terrain) {
         const smoothed = JSON.parse(JSON.stringify(terrain));
@@ -256,5 +257,37 @@ export default class TerrainGenerator {
         const u = h < 8 ? x : y;
         const v = h < 4 ? y : h === 12 || h === 14 ? x : 0;
         return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+    }
+
+    generateRoads(terrain) {
+        const regionSize = this.gridSize;
+        for (let y = 0; y < this.height; y += regionSize) {
+            for (let x = 0; x < this.width; x += regionSize) {
+                if (Math.random() > 0.5) {
+                    this.placeHorizontalRoad(terrain, x, y, regionSize);
+                } else {
+                    this.placeVerticalRoad(terrain, x, y, regionSize);
+                }
+            }
+        }
+        return terrain;
+    }
+
+    placeHorizontalRoad(terrain, startX, startY, length) {
+        const roadY = startY + Math.floor(Math.random() * this.gridSize);
+        for (let x = startX; x < startX + length && x < this.width; x++) {
+            if (terrain[roadY][x] === TILES.GRASS || terrain[roadY][x] === TILES.FIELD) {
+                terrain[roadY][x] = TILES.ROAD;
+            }
+        }
+    }
+
+    placeVerticalRoad(terrain, startX, startY, length) {
+        const roadX = startX + Math.floor(Math.random() * this.gridSize);
+        for (let y = startY; y < startY + length && y < this.height; y++) {
+            if (terrain[y][roadX] === TILES.GRASS || terrain[y][roadX] === TILES.FIELD) {
+                terrain[y][roadX] = TILES.ROAD;
+            }
+        }
     }
 }
