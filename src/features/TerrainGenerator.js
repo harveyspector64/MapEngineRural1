@@ -34,12 +34,12 @@ export default class TerrainGenerator {
         }
     }
 
-    generate() {
+  generate() {
         let terrain = this.generateBaseTerrain();
         const regions = this.assignRegions();
         terrain = this.generateRegionFeatures(terrain, regions);
         terrain = this.smoothTransitions(terrain);
-        terrain = this.addNaturalElements(terrain);
+        terrain = this.addNaturalElements(terrain, regions);
         return terrain;
     }
 
@@ -155,25 +155,50 @@ export default class TerrainGenerator {
         }
     }
 
-    addNaturalElements(terrain) {
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
-                if (terrain[y][x] === TILES.GRASS) {
-                    this.addTreesAndBushes(terrain, x, y);
-                }
+    addNaturalElements(terrain, regions) {
+        regions.forEach(region => {
+            if (region.type === REGION_TYPES.FARMLAND) {
+                this.addVegetationNearFarmland(terrain, region);
+            } else {
+                this.addGeneralVegetation(terrain, region);
             }
-        }
+        });
         return terrain;
     }
 
-    addTreesAndBushes(terrain, x, y) {
+        addVegetationNearFarmland(terrain, region) {
+        const openGrassChance = 0.7; // Higher chance for open grass near farmland
+        for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
+            for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
+                if (terrain[y][x] === TILES.GRASS) {
+                    this.addTreesAndBushes(terrain, x, y, openGrassChance);
+                }
+            }
+        }
+    }
+
+        addGeneralVegetation(terrain, region) {
+        const openGrassChance = 0.3; // Lower chance for open grass in other regions
+        for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
+            for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
+                if (terrain[y][x] === TILES.GRASS) {
+                    this.addTreesAndBushes(terrain, x, y, openGrassChance);
+                }
+            }
+        }
+    }
+
+    addTreesAndBushes(terrain, x, y, openGrassChance) {
         const chance = Math.random();
         if (chance < 0.05) {
             terrain[y][x] = TILES.TREE;
         } else if (chance < 0.1) {
             terrain[y][x] = TILES.BUSH;
+        } else if (chance < openGrassChance) {
+            terrain[y][x] = TILES.GRASS;
         }
     }
+
 
     smoothTransitions(terrain) {
         const smoothed = JSON.parse(JSON.stringify(terrain));
