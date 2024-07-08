@@ -1,6 +1,5 @@
 import TerrainGenerator from './src/features/TerrainGenerator.js';
 import Renderer from './src/rendering/Renderer.js';
-import StructureGenerator from './src/features/StructureGenerator.js';
 import RoadGenerator from './src/features/RoadGenerator.js';  // Import RoadGenerator
 import { TILES } from './src/features/TerrainGenerator.js';
 
@@ -19,16 +18,17 @@ async function init() {
     const terrainGenerator = new TerrainGenerator(mapWidth, mapHeight);
     const terrain = terrainGenerator.generate();
 
-    const roadGenerator = new RoadGenerator(terrain);  // Initialize RoadGenerator
-    roadGenerator.generateRoads();  // Generate roads
+    const roadGenerator = new RoadGenerator(terrain, renderer);
+    roadGenerator.generateRoads();  // Generate roads incrementally
 
-    const structureGenerator = new StructureGenerator(terrain);
-    const structures = structureGenerator.generate();
+    // Temporarily disable structure generation to isolate road generation
+    // const structureGenerator = new StructureGenerator(terrain);
+    // const structures = structureGenerator.generate();
 
     renderer.render(terrain);
 
     console.log('Map generated with dimensions:', mapWidth, 'x', mapHeight);
-    console.log('Structures:', structures);
+    // console.log('Structures:', structures);
 }
 
 window.addEventListener('load', init);
