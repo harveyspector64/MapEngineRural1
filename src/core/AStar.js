@@ -1,12 +1,10 @@
-// File: src/core/AStar.js
-
 class AStar {
     constructor(grid) {
         this.grid = grid;
     }
 
     findPath(start, goal, options = {}) {
-        const { heuristic = this.manhattanDistance, costFunction = () => 1 } = options;
+        const { heuristic = this.manhattanDistance, costFunction = () => 1, maxPathLength = 100 } = options;
 
         const openSet = [start];
         const cameFrom = {};
@@ -17,6 +15,11 @@ class AStar {
             const current = this.lowestFScore(openSet, fScore);
             if (this.key(current) === this.key(goal)) {
                 return this.reconstructPath(cameFrom, current);
+            }
+
+            if (gScore[this.key(current)] > maxPathLength) {
+                console.log('Exceeded maximum path length');
+                return null;
             }
 
             openSet.splice(openSet.indexOf(current), 1);
