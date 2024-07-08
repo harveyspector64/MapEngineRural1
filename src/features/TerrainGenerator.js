@@ -83,8 +83,8 @@ export default class TerrainGenerator {
 
     generateFarmland(terrain, region) {
         const fieldSize = 10;
-        for (let y = region.y; y < region.y + this.gridSize; y += fieldSize) {
-            for (let x = region.x; x < region.x + this.gridSize; x += fieldSize) {
+        for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y += fieldSize) {
+            for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x += fieldSize) {
                 if (Math.random() > 0.3) {
                     this.placeRectangularField(terrain, x, y, fieldSize, fieldSize);
                 }
@@ -106,8 +106,8 @@ export default class TerrainGenerator {
     }
 
     generateForest(terrain, region) {
-        for (let y = region.y; y < region.y + this.gridSize; y++) {
-            for (let x = region.x; x < region.x + this.gridSize; x++) {
+        for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
+            for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 if (Math.random() > 0.3) {
                     terrain[y][x] = Math.random() > 0.7 ? TILES.TREE : TILES.BUSH;
                 }
@@ -130,8 +130,8 @@ export default class TerrainGenerator {
         const centerY = region.y + this.gridSize / 2;
         const maxRadius = this.gridSize / 2;
 
-        for (let y = region.y; y < region.y + this.gridSize; y++) {
-            for (let x = region.x; x < region.x + this.gridSize; x++) {
+        for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
+            for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 const dx = x - centerX;
                 const dy = y - centerY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
