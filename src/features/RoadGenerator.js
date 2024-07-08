@@ -82,6 +82,10 @@ export default class RoadGenerator {
                 maxIterations: 1000 // Safety check to avoid infinite loops
             });
             if (path) {
+                if (path.length > 20) { // Prevent excessively long paths
+                    console.warn(`Path too long from (${start.x}, ${start.y}) to (${end.x}, ${end.y}): ${path.length} steps`);
+                    return;
+                }
                 this.applyRoadToTerrain(path);
                 console.log('Road applied to terrain:', path);
             } else {
