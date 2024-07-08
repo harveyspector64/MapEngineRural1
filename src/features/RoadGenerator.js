@@ -5,13 +5,14 @@ import { TILES } from './TerrainGenerator.js';
  * Class responsible for generating roads on the terrain.
  */
 export default class RoadGenerator {
-    constructor(terrain) {
+    constructor(terrain, renderer) {
         this.terrain = terrain;
+        this.renderer = renderer;
         this.astar = new AStar(terrain);
     }
 
     /**
-     * Generates roads on the terrain.
+     * Generates roads on the terrain incrementally.
      */
     generateRoads() {
         console.log('Starting road generation...');
@@ -23,14 +24,30 @@ export default class RoadGenerator {
         const prioritizedEdges = this.prioritizeEdges(edgePoints).slice(0, maxEdges);
         console.log(`Prioritized and limited edges to process: ${prioritizedEdges.length} points`);
 
-        prioritizedEdges.forEach((startPoint, index) => {
-            if (index < prioritizedEdges.length - 1) {
-                const endPoint = prioritizedEdges[index + 1];
-                this.createRoad(startPoint, endPoint);
-            }
-        });
+        // Generate roads incrementally
+        this.generateRoadsIncrementally(prioritizedEdges, 0);
+    }
 
-        console.log('Road generation completed.');
+    /**
+     * Generates roads incrementally to avoid browser freezes.
+     * @param {Array} edges - The edges to process.
+     * @param {number} index - The current index in the edges array.
+     */
+    generateRoadsIncrementally(edges, index) {
+        if (index >= edges.length - 1) {
+            console.log('Road generation completed.');
+            this.renderer.render(this.terrain);  // Render the updated terrain
+            return;
+        }
+
+        const startPoint = edges[index];
+        const endPoint = edges[index + 1];
+        console.log(`Creating road from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
+        
+        setTimeout(() => {
+            this.createRoad(startPoint, endPoint);
+            this.generateRoadsIncrementally(edges, index + 1);
+        }, 50);  // Adjust the delay as needed to prevent freezing
     }
 
     /**
@@ -95,16 +112,14 @@ export default class RoadGenerator {
      */
     createRoad(start, end) {
         console.log(`Creating road from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
-        const maxPathLength = 50; // Limit to avoid excessive paths
         const path = this.astar.findPath(start, end, {
             heuristic: this.roadHeuristic.bind(this),
-            costFunction: this.roadCostFunction.bind(this),
-            maxPathLength: maxPathLength // New option to limit path length
+            costFunction: this.roadCostFunction.bind(this)
         });
-        if (path && path.length <= maxPathLength) {
+        if (path) {
             this.applyRoadToTerrain(path);
         } else {
-            console.log(`Path too long or not found from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
+            console.log(`No path found from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
         }
     }
 
