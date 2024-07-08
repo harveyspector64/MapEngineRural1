@@ -39,6 +39,8 @@ export default class TerrainGenerator {
         const regions = this.assignRegions();
         terrain = this.generateRegionFeatures(terrain, regions);
         terrain = this.smoothTransitions(terrain);
+        terrain = this.enhanceGrassAreas(terrain);
+        terrain = this.generateRivers(terrain);
         return terrain;
     }
 
@@ -187,6 +189,203 @@ export default class TerrainGenerator {
         } else if (bushesCount > 0 && Math.random() < bushesCount / 8) {
             smoothed[y][x] = TILES.BUSH;
         }
+    }
+
+    enhanceGrassAreas(terrain) {
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (terrain[y][x] === TILES.GRASS) {
+                    const noiseValue = this.noise(x / 50, y / 50);
+                    if (noiseValue > 0.75) {
+                        // Single tree or bush
+                        terrain[y][x] = Math.random() > 0.5 ? TILES.TREE : TILES.BUSH;
+                    } else if (noiseValue > 0.7) {
+                        // Small cluster
+                        this.createSmallCluster(terrain, x, y);
+                    }
+                }
+            }
+        }
+        return terrain;
+    }
+
+    createSmallCluster(terrain, centerX, centerY) {
+        const clusterSize = 3;
+        for (let dy = -clusterSize; dy <= clusterSize; dy++) {
+            for (let dx = -clusterSize; dx <= clusterSize; dx++) {
+                const x = centerX + dx;
+                const y = centerY + dy;
+                if (x >= 0 && x < this.width && y >= 0 && y < this.height && 
+                    terrain[y][x] === TILES.GRASS && Math.random() > 0.5) {
+                    terrain[y][x] = Math.random() > 0.5 ? TILES.TREE : TILES.BUSH;
+                }
+            }
+        }
+    }
+
+    generateRivers(terrain) {
+        const numRivers = Math.floor(Math.random() * 3) + 1; // 1 to 3 rivers
+        for (let i = 0; i < numRivers; i++) {
+            const start = this.chooseRiverStart();
+            const end = this.chooseRiverEnd(start);
+            const path = this.findRiverPath(terrain, start, end);
+            this.carveRiverPath(terrain, path);
+            this.addTributaries(terrain, path);
+        }
+        return terrain;
+    }
+
+    chooseRiverStart() {
+        // For simplicity, start from the edge of the map
+        const side = Math.floor(Math.random() * 4);
+        switch(side) {
+            case 0: return {x: 0, y: Math.floor(Math.random() * this.height)};
+            case 1: return {x: this.width - 1, y: Math.floor(Math.random() * this.height)};
+            case 2: return {x: Math.floor(Math.random() * this.width), y: 0};
+            case 3: return {x: Math.floor(Math.random() * this.width), y: this.height - 1};
+        }
+    }
+
+    chooseRiverEnd(start) {
+        // Choose an end point on the opposite side of the map
+        if (start.x === 0) return {x: this.width - 1, y: Math.floor(Math.random() * this.height)};
+        if (start.x === this.width - 1) return {x: 0, y: Math.floor(Math.random() * this.height)};
+        if (start.y === 0) return {x: Math.floor(Math.random() * this.width), y: this.height - 1};
+        return {x: Math.floor(Math.random() * this.width), y: 0};
+    }
+
+    findRiverPath(terrain, start, end) {
+        const openSet = [start];
+        const cameFrom = {};
+        const gScore = {[this.key(start)]: 0};
+        const fScore = {[this.key(start)]: this.heuristic(start, end)};
+        const momentum = {[this.key(start)]: {dx: 0, dy: 0}};
+
+        while (openSet.length > 0) {
+            const current = this.lowestFScore(openSet, fScore);
+            if (this.key(current) === this.key(end)) {
+                return this.reconstructPath(cameFrom, current);
+            }
+
+            openSet.splice(openSet.indexOf(current), 1);
+            const neighbors = this.getNeighbors(current);
+            for (const neighbor of neighbors) {
+                const tentativeGScore = gScore[this.key(current)] + this.riverCost(terrain, current, neighbor, momentum[this.key(current)]);
+                
+                if (!gScore[this.key(neighbor)] || tentativeGScore < gScore[this.key(neighbor)]) {
+                    cameFrom[this.key(neighbor)] = current;
+                    gScore[this.key(neighbor)] = tentativeGScore;
+                    fScore[this.key(neighbor)] = gScore[this.key(neighbor)] + this.heuristic(neighbor, end);
+                    momentum[this.key(neighbor)] = {
+                        dx: neighbor.x - current.x,
+                        dy: neighbor.y - current.y
+                    };
+                    if (!openSet.some(node => this.key(node) === this.key(neighbor))) {
+                        openSet.push(neighbor);
+                    }
+                }
+            }
+        }
+
+        return null; // No path found
+    }
+
+    riverCost(terrain, current, neighbor, currentMomentum) {
+        const base = 1;
+        const elevationCost = this.getElevation(neighbor.x, neighbor.y) * 0.5;
+        const momentumCost = (currentMomentum.dx !== neighbor.x - current.x || currentMomentum.dy !== neighbor.y - current.y) ? 0.5 : 0;
+        const noiseFactor = this.noise(neighbor.x / 20, neighbor.y / 20) * 0.5;
+        return base + elevationCost + momentumCost + noiseFactor;
+    }
+
+    getElevation(x, y) {
+        // Simulate elevation using noise
+        return this.noise(x / 100, y / 100);
+    }
+
+    carveRiverPath(terrain, path) {
+        for (const point of path) {
+            terrain[point.y][point.x] = TILES.WATER;
+            // Add width to the river
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    const nx = point.x + dx;
+                    const ny = point.y + dy;
+                    if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height && Math.random() > 0.3) {
+                        terrain[ny][nx] = TILES.WATER;
+                    }
+                }
+            }
+        }
+    }
+
+    addTributaries(terrain, mainPath) {
+        const numTributaries = Math.floor(Math.random() * 3) + 1;
+        for (let i = 0; i < numTributaries; i++) {
+            const startIndex = Math.floor(Math.random() * (mainPath.length - 1));
+            const start = mainPath[startIndex];
+            const end = this.chooseRandomPointNearby(start);
+            const tributaryPath = this.findRiverPath(terrain, end, start);
+            if (tributaryPath) {
+                this.carveTributaryPath(terrain, tributaryPath);
+            }
+        }
+    }
+
+carveTributaryPath(terrain, path) {
+        for (const point of path) {
+            if (Math.random() > 0.3) { // Make tributaries narrower
+                terrain[point.y][point.x] = TILES.WATER;
+            }
+        }
+    }
+
+    chooseRandomPointNearby(point) {
+        const distance = Math.floor(Math.random() * 20) + 10;
+        const angle = Math.random() * 2 * Math.PI;
+        const x = Math.floor(point.x + Math.cos(angle) * distance);
+        const y = Math.floor(point.y + Math.sin(angle) * distance);
+        return {
+            x: Math.max(0, Math.min(this.width - 1, x)),
+            y: Math.max(0, Math.min(this.height - 1, y))
+        };
+    }
+
+    key(node) {
+        return `${node.x},${node.y}`;
+    }
+
+    lowestFScore(nodes, fScore) {
+        return nodes.reduce((lowest, node) => 
+            (fScore[this.key(node)] < fScore[this.key(lowest)] ? node : lowest));
+    }
+
+    getNeighbors(node) {
+        const neighbors = [];
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const x = node.x + dx;
+                const y = node.y + dy;
+                if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+                    neighbors.push({x, y});
+                }
+            }
+        }
+        return neighbors;
+    }
+
+    heuristic(a, b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+
+    reconstructPath(cameFrom, current) {
+        const path = [current];
+        while (cameFrom[this.key(current)]) {
+            current = cameFrom[this.key(current)];
+            path.unshift(current);
+        }
+        return path;
     }
 
     noise(x, y) {
