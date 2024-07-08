@@ -58,15 +58,19 @@ export default class RoadGenerator {
 
     createRoad(start, end) {
         console.log(`Creating road from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
-        const path = this.astar.findPath(start, end, {
-            heuristic: this.roadHeuristic.bind(this),
-            costFunction: this.roadCostFunction.bind(this)
-        });
-        if (path) {
-            this.applyRoadToTerrain(path);
-            console.log('Road applied to terrain:', path);
-        } else {
-            console.log(`No path found from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
+        try {
+            const path = this.astar.findPath(start, end, {
+                heuristic: this.roadHeuristic.bind(this),
+                costFunction: this.roadCostFunction.bind(this)
+            });
+            if (path) {
+                this.applyRoadToTerrain(path);
+                console.log('Road applied to terrain:', path);
+            } else {
+                console.log(`No path found from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
+            }
+        } catch (error) {
+            console.error('Error during pathfinding:', error);
         }
     }
 
@@ -85,7 +89,9 @@ export default class RoadGenerator {
 
     applyRoadToTerrain(path) {
         path.forEach(point => {
-            this.terrain[point.y][point.x] = TILES.ROAD;
+            if (this.isWithinBounds(point.x, point.y)) {
+                this.terrain[point.y][point.x] = TILES.ROAD;
+            }
         });
     }
 }
