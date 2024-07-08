@@ -4,22 +4,26 @@ class AStar {
     }
 
     findPath(start, goal, options = {}) {
-        const { heuristic = this.manhattanDistance, costFunction = () => 1, maxPathLength = 100 } = options;
+        const { heuristic = this.manhattanDistance, costFunction = () => 1 } = options;
 
         const openSet = [start];
         const cameFrom = {};
         const gScore = { [this.key(start)]: 0 };
         const fScore = { [this.key(start)]: heuristic(start, goal) };
 
+        let iterations = 0;
+        const maxIterations = 1000; // Safety check to avoid infinite loops
+
         while (openSet.length > 0) {
+            iterations++;
+            if (iterations > maxIterations) {
+                console.error('Exceeded maximum iterations in pathfinding');
+                return null;
+            }
+
             const current = this.lowestFScore(openSet, fScore);
             if (this.key(current) === this.key(goal)) {
                 return this.reconstructPath(cameFrom, current);
-            }
-
-            if (gScore[this.key(current)] > maxPathLength) {
-                console.log('Exceeded maximum path length');
-                return null;
             }
 
             openSet.splice(openSet.indexOf(current), 1);
