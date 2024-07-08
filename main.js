@@ -3,6 +3,7 @@
 import TerrainGenerator from './src/features/TerrainGenerator.js';
 import Renderer from './src/rendering/Renderer.js';
 import StructureGenerator from './src/features/StructureGenerator.js';
+import RoadGenerator from './src/features/RoadGenerator.js';
 import { TILES } from './src/features/TerrainGenerator.js';
 
 const canvas = document.getElementById('mapCanvas');
@@ -24,7 +25,7 @@ async function init() {
     const mapWidth = Math.ceil(canvas.width / renderer.tileSize);
     const mapHeight = Math.ceil(canvas.height / renderer.tileSize);
 
-    await renderer.loadSprites(Object.values(TILES).concat(['barn', 'silo']));
+    await renderer.loadSprites(Object.values(TILES).concat(['barn', 'silo', 'road']));
 
     const terrainGenerator = new TerrainGenerator(mapWidth, mapHeight);
     const terrain = terrainGenerator.generate();
@@ -32,10 +33,14 @@ async function init() {
     const structureGenerator = new StructureGenerator(terrain);
     const structures = structureGenerator.generate();
 
+    const roadGenerator = new RoadGenerator(terrain);
+    const roads = roadGenerator.generate();
+
     renderer.render(terrain);
 
     console.log('Map generated with dimensions:', mapWidth, 'x', mapHeight);
     console.log('Structures:', structures);
+    console.log('Roads:', roads);
 }
 
 window.addEventListener('load', init);
