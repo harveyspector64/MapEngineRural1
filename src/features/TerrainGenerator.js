@@ -36,20 +36,24 @@ export default class TerrainGenerator {
     }
 
     generate() {
+        console.log("Start generating terrain");
         let terrain = this.generateBaseTerrain();
         const regions = this.assignRegions();
         terrain = this.generateRegionFeatures(terrain, regions);
         terrain = this.smoothTransitions(terrain);
         terrain = this.addNaturalElements(terrain, regions);
         terrain = this.generateRoads(terrain);
+        console.log("Finished generating terrain");
         return terrain;
     }
 
     generateBaseTerrain() {
+        console.log("Generating base terrain");
         return Array(this.height).fill().map(() => Array(this.width).fill(TILES.GRASS));
     }
 
     assignRegions() {
+        console.log("Assigning regions");
         const regions = [];
         for (let y = 0; y < this.height; y += this.gridSize) {
             for (let x = 0; x < this.width; x += this.gridSize) {
@@ -57,6 +61,7 @@ export default class TerrainGenerator {
                 regions.push({x, y, type: regionType});
             }
         }
+        console.log("Regions assigned:", regions);
         return regions;
     }
 
@@ -66,6 +71,7 @@ export default class TerrainGenerator {
     }
 
     generateRegionFeatures(terrain, regions) {
+        console.log("Generating region features");
         regions.forEach(region => {
             switch (region.type) {
                 case REGION_TYPES.FARMLAND:
@@ -86,6 +92,7 @@ export default class TerrainGenerator {
     }
 
     generateFarmland(terrain, region) {
+        console.log("Generating farmland for region:", region);
         const minFieldSize = 8;
         const maxFieldSize = 16;
         let y = region.y;
@@ -119,6 +126,7 @@ export default class TerrainGenerator {
     }
 
     generateForest(terrain, region) {
+        console.log("Generating forest for region:", region);
         const isDenseForest = Math.random() > 0.5;
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
@@ -131,16 +139,19 @@ export default class TerrainGenerator {
     }
 
     generateMixedRegion(terrain, region) {
+        console.log("Generating mixed region for region:", region);
         this.generateForest(terrain, region);
         this.generateFarmland(terrain, region);
     }
 
     generateLakeside(terrain, region) {
+        console.log("Generating lakeside for region:", region);
         this.generateLake(terrain, region);
         this.generateForest(terrain, region);
     }
 
     generateLake(terrain, region) {
+        console.log("Generating lake for region:", region);
         const centerX = region.x + this.gridSize / 2;
         const centerY = region.y + this.gridSize / 2;
         const maxRadius = this.gridSize * 0.6;
@@ -158,6 +169,7 @@ export default class TerrainGenerator {
     }
 
     addNaturalElements(terrain, regions) {
+        console.log("Adding natural elements");
         regions.forEach(region => {
             if (region.type === REGION_TYPES.FARMLAND) {
                 this.addVegetationNearFarmland(terrain, region);
@@ -202,6 +214,7 @@ export default class TerrainGenerator {
     }
 
     smoothTransitions(terrain) {
+        console.log("Smoothing transitions");
         const smoothed = JSON.parse(JSON.stringify(terrain));
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
@@ -255,11 +268,12 @@ export default class TerrainGenerator {
     grad(hash, x, y) {
         const h = hash & 15;
         const u = h < 8 ? x : y;
-        const v = h < 4 ? y : h === 12 || h === 14 ? x : 0;
+        const v = h < 4 ? y : h === 12 or 14 ? x : 0;
         return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
     }
 
     generateRoads(terrain) {
+        console.log("Generating roads");
         const regionSize = this.gridSize;
         for (let y = 0; y < this.height; y += regionSize) {
             for (let x = 0; x < this.width; x += regionSize) {
@@ -270,10 +284,12 @@ export default class TerrainGenerator {
                 }
             }
         }
+        console.log("Finished generating roads");
         return terrain;
     }
 
     placeHorizontalRoad(terrain, startX, startY, length) {
+        console.log("Placing horizontal road");
         const roadY = startY + Math.floor(Math.random() * this.gridSize);
         for (let x = startX; x < startX + length && x < this.width; x++) {
             if (terrain[roadY][x] === TILES.GRASS || terrain[roadY][x] === TILES.FIELD) {
@@ -283,6 +299,7 @@ export default class TerrainGenerator {
     }
 
     placeVerticalRoad(terrain, startX, startY, length) {
+        console.log("Placing vertical road");
         const roadX = startX + Math.floor(Math.random() * this.gridSize);
         for (let y = startY; y < startY + length && y < this.height; y++) {
             if (terrain[y][roadX] === TILES.GRASS || terrain[y][roadX] === TILES.FIELD) {
