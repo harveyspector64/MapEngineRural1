@@ -19,16 +19,11 @@ async function init() {
     const terrain = terrainGenerator.generate();
 
     const roadGenerator = new RoadGenerator(terrain, renderer);
-    roadGenerator.generateRoads();  // Generate roads incrementally
-
-    // Temporarily disable structure generation to isolate road generation
-    // const structureGenerator = new StructureGenerator(terrain);
-    // const structures = structureGenerator.generate();
+    roadGenerator.generateRoads();  // Generate roads
 
     renderer.render(terrain);
 
     console.log('Map generated with dimensions:', mapWidth, 'x', mapHeight);
-    // console.log('Structures:', structures);
 }
 
 window.addEventListener('load', init);
