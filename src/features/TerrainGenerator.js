@@ -268,7 +268,7 @@ export default class TerrainGenerator {
     grad(hash, x, y) {
         const h = hash & 15;
         const u = h < 8 ? x : y;
-        const v = h < 4 ? y : h === 12 or 14 ? x : 0;
+        const v = h < 4 ? y : h === 12 || h === 14 ? x : 0;
         return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
     }
 
