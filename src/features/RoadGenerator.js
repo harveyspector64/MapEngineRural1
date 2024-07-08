@@ -16,7 +16,7 @@ export default class RoadGenerator {
     generateRoads() {
         console.log('Starting road generation...');
         const edgePoints = this.findFieldEdges();
-        console.log('Field edges found:', edgePoints);
+        console.log('Field edges found:', edgePoints.length);
 
         edgePoints.forEach((startPoint, index) => {
             if (index < edgePoints.length - 1) {
