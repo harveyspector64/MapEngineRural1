@@ -7,6 +7,7 @@ export default class RoadGenerator {
     }
 
     generate() {
+        console.log("Starting road generation");
         this.generateMainRoads();
         this.generateSecondaryRoads();
         this.ensureConnectivity();
@@ -14,7 +15,7 @@ export default class RoadGenerator {
     }
 
     generateMainRoads() {
-        // Generate 2-4 main roads connecting opposite edges
+        console.log("Generating main roads");
         const numMainRoads = 2 + Math.floor(Math.random() * 3);
         for (let i = 0; i < numMainRoads; i++) {
             const start = this.getRandomEdgePoint();
@@ -24,7 +25,7 @@ export default class RoadGenerator {
     }
 
     generateSecondaryRoads() {
-        // Branch secondary roads from main roads
+        console.log("Generating secondary roads");
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 if (this.roads[y][x] && Math.random() < this.branchProbability(x, y)) {
@@ -53,7 +54,6 @@ export default class RoadGenerator {
             {x: current.x, y: current.y - 1}
         ].filter(p => this.isValidTile(p.x, p.y));
 
-        // Sort options by distance to end and terrain suitability
         options.sort((a, b) => {
             const distA = this.distance(a, end);
             const distB = this.distance(b, end);
@@ -66,18 +66,57 @@ export default class RoadGenerator {
     }
 
     getTileSuitability(x, y, isMainRoad) {
-        // Implement logic to determine tile suitability for roads
-        // Consider terrain type, avoiding fields unless necessary, etc.
+        // Simple suitability check, can be expanded later
+        if (this.terrain[y][x] === 'water') return 0;
+        if (this.terrain[y][x] === 'crop' && !isMainRoad) return 1;
+        return 10;
     }
 
     ensureConnectivity() {
-        // Implement flood fill to check connectivity
-        // Add necessary connections if roads are disconnected
+        // Placeholder for future implementation
+        console.log("Ensuring road connectivity");
     }
 
-    // Helper methods (getRandomEdgePoint, getOppositeEdgePoint, distance, isValidTile, etc.)
-
     applyRoadsToTerrain() {
-        // Apply road tiles to the terrain based on this.roads
+        console.log("Applying roads to terrain");
+        const newTerrain = JSON.parse(JSON.stringify(this.terrain));
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (this.roads[y][x]) {
+                    newTerrain[y][x] = 'road';
+                }
+            }
+        }
+        return newTerrain;
+    }
+
+    getRandomEdgePoint() {
+        const edge = Math.floor(Math.random() * 4);
+        switch(edge) {
+            case 0: return {x: 0, y: Math.floor(Math.random() * this.height)};
+            case 1: return {x: this.width - 1, y: Math.floor(Math.random() * this.height)};
+            case 2: return {x: Math.floor(Math.random() * this.width), y: 0};
+            case 3: return {x: Math.floor(Math.random() * this.width), y: this.height - 1};
+        }
+    }
+
+    getOppositeEdgePoint(point) {
+        if (point.x === 0) return {x: this.width - 1, y: Math.floor(Math.random() * this.height)};
+        if (point.x === this.width - 1) return {x: 0, y: Math.floor(Math.random() * this.height)};
+        if (point.y === 0) return {x: Math.floor(Math.random() * this.width), y: this.height - 1};
+        return {x: Math.floor(Math.random() * this.width), y: 0};
+    }
+
+    branchProbability(x, y) {
+        // Simple probability function, can be adjusted
+        return 0.1;
+    }
+
+    distance(a, b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+
+    isValidTile(x, y) {
+        return x >= 0 && x < this.width && y >= 0 && y < this.height;
     }
 }
