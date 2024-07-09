@@ -1,6 +1,6 @@
 // src/core/MapGenerator.js
 import TerrainGenerator from '../features/TerrainGenerator.js';
-import RiverGenerator from '../features/RiverGenerator.js';
+// import RiverGenerator from '../features/RiverGenerator.js';  // Commented out for now
 import RoadGenerator from '../features/RoadGenerator.js';
 import StructureGenerator from '../features/StructureGenerator.js';
 
@@ -15,9 +15,9 @@ export default class MapGenerator {
         const terrainGenerator = new TerrainGenerator(this.width, this.height);
         const terrain = terrainGenerator.generate();
 
-        // Generate rivers (assuming this is implemented)
-        const riverGenerator = new RiverGenerator(terrain);
-        riverGenerator.generate();
+        // Generate rivers (commented out for now)
+        // const riverGenerator = new RiverGenerator(terrain);
+        // riverGenerator.generate();
 
         // Generate structures
         const structureGenerator = new StructureGenerator(terrain);
