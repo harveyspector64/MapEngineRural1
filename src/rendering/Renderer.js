@@ -4,7 +4,7 @@ export default class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.tileSize = 16;
+        this.tileSize = 32;
         this.sprites = {};
     }
 
@@ -21,6 +21,7 @@ export default class Renderer {
             })
         );
         await Promise.all(loadPromises);
+        console.log("Loaded sprites:", Object.keys(this.sprites)); // Add this line
     }
 
     render(terrain) {
