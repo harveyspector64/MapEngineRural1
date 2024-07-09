@@ -25,11 +25,9 @@ export default class RoadGenerator {
         console.log('Generating primary road...');
         let y = Math.floor(this.height / 2);
         for (let x = 0; x < this.width; x++) {
-            // Add subtle curves
             if (Math.random() < 0.1) y += Math.random() < 0.5 ? 1 : -1;
             y = Math.max(1, Math.min(this.height - 2, y));
             
-            // Avoid water
             let attempts = 0;
             while (this.terrain[y][x] === TILES.WATER && attempts < 5) {
                 y += Math.random() < 0.5 ? 1 : -1;
@@ -41,7 +39,6 @@ export default class RoadGenerator {
                 this.placeRoad(x, y);
                 if (Math.random() < 0.7 && y < this.height - 1) this.placeRoad(x, y + 1);
             }
-            // If we couldn't avoid water after 5 attempts, we skip this tile
         }
     }
 
@@ -63,13 +60,11 @@ export default class RoadGenerator {
                 x = Math.max(0, Math.min(this.width - 1, x));
                 y += y < endY ? 1 : -1;
             
-                // Avoid water
                 if (this.terrain[y][x] === TILES.WATER) {
                     x = x > this.width / 2 ? x - 1 : x + 1;
                     x = Math.max(0, Math.min(this.width - 1, x));
                 }
             } else {
-                // If we can't place a road, try to move around the obstacle
                 x += Math.random() < 0.5 ? 1 : -1;
                 x = Math.max(0, Math.min(this.width - 1, x));
             }
@@ -78,24 +73,28 @@ export default class RoadGenerator {
 
     connectStructures() {
         console.log('Connecting structures...');
-        this.structures.forEach(structure => {
+        this.structures.forEach((structure, index) => {
+            console.log(`Connecting structure ${index + 1}/${this.structures.length}`);
             const { x, y } = structure.position;
             const nearestRoad = this.findNearestRoad(x, y);
             if (nearestRoad) {
                 this.createOrganicRoad(x, y, nearestRoad.x, nearestRoad.y);
+            } else {
+                console.warn(`No nearby road found for structure at (${x}, ${y})`);
             }
         });
     }
 
     findNearestRoad(x, y) {
+        console.log(`Finding nearest road to (${x}, ${y})`);
         let nearest = null;
         let minDist = Infinity;
         const maxSearchDist = Math.max(this.width, this.height) / 2;
 
         for (let dy = -maxSearchDist; dy <= maxSearchDist; dy++) {
             for (let dx = -maxSearchDist; dx <= maxSearchDist; dx++) {
-                const nx = x + dx;
-                const ny = y + dy;
+                const nx = Math.floor(x + dx);
+                const ny = Math.floor(y + dy);
                 if (this.isValidPosition(nx, ny) && this.roads[ny][nx]) {
                     const dist = Math.sqrt(dx*dx + dy*dy);
                     if (dist < minDist) {
@@ -104,6 +103,10 @@ export default class RoadGenerator {
                     }
                 }
             }
+        }
+
+        if (!nearest) {
+            console.warn(`No road found within search distance for (${x}, ${y})`);
         }
 
         return nearest;
@@ -123,6 +126,8 @@ export default class RoadGenerator {
         if (this.isValidPosition(x, y)) {
             this.roads[y][x] = true;
             this.terrain[y][x] = ROAD_TILE;
+        } else {
+            console.warn(`Attempted to place road at invalid position (${x}, ${y})`);
         }
     }
 }
