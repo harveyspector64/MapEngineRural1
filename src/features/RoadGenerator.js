@@ -1,70 +1,83 @@
-// src/features/RoadGenerator.js
-
-import { TILES } from './TerrainGenerator.js';
-
 export default class RoadGenerator {
     constructor(terrain) {
         this.terrain = terrain;
         this.width = terrain[0].length;
         this.height = terrain.length;
+        this.roads = Array(this.height).fill().map(() => Array(this.width).fill(0));
     }
 
     generate() {
-        console.log("Starting dynamic road generation");
-        
-        // Generate a main road
-        this.generateMainRoad();
-        
-        // Generate a few branch roads
-        const branchPoints = this.selectBranchPoints();
-        branchPoints.forEach(point => this.generateBranchRoad(point));
-
-        const roadTiles = this.terrain.flat().filter(tile => tile === TILES.ROAD).length;
-        console.log(`Generated ${roadTiles} road tiles`);
-
-        return this.terrain;
+        this.generateMainRoads();
+        this.generateSecondaryRoads();
+        this.ensureConnectivity();
+        return this.applyRoadsToTerrain();
     }
 
-    generateMainRoad() {
-        const startY = Math.floor(this.height / 2);
-        let x = 0;
-        let y = startY;
-
-        while (x < this.width) {
-            this.terrain[y][x] = TILES.ROAD;
-            x++;
-            if (Math.random() < 0.2) { // 20% chance to move up or down
-                y += Math.random() < 0.5 ? 1 : -1;
-                y = Math.max(0, Math.min(y, this.height - 1)); // Keep within bounds
-            }
+    generateMainRoads() {
+        // Generate 2-4 main roads connecting opposite edges
+        const numMainRoads = 2 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < numMainRoads; i++) {
+            const start = this.getRandomEdgePoint();
+            const end = this.getOppositeEdgePoint(start);
+            this.buildRoadBetweenPoints(start, end, true);
         }
     }
 
-    selectBranchPoints() {
-        const branchPoints = [];
-        for (let x = 0; x < this.width; x += Math.floor(this.width / 3)) {
-            for (let y = 0; y < this.height; y++) {
-                if (this.terrain[y][x] === TILES.ROAD) {
-                    branchPoints.push({x, y});
-                    break;
+    generateSecondaryRoads() {
+        // Branch secondary roads from main roads
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (this.roads[y][x] && Math.random() < this.branchProbability(x, y)) {
+                    const end = this.getRandomEdgePoint();
+                    this.buildRoadBetweenPoints({x, y}, end, false);
                 }
             }
         }
-        return branchPoints;
     }
 
-    generateBranchRoad(start) {
-        let x = start.x;
-        let y = start.y;
-        const direction = Math.random() < 0.5 ? 1 : -1; // Up or down
-
-        while (y >= 0 && y < this.height) {
-            this.terrain[y][x] = TILES.ROAD;
-            y += direction;
-            if (Math.random() < 0.3) { // 30% chance to move left or right
-                x += Math.random() < 0.5 ? 1 : -1;
-                x = Math.max(0, Math.min(x, this.width - 1)); // Keep within bounds
-            }
+    buildRoadBetweenPoints(start, end, isMainRoad) {
+        let current = {...start};
+        while (current.x !== end.x || current.y !== end.y) {
+            this.roads[current.y][current.x] = 1;
+            const next = this.getNextRoadTile(current, end, isMainRoad);
+            if (!next) break; // No valid path found
+            current = next;
         }
+    }
+
+    getNextRoadTile(current, end, isMainRoad) {
+        const options = [
+            {x: current.x + 1, y: current.y},
+            {x: current.x - 1, y: current.y},
+            {x: current.x, y: current.y + 1},
+            {x: current.x, y: current.y - 1}
+        ].filter(p => this.isValidTile(p.x, p.y));
+
+        // Sort options by distance to end and terrain suitability
+        options.sort((a, b) => {
+            const distA = this.distance(a, end);
+            const distB = this.distance(b, end);
+            const suitA = this.getTileSuitability(a.x, a.y, isMainRoad);
+            const suitB = this.getTileSuitability(b.x, b.y, isMainRoad);
+            return (distA - distB) * 2 + (suitB - suitA);
+        });
+
+        return options[0];
+    }
+
+    getTileSuitability(x, y, isMainRoad) {
+        // Implement logic to determine tile suitability for roads
+        // Consider terrain type, avoiding fields unless necessary, etc.
+    }
+
+    ensureConnectivity() {
+        // Implement flood fill to check connectivity
+        // Add necessary connections if roads are disconnected
+    }
+
+    // Helper methods (getRandomEdgePoint, getOppositeEdgePoint, distance, isValidTile, etc.)
+
+    applyRoadsToTerrain() {
+        // Apply road tiles to the terrain based on this.roads
     }
 }
