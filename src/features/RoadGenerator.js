@@ -15,66 +15,162 @@ export default class RoadGenerator {
 
     generate() {
         this.generatePrimaryRoad();
+        this.generateSecondaryRoads();
         this.connectStructures();
-        this.removeIsolatedRoads();
+        this.generateLocalRoads();
         return this.roads;
     }
 
     generatePrimaryRoad() {
         let x = 0;
         let y = Math.floor(this.height / 2);
-        const endX = this.width - 1;
 
-        while (x <= endX) {
-            this.placeRoad(x, y);
-
-            // Determine next position
-            const nextSteps = [
-                {x: x+1, y: y-1},
-                {x: x+1, y: y},
-                {x: x+1, y: y+1}
-            ].filter(pos => this.isValidPosition(pos.x, pos.y));
-
-            if (nextSteps.length === 0) break;
-
-            // Choose next step based on terrain
-            const nextStep = this.chooseNextStep(nextSteps);
-            x = nextStep.x;
-            y = nextStep.y;
+        while (x < this.width - 1) {
+            if (this.isValidRoadPosition(x, y) && this.isValidRoadPosition(x+1, y) &&
+                this.isValidRoadPosition(x, y+1) && this.isValidRoadPosition(x+1, y+1)) {
+                this.placePrimaryRoad(x, y);
+                x += 2;
+            } else {
+                // Find the nearest valid position
+                let found = false;
+                for (let offset = 1; offset < 10 && !found; offset++) {
+                    for (let dy of [-offset, offset]) {
+                        if (this.isValidRoadPosition(x, y + dy) && this.isValidRoadPosition(x+1, y + dy) &&
+                            this.isValidRoadPosition(x, y + dy + 1) && this.isValidRoadPosition(x+1, y + dy + 1)) {
+                            y += dy;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found) x += 2; // Skip if no valid position found
+            }
         }
     }
 
-    chooseNextStep(steps) {
-        // Prefer flat terrain, avoid water
-        const weights = steps.map(step => {
-            if (this.terrain[step.y][step.x] === TILES.WATER) return 0;
-            if (this.terrain[step.y][step.x] === TILES.GRASS) return 3;
-            if (this.terrain[step.y][step.x] === TILES.FIELD) return 2;
-            return 1;
-        });
-
-        const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-        let random = Math.random() * totalWeight;
-
-        for (let i = 0; i < steps.length; i++) {
-            if (random < weights[i]) return steps[i];
-            random -= weights[i];
+    generateSecondaryRoads() {
+        for (let x = 0; x < this.width; x += Math.floor(this.width / 4)) {
+            let y = this.findNearestPrimaryRoad(x);
+            if (y !== null) {
+                this.createSecondaryRoad(x, y, Math.random() < 0.5 ? -1 : 1);
+            }
         }
+    }
 
-        return steps[steps.length - 1];
+    createSecondaryRoad(startX, startY, direction) {
+        let x = startX;
+        let y = startY;
+        while (y >= 0 && y < this.height) {
+            if (this.isValidRoadPosition(x, y)) {
+                this.placeRoad(x, y);
+                y += direction;
+                if (Math.random() < 0.2) x += Math.random() < 0.5 ? -1 : 1;
+            } else {
+                break;
+            }
+        }
     }
 
     connectStructures() {
         this.structures.forEach(structure => {
             const { x, y } = structure.position;
-            const nearestRoadPoint = this.findNearestRoadPoint(x, y);
-            if (nearestRoadPoint) {
-                this.createRoadToStructure(x, y, nearestRoadPoint.x, nearestRoadPoint.y);
+            const nearestRoad = this.findNearestRoad(x, y);
+            if (nearestRoad) {
+                this.createLocalRoad(x, y, nearestRoad.x, nearestRoad.y);
             }
         });
     }
 
-    findNearestRoadPoint(x, y) {
+    generateLocalRoads() {
+        for (let i = 0; i < this.width * this.height / 10000; i++) {
+            const x = Math.floor(Math.random() * this.width);
+            const y = Math.floor(Math.random() * this.height);
+            if (this.isValidRoadPosition(x, y)) {
+                this.createLocalRoadNetwork(x, y);
+            }
+        }
+    }
+
+    createLocalRoadNetwork(startX, startY) {
+        const queue = [{x: startX, y: startY}];
+        const visited = new Set();
+
+        while (queue.length > 0 && visited.size < 20) {
+            const {x, y} = queue.shift();
+            if (visited.has(`${x},${y}`) || !this.isValidRoadPosition(x, y)) continue;
+
+            visited.add(`${x},${y}`);
+            this.placeRoad(x, y);
+
+            for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+                const nx = x + dx;
+                const ny = y + dy;
+                if (this.isValidPosition(nx, ny) && Math.random() < 0.7) {
+                    queue.push({x: nx, y: ny});
+                }
+            }
+        }
+    }
+
+    createLocalRoad(startX, startY, endX, endY) {
+        const path = this.findPath(startX, startY, endX, endY);
+        path.forEach(({x, y}) => this.placeRoad(x, y));
+    }
+
+    findPath(startX, startY, endX, endY) {
+        // Simple A* pathfinding
+        const openSet = [{x: startX, y: startY, g: 0, h: this.heuristic(startX, startY, endX, endY)}];
+        const cameFrom = {};
+        const gScore = {[`${startX},${startY}`]: 0};
+
+        while (openSet.length > 0) {
+            const current = openSet.reduce((a, b) => (a.g + a.h < b.g + b.h) ? a : b);
+            if (current.x === endX && current.y === endY) {
+                return this.reconstructPath(cameFrom, current);
+            }
+
+            openSet.splice(openSet.indexOf(current), 1);
+            for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+                const neighbor = {x: current.x + dx, y: current.y + dy};
+                if (!this.isValidPosition(neighbor.x, neighbor.y)) continue;
+
+                const tentativeGScore = gScore[`${current.x},${current.y}`] + 1;
+                if (tentativeGScore < (gScore[`${neighbor.x},${neighbor.y}`] || Infinity)) {
+                    cameFrom[`${neighbor.x},${neighbor.y}`] = current;
+                    gScore[`${neighbor.x},${neighbor.y}`] = tentativeGScore;
+                    neighbor.g = tentativeGScore;
+                    neighbor.h = this.heuristic(neighbor.x, neighbor.y, endX, endY);
+                    if (!openSet.some(node => node.x === neighbor.x && node.y === neighbor.y)) {
+                        openSet.push(neighbor);
+                    }
+                }
+            }
+        }
+
+        return []; // No path found
+    }
+
+    reconstructPath(cameFrom, current) {
+        const path = [current];
+        while (cameFrom[`${current.x},${current.y}`]) {
+            current = cameFrom[`${current.x},${current.y}`];
+            path.unshift(current);
+        }
+        return path;
+    }
+
+    heuristic(x1, y1, x2, y2) {
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+    }
+
+    findNearestPrimaryRoad(x) {
+        for (let y = 0; y < this.height; y++) {
+            if (this.roads[y][x]) return y;
+        }
+        return null;
+    }
+
+    findNearestRoad(x, y) {
         let nearest = null;
         let minDist = Infinity;
 
@@ -93,55 +189,14 @@ export default class RoadGenerator {
         return nearest;
     }
 
-    createRoadToStructure(startX, startY, endX, endY) {
-        let x = startX;
-        let y = startY;
-
-        while (x !== endX || y !== endY) {
-            this.placeRoad(x, y);
-
-            const dx = endX - x;
-            const dy = endY - y;
-
-            if (Math.abs(dx) > Math.abs(dy)) {
-                x += Math.sign(dx);
-            } else {
-                y += Math.sign(dy);
-            }
-        }
-
-        this.placeRoad(endX, endY);
+    isValidRoadPosition(x, y) {
+        return this.isValidPosition(x, y) && 
+               this.terrain[y][x] !== TILES.WATER &&
+               !this.roads[y][x];
     }
 
-    removeIsolatedRoads() {
-        const newRoads = JSON.parse(JSON.stringify(this.roads));
-
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
-                if (this.roads[y][x] && this.isIsolatedRoad(x, y)) {
-                    newRoads[y][x] = false;
-                    this.terrain[y][x] = TILES.GRASS; // or whatever the default terrain is
-                }
-            }
-        }
-
-        this.roads = newRoads;
-    }
-
-    isIsolatedRoad(x, y) {
-        const neighbors = [
-            {dx: -1, dy: 0}, {dx: 1, dy: 0},
-            {dx: 0, dy: -1}, {dx: 0, dy: 1}
-        ];
-
-        let connectedNeighbors = 0;
-        for (const {dx, dy} of neighbors) {
-            if (this.isValidPosition(x + dx, y + dy) && this.roads[y + dy][x + dx]) {
-                connectedNeighbors++;
-            }
-        }
-
-        return connectedNeighbors <= 1;
+    isValidPosition(x, y) {
+        return x >= 0 && x < this.width && y >= 0 && y < this.height;
     }
 
     placeRoad(x, y) {
@@ -151,7 +206,11 @@ export default class RoadGenerator {
         }
     }
 
-    isValidPosition(x, y) {
-        return x >= 0 && x < this.width && y >= 0 && y < this.height;
+    placePrimaryRoad(x, y) {
+        for (let dy = 0; dy < 2; dy++) {
+            for (let dx = 0; dx < 2; dx++) {
+                this.placeRoad(x + dx, y + dy);
+            }
+        }
     }
 }
