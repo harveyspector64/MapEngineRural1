@@ -23,19 +23,13 @@ export default class Renderer {
         await Promise.all(loadPromises);
     }
 
-    render(terrain, roads) {
+    render(terrain) {
         for (let y = 0; y < terrain.length; y++) {
             for (let x = 0; x < terrain[y].length; x++) {
                 const tile = terrain[y][x];
                 const sprite = this.sprites[tile];
                 if (sprite) {
                     this.ctx.drawImage(sprite, x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
-                }
-                if (roads && roads[y] && roads[y][x]) {
-                    const roadSprite = this.sprites['road'];
-                    if (roadSprite) {
-                        this.ctx.drawImage(roadSprite, x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
-                    }
                 }
             }
         }
