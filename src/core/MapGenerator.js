@@ -26,6 +26,9 @@ export default class MapGenerator {
         const roadGenerator = new RoadGenerator(terrain, structures);
         let roads;
         try {
+            if (typeof roadGenerator.generate !== 'function') {
+                throw new Error('generate method is not defined in RoadGenerator');
+            }
             roads = roadGenerator.generate();
         } catch (error) {
             console.error('Error generating roads:', error);
