@@ -21,8 +21,10 @@ export default class RoadGenerator {
     }
 
 generatePrimaryRoad() {
-    const y = Math.floor(this.height / 2);
+    let y = Math.floor(this.height / 2);
     for (let x = 0; x < this.width; x++) {
+        if (Math.random() < 0.1) y += Math.random() < 0.5 ? 1 : -1;
+        y = Math.max(1, Math.min(this.height - 2, y));
         if (this.isValidRoadPosition(x, y) && this.isValidRoadPosition(x, y + 1)) {
             this.placeRoad(x, y);
             this.placeRoad(x, y + 1);
