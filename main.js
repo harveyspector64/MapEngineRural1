@@ -1,5 +1,3 @@
-// main.js
-
 import TerrainGenerator from './src/features/TerrainGenerator.js';
 import Renderer from './src/rendering/Renderer.js';
 import StructureGenerator from './src/features/StructureGenerator.js';
@@ -15,12 +13,11 @@ async function init() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const mapWidth = Math.min(Math.ceil(canvas.width / renderer.tileSize), 200); // Limit map size
-        const mapHeight = Math.min(Math.ceil(canvas.height / renderer.tileSize), 200);
+        const mapWidth = Math.ceil(canvas.width / renderer.tileSize);
+        const mapHeight = Math.ceil(canvas.height / renderer.tileSize);
 
         console.log("Map dimensions:", mapWidth, "x", mapHeight);
 
-        // Load all sprites, including 'road'
         await renderer.loadSprites(Object.values(TILES).concat(['barn', 'silo']));
 
         console.log("Generating terrain...");
@@ -41,8 +38,7 @@ async function init() {
         console.log("Rendering map...");
         renderer.render(terrain);
         console.log("Map rendered");
-    
-        // Debug: Count and log the number of each tile type
+
         const tileCounts = Object.fromEntries(
             Object.values(TILES).map(tile => [tile, terrain.flat().filter(t => t === tile).length])
         );
@@ -53,5 +49,3 @@ async function init() {
 }
 
 window.addEventListener('load', init);
-// Remove resize listener to prevent constant reloading
-// window.addEventListener('resize', init);
