@@ -83,11 +83,11 @@ generatePrimaryRoad() {
         }
     }
 
-    isValidRoadPosition(x, y) {
-        return this.isValidPosition(x, y) && 
-               this.terrain[y][x] !== TILES.WATER &&
-               !this.roads[y][x];
-    }
+isValidRoadPosition(x, y) {
+    if (!this.isValidPosition(x, y)) return false;
+    const tile = this.terrain[y][x];
+    return tile !== TILES.WATER && tile !== TILES.MOUNTAIN && !this.roads[y][x];
+}
 
     isValidPosition(x, y) {
         return x >= 0 && x < this.width && y >= 0 && y < this.height;
