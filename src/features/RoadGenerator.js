@@ -1,6 +1,6 @@
 // File: src/features/RoadGenerator.js
 
-import { TILES } from './TerrainGenerator.js';
+import { TILES } from './TerrainGenerator.js'; // Ensure this import is correct and TILES is exported properly.
 
 export default class RoadGenerator {
     constructor(width, height) {
