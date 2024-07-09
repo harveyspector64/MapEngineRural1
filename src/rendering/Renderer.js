@@ -4,7 +4,7 @@ export default class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.tileSize = 32; // Make sure this matches your sprite size
+        this.tileSize = 16; // Make sure this matches your sprite size
         this.sprites = {};
     }
 
