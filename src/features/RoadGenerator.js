@@ -42,7 +42,9 @@ export default class RoadGenerator {
             const start = this.findRoadTile(1); // Start from a secondary road
             if (start) {
                 const end = this.findNearestField(start);
-                this.buildRoad(start, end, 0); // 0 represents tertiary road
+                if (end) {
+                    this.buildRoad(start, end, 0); // 0 represents tertiary road
+                }
             }
         }
     }
@@ -94,12 +96,26 @@ export default class RoadGenerator {
                 }
             }
         }
-        return candidates[Math.floor(Math.random() * candidates.length)];
+        return candidates.length > 0 ? candidates[Math.floor(Math.random() * candidates.length)] : null;
     }
 
     findNearestField(start) {
-        // Implementation to find the nearest field tile
-        // This is a placeholder and should be implemented based on your terrain structure
+        let nearestField = null;
+        let minDistance = Infinity;
+
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (this.terrain[y][x] === 'crop') {
+                    const distance = this.distance(start, {x, y});
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestField = {x, y};
+                    }
+                }
+            }
+        }
+
+        return nearestField;
     }
 
     cleanupDeadEnds() {
@@ -130,7 +146,30 @@ export default class RoadGenerator {
         ].filter(p => this.isValidTile(p.x, p.y));
     }
 
-    // ... (other helper methods like getRandomEdgePoint, getOppositeEdgePoint, distance, isValidTile)
+    getRandomEdgePoint() {
+        const edge = Math.floor(Math.random() * 4);
+        switch(edge) {
+            case 0: return {x: 0, y: Math.floor(Math.random() * this.height)};
+            case 1: return {x: this.width - 1, y: Math.floor(Math.random() * this.height)};
+            case 2: return {x: Math.floor(Math.random() * this.width), y: 0};
+            case 3: return {x: Math.floor(Math.random() * this.width), y: this.height - 1};
+        }
+    }
+
+    getOppositeEdgePoint(point) {
+        if (point.x === 0) return {x: this.width - 1, y: Math.floor(Math.random() * this.height)};
+        if (point.x === this.width - 1) return {x: 0, y: Math.floor(Math.random() * this.height)};
+        if (point.y === 0) return {x: Math.floor(Math.random() * this.width), y: this.height - 1};
+        return {x: Math.floor(Math.random() * this.width), y: 0};
+    }
+
+    distance(a, b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+
+    isValidTile(x, y) {
+        return x >= 0 && x < this.width && y >= 0 && y < this.height;
+    }
 
     applyRoadsToTerrain() {
         const newTerrain = JSON.parse(JSON.stringify(this.terrain));
