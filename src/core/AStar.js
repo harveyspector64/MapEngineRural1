@@ -7,7 +7,6 @@ class AStar {
 
     findPath(start, goal, options = {}) {
         const { heuristic = this.manhattanDistance, costFunction = () => 1 } = options;
-
         const openSet = [start];
         const cameFrom = {};
         const gScore = { [this.key(start)]: 0 };
