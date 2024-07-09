@@ -31,6 +31,8 @@ export default class Renderer {
                 const sprite = this.sprites[tile];
                 if (sprite) {
                     this.ctx.drawImage(sprite, x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
+                } else {
+                    console.warn(`No sprite found for tile type: ${tile}`);
                 }
             }
         }
