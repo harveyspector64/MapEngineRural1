@@ -1,4 +1,6 @@
-// src/features/TerrainGenerator.js
+// File: src/features/TerrainGenerator.js
+
+import RoadGenerator from './RoadGenerator.js';
 
 export const TILES = {
     GRASS: 'grass',
@@ -10,7 +12,6 @@ export const TILES = {
     ROAD: 'road',
     HIGHWAY: 'highway'
 };
-
 
 const REGION_TYPES = {
     FARMLAND: 'farmland',
@@ -37,12 +38,17 @@ export default class TerrainGenerator {
         }
     }
 
-  generate() {
+    generate() {
         let terrain = this.generateBaseTerrain();
         const regions = this.assignRegions();
         terrain = this.generateRegionFeatures(terrain, regions);
         terrain = this.smoothTransitions(terrain);
         terrain = this.addNaturalElements(terrain, regions);
+
+        const roadGenerator = new RoadGenerator(this.width, this.height);
+        const highway = roadGenerator.generateHighway(terrain);
+        roadGenerator.generateSmallerRoads(terrain, highway);
+
         return terrain;
     }
 
@@ -169,7 +175,7 @@ export default class TerrainGenerator {
         return terrain;
     }
 
-        addVegetationNearFarmland(terrain, region) {
+    addVegetationNearFarmland(terrain, region) {
         const openGrassChance = 1.5; // Higher chance for open grass near farmland
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
@@ -180,7 +186,7 @@ export default class TerrainGenerator {
         }
     }
 
-        addGeneralVegetation(terrain, region) {
+    addGeneralVegetation(terrain, region) {
         const openGrassChance = 0.3; // Lower chance for open grass in other regions
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
@@ -201,7 +207,6 @@ export default class TerrainGenerator {
             terrain[y][x] = TILES.GRASS;
         }
     }
-
 
     smoothTransitions(terrain) {
         const smoothed = JSON.parse(JSON.stringify(terrain));
