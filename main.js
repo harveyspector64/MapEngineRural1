@@ -1,8 +1,10 @@
-// main.js
+// File: main.js
 
 import TerrainGenerator from './src/features/TerrainGenerator.js';
 import Renderer from './src/rendering/Renderer.js';
 import StructureGenerator from './src/features/StructureGenerator.js';
+import WaypointGenerator from './src/features/WaypointGenerator.js';
+import RoadGenerator from './src/features/RoadGenerator.js';
 import { TILES } from './src/features/TerrainGenerator.js';
 
 const canvas = document.getElementById('mapCanvas');
@@ -23,10 +25,22 @@ async function init() {
     const structureGenerator = new StructureGenerator(terrain);
     const structures = structureGenerator.generate();
 
+    const POIs = {
+        primary: structures.map(structure => structure.position),
+        secondary: [] // Add any additional secondary POIs if needed
+    };
+
+    const waypointGenerator = new WaypointGenerator(terrain, POIs);
+    const waypoints = waypointGenerator.generateWaypoints();
+
+    const roadGenerator = new RoadGenerator(terrain);
+    const roads = roadGenerator.generateRoads(waypoints);
+
     renderer.render(terrain);
     
     console.log('Map generated with dimensions:', mapWidth, 'x', mapHeight);
     console.log('Structures:', structures);
+    console.log('Roads:', roads);
 }
 
 window.addEventListener('load', init);
