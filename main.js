@@ -10,40 +10,48 @@ const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
 
 async function init() {
-    console.log("Initializing...");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    try {
+        console.log("Initializing...");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-    const mapWidth = Math.ceil(canvas.width / renderer.tileSize);
-    const mapHeight = Math.ceil(canvas.height / renderer.tileSize);
+        const mapWidth = Math.min(Math.ceil(canvas.width / renderer.tileSize), 100); // Limit map size
+        const mapHeight = Math.min(Math.ceil(canvas.height / renderer.tileSize), 100);
 
-    console.log("Map dimensions:", mapWidth, "x", mapHeight);
+        console.log("Map dimensions:", mapWidth, "x", mapHeight);
 
-    // Load all sprites, including 'road'
-    await renderer.loadSprites(Object.values(TILES).concat(['barn', 'silo']));
+        // Load all sprites, including 'road'
+        await renderer.loadSprites(Object.values(TILES).concat(['barn', 'silo']));
 
-    const terrainGenerator = new TerrainGenerator(mapWidth, mapHeight);
-    let terrain = terrainGenerator.generate();
-    console.log("Terrain generated");
+        console.log("Generating terrain...");
+        const terrainGenerator = new TerrainGenerator(mapWidth, mapHeight);
+        let terrain = terrainGenerator.generate();
+        console.log("Terrain generated");
 
-    // Generate roads
-    const roadGenerator = new RoadGenerator(terrain);
-    terrain = roadGenerator.generate();
-    console.log("Roads generated");
+        console.log("Generating roads...");
+        const roadGenerator = new RoadGenerator(terrain);
+        terrain = roadGenerator.generate();
+        console.log("Roads generated");
 
-    const structureGenerator = new StructureGenerator(terrain);
-    const structures = structureGenerator.generate();
-    console.log("Structures generated");
+        console.log("Generating structures...");
+        const structureGenerator = new StructureGenerator(terrain);
+        const structures = structureGenerator.generate();
+        console.log("Structures generated");
 
-    renderer.render(terrain);
-    console.log("Map rendered");
+        console.log("Rendering map...");
+        renderer.render(terrain);
+        console.log("Map rendered");
     
-    // Debug: Count and log the number of each tile type
-    const tileCounts = Object.fromEntries(
-        Object.values(TILES).map(tile => [tile, terrain.flat().filter(t => t === tile).length])
-    );
-    console.log("Tile counts:", tileCounts);
+        // Debug: Count and log the number of each tile type
+        const tileCounts = Object.fromEntries(
+            Object.values(TILES).map(tile => [tile, terrain.flat().filter(t => t === tile).length])
+        );
+        console.log("Tile counts:", tileCounts);
+    } catch (error) {
+        console.error("An error occurred during initialization:", error);
+    }
 }
 
 window.addEventListener('load', init);
-window.addEventListener('resize', init);
+// Remove resize listener to prevent constant reloading
+// window.addEventListener('resize', init);
