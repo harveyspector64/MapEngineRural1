@@ -7,6 +7,8 @@ export const TILES = {
     CROP: 'crop',
     TREE: 'tree',
     BUSH: 'bush',
+    ROAD: 'road',
+    HIGHWAY: 'highway'
 };
 
 
