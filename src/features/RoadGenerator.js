@@ -4,6 +4,8 @@ export default class RoadGenerator {
         this.width = terrain[0].length;
         this.height = terrain.length;
         this.roads = Array(this.height).fill().map(() => Array(this.width).fill(0));
+        this.maxRoads = Math.floor(this.width * this.height * 0.1); // Limit roads to 10% of tiles
+        this.roadCount = 0;
     }
 
     generate() {
@@ -26,24 +28,38 @@ export default class RoadGenerator {
 
     generateSecondaryRoads() {
         console.log("Generating secondary roads");
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
-                if (this.roads[y][x] && Math.random() < this.branchProbability(x, y)) {
-                    const end = this.getRandomEdgePoint();
-                    this.buildRoadBetweenPoints({x, y}, end, false);
-                }
+        let attempts = 0;
+        const maxAttempts = this.width * this.height;
+        
+        while (this.roadCount < this.maxRoads && attempts < maxAttempts) {
+            attempts++;
+            const x = Math.floor(Math.random() * this.width);
+            const y = Math.floor(Math.random() * this.height);
+            
+            if (this.roads[y][x] && Math.random() < this.branchProbability(x, y)) {
+                const end = this.getRandomEdgePoint();
+                this.buildRoadBetweenPoints({x, y}, end, false);
             }
         }
+        console.log(`Secondary road generation complete. Attempts: ${attempts}, Roads: ${this.roadCount}`);
     }
 
     buildRoadBetweenPoints(start, end, isMainRoad) {
         let current = {...start};
-        while (current.x !== end.x || current.y !== end.y) {
-            this.roads[current.y][current.x] = 1;
+        let steps = 0;
+        const maxSteps = this.width * this.height;
+        
+        while ((current.x !== end.x || current.y !== end.y) && steps < maxSteps && this.roadCount < this.maxRoads) {
+            steps++;
+            if (!this.roads[current.y][current.x]) {
+                this.roads[current.y][current.x] = 1;
+                this.roadCount++;
+            }
             const next = this.getNextRoadTile(current, end, isMainRoad);
-            if (!next) break; // No valid path found
+            if (!next) break;
             current = next;
         }
+        console.log(`Road built from (${start.x},${start.y}) to (${current.x},${current.y}). Steps: ${steps}`);
     }
 
     getNextRoadTile(current, end, isMainRoad) {
@@ -66,15 +82,14 @@ export default class RoadGenerator {
     }
 
     getTileSuitability(x, y, isMainRoad) {
-        // Simple suitability check, can be expanded later
         if (this.terrain[y][x] === 'water') return 0;
         if (this.terrain[y][x] === 'crop' && !isMainRoad) return 1;
         return 10;
     }
 
     ensureConnectivity() {
-        // Placeholder for future implementation
         console.log("Ensuring road connectivity");
+        // Placeholder for future implementation
     }
 
     applyRoadsToTerrain() {
@@ -108,7 +123,6 @@ export default class RoadGenerator {
     }
 
     branchProbability(x, y) {
-        // Simple probability function, can be adjusted
         return 0.1;
     }
 
