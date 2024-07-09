@@ -20,9 +20,17 @@ export default class MapGenerator {
         const structureGenerator = new StructureGenerator(terrain);
         const structures = structureGenerator.generate();
 
+        console.log(`Generated ${structures.length} structures`);
+
         // Generate roads
         const roadGenerator = new RoadGenerator(terrain, structures);
-        const roads = roadGenerator.generate();
+        let roads;
+        try {
+            roads = roadGenerator.generate();
+        } catch (error) {
+            console.error('Error generating roads:', error);
+            roads = Array(this.height).fill().map(() => Array(this.width).fill(false));
+        }
 
         // Apply roads to terrain
         for (let y = 0; y < this.height; y++) {
