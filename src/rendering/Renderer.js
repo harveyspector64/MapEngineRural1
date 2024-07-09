@@ -31,7 +31,7 @@ export default class Renderer {
                 if (sprite) {
                     this.ctx.drawImage(sprite, x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
                 }
-                if (roads[y][x]) {
+                if (roads && roads[y] && roads[y][x]) {
                     const roadSprite = this.sprites['road'];
                     if (roadSprite) {
                         this.ctx.drawImage(roadSprite, x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
