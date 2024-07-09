@@ -14,19 +14,54 @@ export default class RoadGenerator {
     }
 
     generate() {
-        this.generatePrimaryRoads();
+        this.generatePrimaryRoad();
         this.connectStructures();
-        this.addRandomLocalRoads();
+        this.addLocalRoads();
         return this.roads;
     }
 
-    generatePrimaryRoads() {
-        // For now, let's create a single primary road
-        const startY = Math.floor(this.height / 2) + Math.floor(Math.random() * (this.height / 4)) - Math.floor(this.height / 8);
-        for (let x = 0; x < this.width; x++) {
-            const y = startY + Math.floor(Math.sin(x / 20) * 5); // Add some curvature
+    generatePrimaryRoad() {
+        let x = 0;
+        let y = Math.floor(this.height / 2);
+        const endX = this.width - 1;
+
+        while (x <= endX) {
             this.placeRoad(x, y);
+
+            // Determine next position
+            const nextSteps = [
+                {x: x+1, y: y-1},
+                {x: x+1, y: y},
+                {x: x+1, y: y+1}
+            ].filter(pos => this.isValidPosition(pos.x, pos.y));
+
+            if (nextSteps.length === 0) break;
+
+            // Choose next step based on terrain
+            const nextStep = this.chooseNextStep(nextSteps);
+            x = nextStep.x;
+            y = nextStep.y;
         }
+    }
+
+    chooseNextStep(steps) {
+        // Prefer flat terrain, avoid water
+        const weights = steps.map(step => {
+            if (this.terrain[step.y][step.x] === TILES.WATER) return 0;
+            if (this.terrain[step.y][step.x] === TILES.GRASS) return 3;
+            if (this.terrain[step.y][step.x] === TILES.FIELD) return 2;
+            return 1;
+        });
+
+        const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+        let random = Math.random() * totalWeight;
+
+        for (let i = 0; i < steps.length; i++) {
+            if (random < weights[i]) return steps[i];
+            random -= weights[i];
+        }
+
+        return steps[steps.length - 1];
     }
 
     connectStructures() {
@@ -39,14 +74,15 @@ export default class RoadGenerator {
         });
     }
 
-    addRandomLocalRoads() {
-        const numRandomRoads = Math.floor(Math.random() * 3) + 2; // 2-4 random roads
-        for (let i = 0; i < numRandomRoads; i++) {
+    addLocalRoads() {
+        const numLocalRoads = Math.floor(this.width * this.height / 10000); // Adjust as needed
+        for (let i = 0; i < numLocalRoads; i++) {
             const startX = Math.floor(Math.random() * this.width);
             const startY = Math.floor(Math.random() * this.height);
-            const endX = Math.floor(Math.random() * this.width);
-            const endY = Math.floor(Math.random() * this.height);
-            this.createLocalRoad(startX, startY, endX, endY);
+            const nearestRoad = this.findNearestRoad(startX, startY);
+            if (nearestRoad) {
+                this.createLocalRoad(startX, startY, nearestRoad.x, nearestRoad.y);
+            }
         }
     }
 
@@ -68,7 +104,6 @@ export default class RoadGenerator {
     }
 
     createLocalRoad(startX, startY, endX, endY) {
-        // Simple line drawing algorithm (Bresenham's)
         let x = startX;
         let y = startY;
         const dx = Math.abs(endX - startX);
@@ -93,9 +128,13 @@ export default class RoadGenerator {
     }
 
     placeRoad(x, y) {
-        if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+        if (this.isValidPosition(x, y)) {
             this.roads[y][x] = true;
             this.terrain[y][x] = ROAD_TILE;
         }
+    }
+
+    isValidPosition(x, y) {
+        return x >= 0 && x < this.width && y >= 0 && y < this.height;
     }
 }
