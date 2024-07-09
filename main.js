@@ -25,10 +25,15 @@ async function init() {
         let terrain = terrainGenerator.generate();
         console.log("Terrain generated");
 
-        console.log("Generating roads...");
-        const roadGenerator = new RoadGenerator(terrain);
-        terrain = roadGenerator.generate();
-        console.log("Roads generated");
+        try {
+            console.log("Generating roads...");
+            const roadGenerator = new RoadGenerator(terrain);
+            terrain = roadGenerator.generate();
+            console.log("Roads generated");
+        } catch (roadError) {
+            console.error("Error generating roads:", roadError);
+            console.log("Continuing without roads");
+        }
 
         console.log("Generating structures...");
         const structureGenerator = new StructureGenerator(terrain);
