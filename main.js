@@ -15,8 +15,8 @@ async function init() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const mapWidth = Math.min(Math.ceil(canvas.width / renderer.tileSize), 100); // Limit map size
-        const mapHeight = Math.min(Math.ceil(canvas.height / renderer.tileSize), 100);
+        const mapWidth = Math.min(Math.ceil(canvas.width / renderer.tileSize), 200); // Limit map size
+        const mapHeight = Math.min(Math.ceil(canvas.height / renderer.tileSize), 200);
 
         console.log("Map dimensions:", mapWidth, "x", mapHeight);
 
