@@ -20,17 +20,17 @@ export default class RoadGenerator {
         return this.roads;
     }
 
-    generatePrimaryRoad() {
-        const y = Math.floor(this.height / 2);
-        for (let x = 0; x < this.width; x++) {
-            if (this.isValidRoadPosition(x, y)) {
-                this.placeRoad(x, y);
-                if (x % 2 === 0 && this.isValidRoadPosition(x, y + 1)) {
-                    this.placeRoad(x, y + 1);
-                }
-            }
+generatePrimaryRoad() {
+    const y = Math.floor(this.height / 2);
+    for (let x = 0; x < this.width; x++) {
+        if (this.isValidRoadPosition(x, y) && this.isValidRoadPosition(x, y + 1)) {
+            this.placeRoad(x, y);
+            this.placeRoad(x, y + 1);
+        } else if (this.isValidRoadPosition(x, y)) {
+            this.placeRoad(x, y);
         }
     }
+}
 
     generateSecondaryRoads() {
         const numSecondaryRoads = Math.floor(this.width / 50);
