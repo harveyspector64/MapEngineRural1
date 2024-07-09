@@ -10,6 +10,8 @@ export default class MapGenerator {
     }
 
     generate() {
+        console.log('Generating map...');
+        
         // Generate terrain
         const terrainGenerator = new TerrainGenerator(this.width, this.height);
         const terrain = terrainGenerator.generate();
@@ -31,6 +33,7 @@ export default class MapGenerator {
             }
         }
 
+        console.log('Map generation complete.');
         return { terrain, structures };
     }
 }
