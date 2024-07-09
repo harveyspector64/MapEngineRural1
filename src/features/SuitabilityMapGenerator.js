@@ -1,4 +1,4 @@
-import SimplexNoise from 'simplex-noise';
+import SimplexNoise from 'https://cdn.jsdelivr.net/npm/simplex-noise@3.0.0/dist/esm/simplex-noise.js';
 
 class SuitabilityMapGenerator {
     constructor(terrain) {
