@@ -1,14 +1,16 @@
 // File: src/features/RoadGenerator.js
 
-import { TILES } from './TerrainGenerator.js'; // Ensure this import is correct and TILES is exported properly.
+import { TILES } from './TerrainGenerator.js';
 
 export default class RoadGenerator {
     constructor(width, height) {
         this.width = width;
         this.height = height;
+        console.log(`RoadGenerator initialized with width: ${width}, height: ${height}`);
     }
 
     generateHighway(terrain) {
+        console.log('Generating highway...');
         const startEdge = Math.random() < 0.5 ? 'left' : 'top';
         const endEdge = startEdge === 'left' ? 'right' : 'bottom';
         const highway = [];
@@ -29,10 +31,12 @@ export default class RoadGenerator {
             }
         }
 
+        console.log('Highway generated:', highway);
         return highway;
     }
 
     generateSmallerRoads(terrain, highway) {
+        console.log('Generating smaller roads...');
         highway.forEach(({ x, y }) => {
             if (Math.random() < 0.3) {
                 let length = Math.floor(Math.random() * 10) + 5;
@@ -49,5 +53,6 @@ export default class RoadGenerator {
                 }
             }
         });
+        console.log('Smaller roads generated.');
     }
 }
