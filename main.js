@@ -8,18 +8,22 @@ const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
 
 async function init() {
+    console.log('Initializing...');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     const mapWidth = Math.ceil(canvas.width / renderer.tileSize);
     const mapHeight = Math.ceil(canvas.height / renderer.tileSize);
 
-    await renderer.loadSprites(Object.values(TILES).concat(['barn', 'silo', 'road']));
+    // Load all necessary sprites
+    const tileTypes = [...Object.values(TILES), 'road', 'barn', 'silo'];
+    await renderer.loadSprites(tileTypes);
 
     const mapGenerator = new MapGenerator(mapWidth, mapHeight);
-    const { terrain, structures, roads } = mapGenerator.generate();
+    const { terrain, structures } = mapGenerator.generate();
 
-    renderer.render(terrain, roads);
+    console.log('Rendering map...');
+    renderer.render(terrain);
     
     console.log('Map generated with dimensions:', mapWidth, 'x', mapHeight);
     console.log('Structures:', structures);
@@ -27,3 +31,5 @@ async function init() {
 
 window.addEventListener('load', init);
 window.addEventListener('resize', init);
+
+console.log('main.js loaded');
