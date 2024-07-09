@@ -1,65 +1,72 @@
 // src/features/RoadGenerator.js
+
 import { TILES } from './TerrainGenerator.js';
 import AStar from '../core/AStar.js';
 
 export default class RoadGenerator {
-    constructor(terrain, noiseSeed) {
+    constructor(terrain) {
         this.terrain = terrain;
         this.width = terrain[0].length;
         this.height = terrain.length;
-        this.noiseSeed = noiseSeed;
-        this.suitabilityMap = this.generateSuitabilityMap();
-        this.astar = new AStar(this.suitabilityMap);
+        this.astar = new AStar(terrain);
     }
 
     generate() {
+        console.log("Starting road generation");
         const keyPoints = this.generateKeyPoints();
-        const mainRoads = this.generateMainRoads(keyPoints);
-        const allRoads = this.addBranchingRoads(mainRoads);
-        return this.applyRoadsToTerrain(allRoads);
-    }
+        console.log("Key points generated:", keyPoints);
 
-    generateSuitabilityMap() {
-        // Implementation of noise-based suitability map
-        // This would consider terrain features, preferring flatter areas and avoiding water
-        // Return a 2D array of suitability values (0-1)
+        const mainRoads = this.generateMainRoads(keyPoints);
+        console.log("Main roads generated:", mainRoads.length);
+
+        this.applyRoadsToTerrain(mainRoads);
+
+        const roadTiles = this.terrain.flat().filter(tile => tile === TILES.ROAD).length;
+        console.log(`Generated ${roadTiles} road tiles`);
+
+        return this.terrain;
     }
 
     generateKeyPoints() {
-        // Generate entry/exit points and important locations
-        // Return an array of {x, y} coordinates
+        // For simplicity, let's just use the four corners of the map
+        return [
+            {x: 0, y: 0},
+            {x: this.width - 1, y: 0},
+            {x: 0, y: this.height - 1},
+            {x: this.width - 1, y: this.height - 1}
+        ];
     }
 
     generateMainRoads(keyPoints) {
         const roads = [];
-        for (let i = 0; i < keyPoints.length - 1; i++) {
-            const path = this.astar.findPath(keyPoints[i], keyPoints[i + 1], {
-                costFunction: (a, b) => 1 - this.suitabilityMap[b.y][b.x]
-            });
-            if (path) roads.push(path);
+        for (let i = 0; i < keyPoints.length; i++) {
+            for (let j = i + 1; j < keyPoints.length; j++) {
+                const path = this.astar.findPath(keyPoints[i], keyPoints[j], {
+                    costFunction: this.roadCostFunction.bind(this)
+                });
+                if (path) {
+                    console.log(`Path found from (${keyPoints[i].x},${keyPoints[i].y}) to (${keyPoints[j].x},${keyPoints[j].y})`);
+                    roads.push(path);
+                } else {
+                    console.warn(`No path found between (${keyPoints[i].x},${keyPoints[i].y}) and (${keyPoints[j].x},${keyPoints[j].y})`);
+                }
+            }
         }
         return roads;
     }
 
-    addBranchingRoads(mainRoads) {
-        // Implementation of noise-based branching road generation
-        // This would add minor roads branching off from main roads
-        // Return an updated array of all road paths
+    roadCostFunction(current, neighbor) {
+        const tile = this.terrain[neighbor.y][neighbor.x];
+        if (tile === TILES.WATER) return 100; // Avoid water
+        if (tile === TILES.FIELD || tile === TILES.CROP) return 2; // Prefer going through fields
+        return 1; // Default cost
     }
 
     applyRoadsToTerrain(roads) {
-        const newTerrain = JSON.parse(JSON.stringify(this.terrain));
         roads.forEach(road => {
             road.forEach(point => {
-                newTerrain[point.y][point.x] = TILES.ROAD;
+                this.terrain[point.y][point.x] = TILES.ROAD;
             });
         });
-        return newTerrain;
     }
-
-    // Helper methods for noise generation, similar to TerrainGenerator
-    noise(x, y) { /* ... */ }
-    fade(t) { /* ... */ }
-    lerp(t, a, b) { /* ... */ }
-    grad(hash, x, y) { /* ... */ }
 }
