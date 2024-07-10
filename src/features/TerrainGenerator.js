@@ -67,14 +67,8 @@ export default class TerrainGenerator {
     }
 
     getRandomRegionType(x, y) {
-        const noise = this.noise((this.chunkX * this.width + x) / 1000, (this.chunkY * this.height + y) / 1000);
-        
-        // More balanced distribution
-        if (noise < 0.1) return REGION_TYPES.LAKESIDE;
-        if (noise < 0.3) return REGION_TYPES.FOREST;
-        if (noise < 0.6) return REGION_TYPES.MIXED;
-        if (noise < 0.8) return REGION_TYPES.FARMLAND;
-        return REGION_TYPES.MIXED; // Extra mixed regions for variety
+        const types = Object.values(REGION_TYPES);
+        return types[Math.floor(this.seededRandom(x, y) * types.length)];
     }
 
     generateRegionFeatures(terrain, regions) {
@@ -134,14 +128,12 @@ export default class TerrainGenerator {
 
     generateForest(terrain, region) {
         console.log(`Generating forest at (${region.x}, ${region.y})`);
-        const isDenseForest = this.seededRandom(region.x, region.y) > 0.3;
+        const isDenseForest = this.seededRandom(region.x, region.y) > 0.5;
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 const noiseValue = this.noise((this.chunkX * this.width + x) / 20, (this.chunkY * this.height + y) / 20);
                 if (isDenseForest && noiseValue > 0.3 || (!isDenseForest && noiseValue > 0.6)) {
                     terrain[y][x] = this.seededRandom(x, y) > 0.7 ? TILES.TREE : TILES.BUSH;
-                } else {
-                    terrain[y][x] = TILES.GRASS;
                 }
             }
         }
@@ -149,47 +141,27 @@ export default class TerrainGenerator {
 
     generateMixedRegion(terrain, region) {
         console.log(`Generating mixed region at (${region.x}, ${region.y})`);
-        for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
-            for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
-                const noiseValue = this.noise((this.chunkX * this.width + x) / 30, (this.chunkY * this.height + y) / 30);
-                if (noiseValue < 0.3) {
-                    terrain[y][x] = TILES.TREE;
-                } else if (noiseValue < 0.4) {
-                    terrain[y][x] = TILES.BUSH;
-                } else if (noiseValue < 0.5) {
-                    terrain[y][x] = this.seededRandom(x, y) > 0.5 ? TILES.FIELD : TILES.CROP;
-                } else {
-                    terrain[y][x] = TILES.GRASS;
-                }
-            }
-        }
+        this.generateForest(terrain, region);
+        this.generateFarmland(terrain, region);
     }
 
     generateLakeside(terrain, region) {
         console.log(`Generating lakeside at (${region.x}, ${region.y})`);
         this.generateLake(terrain, region);
-        // Add some surrounding vegetation
-        for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
-            for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
-                if (terrain[y][x] !== TILES.WATER && this.seededRandom(x, y) > 0.6) {
-                    terrain[y][x] = this.seededRandom(x, y) > 0.5 ? TILES.TREE : TILES.BUSH;
-                }
-            }
-        }
+        this.generateForest(terrain, region);
     }
 
     generateLake(terrain, region) {
         const centerX = region.x + this.gridSize / 2;
         const centerY = region.y + this.gridSize / 2;
-        const maxRadius = this.gridSize * 0.4; // Slightly smaller lakes
+        const maxRadius = this.gridSize * 0.6;
 
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 const dx = x - centerX;
                 const dy = y - centerY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                const noiseFactor = this.noise((this.chunkX * this.width + x) / 30, (this.chunkY * this.height + y) / 30);
-                if (distance < maxRadius * (0.5 + noiseFactor * 0.5)) {
+                if (distance < maxRadius * (0.5 + this.noise((this.chunkX * this.width + x) / 30, (this.chunkY * this.height + y) / 30) * 0.5)) {
                     terrain[y][x] = TILES.WATER;
                 }
             }
@@ -220,15 +192,11 @@ export default class TerrainGenerator {
     }
 
     addGeneralVegetation(terrain, region) {
+        const openGrassChance = 0.3; // Lower chance for open grass in other regions
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 if (terrain[y][x] === TILES.GRASS) {
-                    const chance = this.seededRandom(x, y);
-                    if (chance < 0.05) {
-                        terrain[y][x] = TILES.TREE;
-                    } else if (chance < 0.1) {
-                        terrain[y][x] = TILES.BUSH;
-                    }
+                    this.addTreesAndBushes(terrain, x, y, openGrassChance);
                 }
             }
         }
@@ -274,9 +242,9 @@ export default class TerrainGenerator {
             }
         }
 
-        if (treesCount > 0 && this.seededRandom(x, y) < treesCount / 8) {
+        if (treesCount > 0 && this.seededRandom(x, y) < treesCount / 10) {
             smoothed[y][x] = TILES.TREE;
-        } else if (bushesCount > 0 && this.seededRandom(x, y) < bushesCount / 6) {
+        } else if (bushesCount > 0 && this.seededRandom(x, y) < bushesCount / 8) {
             smoothed[y][x] = TILES.BUSH;
         }
     }
@@ -295,7 +263,7 @@ export default class TerrainGenerator {
                                          this.grad(this.p[B + 1], x - 1, y - 1)));
     }
 
-seededRandom(x, y) {
+    seededRandom(x, y) {
         const dot = x * 12.9898 + y * 78.233;
         let seed = Math.sin(dot) * 43758.5453123;
         seed = (seed - Math.floor(seed)) + this.noise((this.chunkX * this.width + x) / 1000, (this.chunkY * this.height + y) / 1000);
@@ -303,9 +271,7 @@ seededRandom(x, y) {
     }
 
     fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
-    
     lerp(t, a, b) { return a + t * (b - a); }
-    
     grad(hash, x, y) {
         const h = hash & 15;
         const u = h < 8 ? x : y;
