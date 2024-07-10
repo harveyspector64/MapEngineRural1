@@ -1,4 +1,5 @@
-// main.js
+// File: main.js
+
 import ChunkManager from './src/core/ChunkManager.js';
 import Renderer from './src/rendering/Renderer.js';
 import { TILES } from './src/features/TerrainGenerator.js';
@@ -9,6 +10,9 @@ const renderer = new Renderer(canvas);
 let chunkManager;
 let cameraX = 0;
 let cameraY = 0;
+let isDragging = false;
+let lastTouchX = 0;
+let lastTouchY = 0;
 
 async function init() {
     canvas.width = window.innerWidth;
@@ -50,6 +54,7 @@ function render() {
 }
 
 function setupControls() {
+    // Keyboard controls
     window.addEventListener('keydown', (e) => {
         const moveDistance = 16; // One tile size
         switch(e.key) {
@@ -66,9 +71,48 @@ function setupControls() {
                 cameraX += moveDistance;
                 break;
         }
-        chunkManager.updateViewport(cameraX, cameraY);
-        updateDebugInfo();
+        updateCameraPosition();
     });
+
+    // Touch controls
+    canvas.addEventListener('touchstart', handleTouchStart, false);
+    canvas.addEventListener('touchmove', handleTouchMove, false);
+    canvas.addEventListener('touchend', handleTouchEnd, false);
+}
+
+function handleTouchStart(event) {
+    if (event.touches.length === 1) {
+        isDragging = true;
+        lastTouchX = event.touches[0].clientX;
+        lastTouchY = event.touches[0].clientY;
+    }
+}
+
+function handleTouchMove(event) {
+    if (!isDragging) return;
+
+    const touchX = event.touches[0].clientX;
+    const touchY = event.touches[0].clientY;
+
+    const deltaX = touchX - lastTouchX;
+    const deltaY = touchY - lastTouchY;
+
+    cameraX -= deltaX;
+    cameraY -= deltaY;
+
+    lastTouchX = touchX;
+    lastTouchY = touchY;
+
+    updateCameraPosition();
+}
+
+function handleTouchEnd() {
+    isDragging = false;
+}
+
+function updateCameraPosition() {
+    chunkManager.updateViewport(cameraX, cameraY);
+    updateDebugInfo();
 }
 
 function setupDebugInfo() {
@@ -89,7 +133,7 @@ function updateDebugInfo() {
     const currentChunkX = Math.floor(cameraX / (chunkManager.chunkSize * renderer.tileSize));
     const currentChunkY = Math.floor(cameraY / (chunkManager.chunkSize * renderer.tileSize));
     debugDiv.innerHTML = `
-        Camera: (${cameraX}, ${cameraY})<br>
+        Camera: (${Math.round(cameraX)}, ${Math.round(cameraY)})<br>
         Current Chunk: (${currentChunkX}, ${currentChunkY})<br>
         Loaded Chunks: ${chunkManager.loadedChunks.size}<br>
         Recently Unloaded: ${chunkManager.recentlyUnloaded.size}
