@@ -20,13 +20,16 @@ async function init() {
     await renderer.loadSprites(tileTypes);
 
     const mapGenerator = new MapGenerator(mapWidth, mapHeight);
-    const { terrain, structures } = mapGenerator.generate();
-
-    console.log('Rendering map...');
-    renderer.render(terrain);
-    
-    console.log('Map generated with dimensions:', mapWidth, 'x', mapHeight);
-    console.log('Structures:', structures);
+    try {
+        const { terrain, structures } = await mapGenerator.generate();
+        console.log('Rendering map...');
+        renderer.render(terrain);
+        
+        console.log('Map generated with dimensions:', mapWidth, 'x', mapHeight);
+        console.log('Structures:', structures);
+    } catch (error) {
+        console.error('Map generation failed:', error);
+    }
 }
 
 window.addEventListener('load', init);
