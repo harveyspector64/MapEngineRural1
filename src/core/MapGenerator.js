@@ -33,12 +33,16 @@ export default class MapGenerator {
                 const roads = roadGenerator.generate();
                 
                 // Apply roads to terrain
-                for (let y = 0; y < this.height; y++) {
-                    for (let x = 0; x < this.width; x++) {
-                        if (roads[y][x]) {
-                            terrain[y][x] = 'road';
+                if (roads && Array.isArray(roads)) {
+                    for (let y = 0; y < this.height; y++) {
+                        for (let x = 0; x < this.width; x++) {
+                            if (roads[y] && roads[y][x]) {
+                                terrain[y][x] = 'road';
+                            }
                         }
                     }
+                } else {
+                    console.warn('Roads were not generated properly');
                 }
 
                 clearTimeout(timeoutId);
