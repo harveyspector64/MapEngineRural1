@@ -20,41 +20,35 @@ export default class TerrainGenerator {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.noiseSeed = Math.random();
         this.gridSize = 64; // Defines the size of regions
-        
-        // Initialize permutation table for Perlin noise
-        this.p = new Array(512);
-        const permutation = Array.from({length: 256}, (_, i) => i);
-        for (let i = 0; i < 256; i++) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [permutation[i], permutation[j]] = [permutation[j], permutation[i]];
-        }
-        for (let i = 0; i < 512; i++) {
-            this.p[i] = permutation[i & 255];
-        }
-
-        console.log(`TerrainGenerator initialized with dimensions: ${width}x${height}`);
     }
 
-    generate() {
-        console.log("Starting terrain generation...");
+    generate(chunkX, chunkY) {
+        // Use chunk coordinates to seed the random number generator
+        this.rng = this.createRNG(chunkX, chunkY);
+        
         let terrain = this.generateBaseTerrain();
         const regions = this.assignRegions();
         terrain = this.generateRegionFeatures(terrain, regions);
         terrain = this.smoothTransitions(terrain);
         terrain = this.addNaturalElements(terrain, regions);
-        console.log("Terrain generation completed.");
         return terrain;
     }
 
+    createRNG(chunkX, chunkY) {
+        // Simple hash function to create a seed from chunk coordinates
+        let seed = chunkX * 373 + chunkY * 7919;
+        return () => {
+            seed = (seed * 16807) % 2147483647;
+            return (seed - 1) / 2147483646;
+        };
+    }
+
     generateBaseTerrain() {
-        console.log("Generating base terrain (all grass)");
         return Array(this.height).fill().map(() => Array(this.width).fill(TILES.GRASS));
     }
 
     assignRegions() {
-        console.log("Assigning regions...");
         const regions = [];
         for (let y = 0; y < this.height; y += this.gridSize) {
             for (let x = 0; x < this.width; x += this.gridSize) {
@@ -62,17 +56,15 @@ export default class TerrainGenerator {
                 regions.push({x, y, type: regionType});
             }
         }
-        console.log(`${regions.length} regions assigned.`);
         return regions;
     }
 
     getRandomRegionType() {
         const types = Object.values(REGION_TYPES);
-        return types[Math.floor(Math.random() * types.length)];
+        return types[Math.floor(this.rng() * types.length)];
     }
 
     generateRegionFeatures(terrain, regions) {
-        console.log("Generating region features...");
         regions.forEach(region => {
             switch (region.type) {
                 case REGION_TYPES.FARMLAND:
@@ -93,16 +85,15 @@ export default class TerrainGenerator {
     }
 
     generateFarmland(terrain, region) {
-        console.log(`Generating farmland at (${region.x}, ${region.y})`);
         const minFieldSize = 8;
         const maxFieldSize = 16;
         let y = region.y;
         while (y < Math.min(region.y + this.gridSize, this.height)) {
             let x = region.x;
             while (x < Math.min(region.x + this.gridSize, this.width)) {
-                if (Math.random() > 0.2) {
-                    const fieldWidth = minFieldSize + Math.floor(Math.random() * (maxFieldSize - minFieldSize));
-                    const fieldHeight = minFieldSize + Math.floor(Math.random() * (maxFieldSize - minFieldSize));
+                if (this.rng() > 0.2) {
+                    const fieldWidth = minFieldSize + Math.floor(this.rng() * (maxFieldSize - minFieldSize));
+                    const fieldHeight = minFieldSize + Math.floor(this.rng() * (maxFieldSize - minFieldSize));
                     this.placeRectangularField(terrain, x, y, fieldWidth, fieldHeight);
                     x += fieldWidth;
                 } else {
@@ -114,7 +105,7 @@ export default class TerrainGenerator {
     }
 
     placeRectangularField(terrain, x, y, width, height) {
-        const isCrop = Math.random() > 0.3;
+        const isCrop = this.rng() > 0.3;
         for (let dy = 0; dy < height; dy++) {
             for (let dx = 0; dx < width; dx++) {
                 const tx = x + dx;
@@ -127,26 +118,23 @@ export default class TerrainGenerator {
     }
 
     generateForest(terrain, region) {
-        console.log(`Generating forest at (${region.x}, ${region.y})`);
-        const isDenseForest = Math.random() > 0.5;
+        const isDenseForest = this.rng() > 0.5;
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 const noiseValue = this.noise(x / 20, y / 20);
                 if (isDenseForest && noiseValue > 0.3 || (!isDenseForest && noiseValue > 0.6)) {
-                    terrain[y][x] = Math.random() > 0.7 ? TILES.TREE : TILES.BUSH;
+                    terrain[y][x] = this.rng() > 0.7 ? TILES.TREE : TILES.BUSH;
                 }
             }
         }
     }
 
     generateMixedRegion(terrain, region) {
-        console.log(`Generating mixed region at (${region.x}, ${region.y})`);
         this.generateForest(terrain, region);
         this.generateFarmland(terrain, region);
     }
 
     generateLakeside(terrain, region) {
-        console.log(`Generating lakeside at (${region.x}, ${region.y})`);
         this.generateLake(terrain, region);
         this.generateForest(terrain, region);
     }
@@ -156,20 +144,45 @@ export default class TerrainGenerator {
         const centerY = region.y + this.gridSize / 2;
         const maxRadius = this.gridSize * 0.6;
 
+        // Generate a more complex lake shape
+        const points = this.generateLakePoints(centerX, centerY, maxRadius);
+
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
-                const dx = x - centerX;
-                const dy = y - centerY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < maxRadius * (0.5 + this.noise(x / 30, y / 30) * 0.5)) {
+                if (this.isInsideLake(x, y, points)) {
                     terrain[y][x] = TILES.WATER;
                 }
             }
         }
     }
 
+    generateLakePoints(centerX, centerY, maxRadius) {
+        const numPoints = 8 + Math.floor(this.rng() * 5);
+        const points = [];
+        for (let i = 0; i < numPoints; i++) {
+            const angle = (i / numPoints) * 2 * Math.PI;
+            const radius = maxRadius * (0.5 + this.rng() * 0.5);
+            points.push({
+                x: centerX + Math.cos(angle) * radius,
+                y: centerY + Math.sin(angle) * radius
+            });
+        }
+        return points;
+    }
+
+    isInsideLake(x, y, points) {
+        let inside = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+            const xi = points[i].x, yi = points[i].y;
+            const xj = points[j].x, yj = points[j].y;
+            const intersect = ((yi > y) != (yj > y))
+                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    }
+
     addNaturalElements(terrain, regions) {
-        console.log("Adding natural elements...");
         regions.forEach(region => {
             if (region.type === REGION_TYPES.FARMLAND) {
                 this.addVegetationNearFarmland(terrain, region);
@@ -203,7 +216,7 @@ export default class TerrainGenerator {
     }
 
     addTreesAndBushes(terrain, x, y, openGrassChance) {
-        const chance = Math.random();
+        const chance = this.rng();
         if (chance < 0.05) {
             terrain[y][x] = TILES.TREE;
         } else if (chance < 0.1) {
@@ -214,7 +227,6 @@ export default class TerrainGenerator {
     }
 
     smoothTransitions(terrain) {
-        console.log("Smoothing terrain transitions...");
         const smoothed = JSON.parse(JSON.stringify(terrain));
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
@@ -242,34 +254,15 @@ export default class TerrainGenerator {
             }
         }
 
-        if (treesCount > 0 && Math.random() < treesCount / 10) {
+        if (treesCount > 0 && this.rng() < treesCount / 10) {
             smoothed[y][x] = TILES.TREE;
-        } else if (bushesCount > 0 && Math.random() < bushesCount / 8) {
+        } else if (bushesCount > 0 && this.rng() < bushesCount / 8) {
             smoothed[y][x] = TILES.BUSH;
         }
     }
 
-    // Perlin noise implementation
     noise(x, y) {
-        const X = Math.floor(x) & 255;
-        const Y = Math.floor(y) & 255;
-        x -= Math.floor(x);
-        y -= Math.floor(y);
-        const u = this.fade(x);
-        const v = this.fade(y);
-        const A = this.p[X] + Y, B = this.p[X + 1] + Y;
-        return this.lerp(v, this.lerp(u, this.grad(this.p[A], x, y), 
-                                         this.grad(this.p[B], x - 1, y)),
-                            this.lerp(u, this.grad(this.p[A + 1], x, y - 1),
-                                         this.grad(this.p[B + 1], x - 1, y - 1)));
-    }
-
-    fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
-    lerp(t, a, b) { return a + t * (b - a); }
-    grad(hash, x, y) {
-        const h = hash & 15;
-        const u = h < 8 ? x : y;
-        const v = h < 4 ? y : h === 12 || h === 14 ? x : 0;
-        return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+        // Simple noise function using the RNG
+        return this.rng() * (Math.sin(x) + Math.cos(y));
     }
 }
