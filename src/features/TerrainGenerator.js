@@ -6,44 +6,24 @@ export const TILES = {
     FIELD: 'dirt',
     CROP: 'crop',
     TREE: 'tree',
-    BUSH: 'bush',
-};
-
-
-const REGION_TYPES = {
-    FARMLAND: 'farmland',
-    FOREST: 'forest',
-    MIXED: 'mixed',
-    LAKESIDE: 'lakeside'
+    BUSH: 'bush'
 };
 
 export default class TerrainGenerator {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.noiseSeed = Math.random();
-        this.gridSize = 64; // Defines the size of regions
-        
-        this.p = new Array(512);
-        const permutation = Array.from({length: 256}, (_, i) => i);
-        for (let i = 0; i < 256; i++) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [permutation[i], permutation[j]] = [permutation[j], permutation[i]];
-        }
-        for (let i = 0; i < 512; i++) {
-            this.p[i] = permutation[i & 255];
-        }
+        this.terrain = Array(height).fill().map(() => Array(width).fill(TILES.GRASS));
     }
 
-  generate() {
-        let terrain = this.generateBaseTerrain();
-        const regions = this.assignRegions();
-        terrain = this.generateRegionFeatures(terrain, regions);
-        terrain = this.smoothTransitions(terrain);
-        terrain = this.addNaturalElements(terrain, regions);
-        return terrain;
+    generate() {
+        this.generateBaseTerrain();
+        this.generateWater();
+        this.generateForests();
+        this.generateFarmland();
+        this.smoothTransitions();
+        return this.terrain;
     }
-
     generateBaseTerrain() {
         return Array(this.height).fill().map(() => Array(this.width).fill(TILES.GRASS));
     }
