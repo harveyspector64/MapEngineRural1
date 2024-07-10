@@ -39,7 +39,6 @@ export default class MapGenerator {
         };
     }
 
-    // Method to get neighboring chunk coordinates
     getNeighboringChunks(chunkX, chunkY) {
         return [
             {x: chunkX - 1, y: chunkY},
