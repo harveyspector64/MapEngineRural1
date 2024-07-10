@@ -44,6 +44,7 @@ export default class TerrainGenerator {
         terrain = this.generateRegionFeatures(terrain, regions);
         terrain = this.smoothTransitions(terrain);
         terrain = this.addNaturalElements(terrain, regions);
+        console.log("Terrain generation completed.");
         return terrain;
     }
 
@@ -100,9 +101,9 @@ export default class TerrainGenerator {
         while (y < Math.min(region.y + this.gridSize, this.height)) {
             let x = region.x;
             while (x < Math.min(region.x + this.gridSize, this.width)) {
-                if (Math.random() > 0.2) {
-                    const fieldWidth = minFieldSize + Math.floor(Math.random() * (maxFieldSize - minFieldSize));
-                    const fieldHeight = minFieldSize + Math.floor(Math.random() * (maxFieldSize - minFieldSize));
+                if (this.seededRandom(x, y) > 0.2) {
+                    const fieldWidth = minFieldSize + Math.floor(this.seededRandom(x, y) * (maxFieldSize - minFieldSize));
+                    const fieldHeight = minFieldSize + Math.floor(this.seededRandom(x + 1, y + 1) * (maxFieldSize - minFieldSize));
                     this.placeRectangularField(terrain, x, y, fieldWidth, fieldHeight);
                     x += fieldWidth;
                 } else {
@@ -114,7 +115,7 @@ export default class TerrainGenerator {
     }
 
     placeRectangularField(terrain, x, y, width, height) {
-        const isCrop = Math.random() > 0.3;
+        const isCrop = this.seededRandom(x, y) > 0.3;
         for (let dy = 0; dy < height; dy++) {
             for (let dx = 0; dx < width; dx++) {
                 const tx = x + dx;
@@ -128,12 +129,12 @@ export default class TerrainGenerator {
 
     generateForest(terrain, region) {
         console.log(`Generating forest at (${region.x}, ${region.y})`);
-        const isDenseForest = Math.random() > 0.5;
+        const isDenseForest = this.seededRandom(region.x, region.y) > 0.5;
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 const noiseValue = this.noise((this.chunkX * this.width + x) / 20, (this.chunkY * this.height + y) / 20);
                 if (isDenseForest && noiseValue > 0.3 || (!isDenseForest && noiseValue > 0.6)) {
-                    terrain[y][x] = Math.random() > 0.7 ? TILES.TREE : TILES.BUSH;
+                    terrain[y][x] = this.seededRandom(x, y) > 0.7 ? TILES.TREE : TILES.BUSH;
                 }
             }
         }
@@ -203,7 +204,7 @@ export default class TerrainGenerator {
     }
 
     addTreesAndBushes(terrain, x, y, openGrassChance) {
-        const chance = this.noise((this.chunkX * this.width + x) / 10, (this.chunkY * this.height + y) / 10);
+        const chance = this.seededRandom(x, y);
         if (chance < 0.05) {
             terrain[y][x] = TILES.TREE;
         } else if (chance < 0.1) {
@@ -242,9 +243,9 @@ export default class TerrainGenerator {
             }
         }
 
-        if (treesCount > 0 && this.noise((this.chunkX * this.width + x) / 10, (this.chunkY * this.height + y) / 10) < treesCount / 10) {
+        if (treesCount > 0 && this.seededRandom(x, y) < treesCount / 10) {
             smoothed[y][x] = TILES.TREE;
-        } else if (bushesCount > 0 && this.noise((this.chunkX * this.width + x) / 10, (this.chunkY * this.height + y) / 10) < bushesCount / 8) {
+        } else if (bushesCount > 0 && this.seededRandom(x, y) < bushesCount / 8) {
             smoothed[y][x] = TILES.BUSH;
         }
     }
@@ -261,6 +262,13 @@ export default class TerrainGenerator {
                                          this.grad(this.p[B], x - 1, y)),
                             this.lerp(u, this.grad(this.p[A + 1], x, y - 1),
                                          this.grad(this.p[B + 1], x - 1, y - 1)));
+    }
+
+    seededRandom(x, y) {
+        const dot = x * 12.9898 + y * 78.233;
+        let seed = Math.sin(dot) * 43758.5453123;
+        seed = (seed - Math.floor(seed)) + this.noise((this.chunkX * this.width + x) / 1000, (this.chunkY * this.height + y) / 1000);
+        return seed - Math.floor(seed);
     }
 
     fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
