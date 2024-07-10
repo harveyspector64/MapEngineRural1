@@ -14,7 +14,11 @@ async function init() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    await renderer.loadSprites(Object.values(TILES).concat(['barn', 'silo', 'road']));
+    const availableSprites = [
+        'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water'
+    ];
+
+    await renderer.loadSprites(availableSprites);
 
     chunkManager = new ChunkManager(canvas.width, canvas.height);
     
