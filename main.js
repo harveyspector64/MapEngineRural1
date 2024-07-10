@@ -38,6 +38,8 @@ function render() {
         const chunk = chunkManager.getChunk(x, y);
         if (chunk) {
             renderer.renderChunk(chunk);
+        } else {
+            console.warn(`Missing chunk at (${x}, ${y})`);
         }
     });
     
@@ -89,7 +91,8 @@ function updateDebugInfo() {
     debugDiv.innerHTML = `
         Camera: (${cameraX}, ${cameraY})<br>
         Current Chunk: (${currentChunkX}, ${currentChunkY})<br>
-        Loaded Chunks: ${chunkManager.loadedChunks.size}
+        Loaded Chunks: ${chunkManager.loadedChunks.size}<br>
+        Recently Unloaded: ${chunkManager.recentlyUnloaded.size}
     `;
 }
 
