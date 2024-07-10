@@ -69,7 +69,12 @@ export default class TerrainGenerator {
     getRandomRegionType(x, y) {
         const types = Object.values(REGION_TYPES);
         const noise = this.noise((this.chunkX * this.width + x) / 1000, (this.chunkY * this.height + y) / 1000);
-        return types[Math.floor(noise * types.length)];
+        
+        // Increase probability of LAKESIDE and FOREST
+        if (noise < 0.2) return REGION_TYPES.LAKESIDE;
+        if (noise < 0.5) return REGION_TYPES.FOREST;
+        if (noise < 0.7) return REGION_TYPES.MIXED;
+        return REGION_TYPES.FARMLAND;
     }
 
     generateRegionFeatures(terrain, regions) {
@@ -129,12 +134,12 @@ export default class TerrainGenerator {
 
     generateForest(terrain, region) {
         console.log(`Generating forest at (${region.x}, ${region.y})`);
-        const isDenseForest = this.seededRandom(region.x, region.y) > 0.5;
+        const isDenseForest = this.seededRandom(region.x, region.y) > 0.3; // Increased dense forest probability
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 const noiseValue = this.noise((this.chunkX * this.width + x) / 20, (this.chunkY * this.height + y) / 20);
-                if (isDenseForest && noiseValue > 0.3 || (!isDenseForest && noiseValue > 0.6)) {
-                    terrain[y][x] = this.seededRandom(x, y) > 0.7 ? TILES.TREE : TILES.BUSH;
+                if (isDenseForest && noiseValue > 0.2 || (!isDenseForest && noiseValue > 0.5)) { // Adjusted thresholds
+                    terrain[y][x] = this.seededRandom(x, y) > 0.6 ? TILES.TREE : TILES.BUSH; // More variation
                 }
             }
         }
@@ -143,7 +148,14 @@ export default class TerrainGenerator {
     generateMixedRegion(terrain, region) {
         console.log(`Generating mixed region at (${region.x}, ${region.y})`);
         this.generateForest(terrain, region);
-        this.generateFarmland(terrain, region);
+        // Add some clearings
+        for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
+            for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
+                if (this.seededRandom(x, y) > 0.7) {
+                    terrain[y][x] = TILES.GRASS;
+                }
+            }
+        }
     }
 
     generateLakeside(terrain, region) {
@@ -155,14 +167,15 @@ export default class TerrainGenerator {
     generateLake(terrain, region) {
         const centerX = region.x + this.gridSize / 2;
         const centerY = region.y + this.gridSize / 2;
-        const maxRadius = this.gridSize * 0.6;
+        const maxRadius = this.gridSize * 0.4; // Slightly smaller lakes
 
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
                 const dx = x - centerX;
                 const dy = y - centerY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < maxRadius * (0.5 + this.noise((this.chunkX * this.width + x) / 30, (this.chunkY * this.height + y) / 30) * 0.5)) {
+                const noiseFactor = this.noise((this.chunkX * this.width + x) / 30, (this.chunkY * this.height + y) / 30);
+                if (distance < maxRadius * (0.5 + noiseFactor * 0.5)) {
                     terrain[y][x] = TILES.WATER;
                 }
             }
@@ -243,9 +256,9 @@ export default class TerrainGenerator {
             }
         }
 
-        if (treesCount > 0 && this.seededRandom(x, y) < treesCount / 10) {
+        if (treesCount > 0 && this.seededRandom(x, y) < treesCount / 8) {
             smoothed[y][x] = TILES.TREE;
-        } else if (bushesCount > 0 && this.seededRandom(x, y) < bushesCount / 8) {
+        } else if (bushesCount > 0 && this.seededRandom(x, y) < bushesCount / 6) {
             smoothed[y][x] = TILES.BUSH;
         }
     }
