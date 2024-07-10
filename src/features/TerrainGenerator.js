@@ -24,8 +24,9 @@ export default class TerrainGenerator {
     }
 
     generate(chunkX, chunkY) {
-        // Use chunk coordinates to seed the random number generator
-        this.rng = this.createRNG(chunkX, chunkY);
+        this.chunkX = chunkX;
+        this.chunkY = chunkY;
+        this.seed = chunkX * 374761393 + chunkY * 668265263; // Large prime numbers
         
         let terrain = this.generateBaseTerrain();
         const regions = this.assignRegions();
@@ -35,13 +36,16 @@ export default class TerrainGenerator {
         return terrain;
     }
 
-    createRNG(chunkX, chunkY) {
-        // Simple hash function to create a seed from chunk coordinates
-        let seed = chunkX * 373 + chunkY * 7919;
-        return () => {
-            seed = (seed * 16807) % 2147483647;
-            return (seed - 1) / 2147483646;
-        };
+    getRandom(x, y) {
+        const localSeed = this.seed + x * 198491317 + y * 6542989;
+        return this.seededRandom(localSeed);
+    }
+
+    seededRandom(seed) {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
     }
 
     generateBaseTerrain() {
@@ -52,16 +56,16 @@ export default class TerrainGenerator {
         const regions = [];
         for (let y = 0; y < this.height; y += this.gridSize) {
             for (let x = 0; x < this.width; x += this.gridSize) {
-                const regionType = this.getRandomRegionType();
+                const regionType = this.getRandomRegionType(x, y);
                 regions.push({x, y, type: regionType});
             }
         }
         return regions;
     }
 
-    getRandomRegionType() {
+    getRandomRegionType(x, y) {
         const types = Object.values(REGION_TYPES);
-        return types[Math.floor(this.rng() * types.length)];
+        return types[Math.floor(this.getRandom(x, y) * types.length)];
     }
 
     generateRegionFeatures(terrain, regions) {
@@ -91,9 +95,9 @@ export default class TerrainGenerator {
         while (y < Math.min(region.y + this.gridSize, this.height)) {
             let x = region.x;
             while (x < Math.min(region.x + this.gridSize, this.width)) {
-                if (this.rng() > 0.2) {
-                    const fieldWidth = minFieldSize + Math.floor(this.rng() * (maxFieldSize - minFieldSize));
-                    const fieldHeight = minFieldSize + Math.floor(this.rng() * (maxFieldSize - minFieldSize));
+                if (this.getRandom(x, y) > 0.2) {
+                    const fieldWidth = minFieldSize + Math.floor(this.getRandom(x, y) * (maxFieldSize - minFieldSize));
+                    const fieldHeight = minFieldSize + Math.floor(this.getRandom(x + 1, y) * (maxFieldSize - minFieldSize));
                     this.placeRectangularField(terrain, x, y, fieldWidth, fieldHeight);
                     x += fieldWidth;
                 } else {
@@ -105,7 +109,7 @@ export default class TerrainGenerator {
     }
 
     placeRectangularField(terrain, x, y, width, height) {
-        const isCrop = this.rng() > 0.3;
+        const isCrop = this.getRandom(x, y) > 0.3;
         for (let dy = 0; dy < height; dy++) {
             for (let dx = 0; dx < width; dx++) {
                 const tx = x + dx;
@@ -118,12 +122,12 @@ export default class TerrainGenerator {
     }
 
     generateForest(terrain, region) {
-        const isDenseForest = this.rng() > 0.5;
+        const isDenseForest = this.getRandom(region.x, region.y) > 0.5;
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
-                const noiseValue = this.noise(x / 20, y / 20);
+                const noiseValue = this.noise(x, y);
                 if (isDenseForest && noiseValue > 0.3 || (!isDenseForest && noiseValue > 0.6)) {
-                    terrain[y][x] = this.rng() > 0.7 ? TILES.TREE : TILES.BUSH;
+                    terrain[y][x] = this.getRandom(x, y) > 0.7 ? TILES.TREE : TILES.BUSH;
                 }
             }
         }
@@ -144,7 +148,6 @@ export default class TerrainGenerator {
         const centerY = region.y + this.gridSize / 2;
         const maxRadius = this.gridSize * 0.6;
 
-        // Generate a more complex lake shape
         const points = this.generateLakePoints(centerX, centerY, maxRadius);
 
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
@@ -157,11 +160,11 @@ export default class TerrainGenerator {
     }
 
     generateLakePoints(centerX, centerY, maxRadius) {
-        const numPoints = 8 + Math.floor(this.rng() * 5);
+        const numPoints = 8 + Math.floor(this.getRandom(centerX, centerY) * 5);
         const points = [];
         for (let i = 0; i < numPoints; i++) {
             const angle = (i / numPoints) * 2 * Math.PI;
-            const radius = maxRadius * (0.5 + this.rng() * 0.5);
+            const radius = maxRadius * (0.5 + this.getRandom(centerX + i, centerY) * 0.5);
             points.push({
                 x: centerX + Math.cos(angle) * radius,
                 y: centerY + Math.sin(angle) * radius
@@ -216,7 +219,7 @@ export default class TerrainGenerator {
     }
 
     addTreesAndBushes(terrain, x, y, openGrassChance) {
-        const chance = this.rng();
+        const chance = this.getRandom(x, y);
         if (chance < 0.05) {
             terrain[y][x] = TILES.TREE;
         } else if (chance < 0.1) {
@@ -254,15 +257,55 @@ export default class TerrainGenerator {
             }
         }
 
-        if (treesCount > 0 && this.rng() < treesCount / 10) {
+        if (treesCount > 0 && this.getRandom(x, y) < treesCount / 10) {
             smoothed[y][x] = TILES.TREE;
-        } else if (bushesCount > 0 && this.rng() < bushesCount / 8) {
+        } else if (bushesCount > 0 && this.getRandom(x, y) < bushesCount / 8) {
             smoothed[y][x] = TILES.BUSH;
         }
     }
 
     noise(x, y) {
-        // Simple noise function using the RNG
-        return this.rng() * (Math.sin(x) + Math.cos(y));
+        // Improved noise function using multiple octaves
+        let value = 0;
+        let amplitude = 1;
+        let frequency = 1;
+        const persistence = 0.5;
+
+        for (let i = 0; i < 4; i++) {  // Using 4 octaves
+            value += this.smoothNoise(x * frequency, y * frequency) * amplitude;
+            amplitude *= persistence;
+            frequency *= 2;
+        }
+
+        return value;
+    }
+
+    smoothNoise(x, y) {
+        // Get fractional part of x and y
+        const fractX = x - Math.floor(x);
+        const fractY = y - Math.floor(y);
+
+        // Wrap around
+        const x1 = (Math.floor(x) + this.width) % this.width;
+        const y1 = (Math.floor(y) + this.height) % this.height;
+
+        // Neighbor values
+        const x2 = (x1 + this.width - 1) % this.width;
+        const y2 = (y1 + this.height - 1) % this.height;
+
+        // Smooth the noise with bilinear interpolation
+        const value = this.fractionalInterpolate(
+            this.fractionalInterpolate(this.getRandom(x1, y1), this.getRandom(x2, y1), fractX),
+            this.fractionalInterpolate(this.getRandom(x1, y2), this.getRandom(x2, y2), fractX),
+            fractY
+        );
+
+        return value;
+    }
+
+    fractionalInterpolate(a, b, x) {
+        const ft = x * Math.PI;
+        const f = (1 - Math.cos(ft)) * 0.5;
+        return a * (1 - f) + b * f;
     }
 }
