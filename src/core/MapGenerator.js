@@ -1,4 +1,5 @@
 // src/core/MapGenerator.js
+// src/core/MapGenerator.js
 import TerrainGenerator from '../features/TerrainGenerator.js';
 import RoadGenerator from '../features/RoadGenerator.js';
 import StructureGenerator from '../features/StructureGenerator.js';
@@ -13,7 +14,7 @@ export default class MapGenerator {
 
     generateChunk(chunkX, chunkY) {
         // Generate base terrain for the chunk
-        const terrain = this.terrainGenerator.generate();
+        const terrain = this.terrainGenerator.generate(chunkX, chunkY);
 
         // Generate structures for the chunk
         const structures = this.structureGenerator.generate(terrain);
