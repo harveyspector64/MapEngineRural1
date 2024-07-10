@@ -19,7 +19,6 @@ export default class MapGenerator {
         const structures = this.structureGenerator.generate(terrain);
 
         // Generate roads for the chunk
-        // Note: This might need to be adjusted to work with neighboring chunks
         const roads = this.roadGenerator.generate(terrain, structures);
 
         // Apply roads to terrain
