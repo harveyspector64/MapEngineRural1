@@ -1,4 +1,3 @@
-// src/core/ChunkManager.js
 import MapGenerator from './MapGenerator.js';
 
 export default class ChunkManager {
@@ -8,7 +7,7 @@ export default class ChunkManager {
         this.viewportWidth = viewportWidth;
         this.viewportHeight = viewportHeight;
         this.loadedChunks = new Map();
-        this.recentlyUnloaded = new Map(); // Cache for recently unloaded chunks
+        this.recentlyUnloaded = new Map();
         console.log(`ChunkManager initialized with viewport: ${viewportWidth}x${viewportHeight}, chunkSize: ${chunkSize}`);
     }
 
