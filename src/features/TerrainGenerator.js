@@ -201,17 +201,52 @@ export default class TerrainGenerator {
     }
 
 
-    smoothTransitions(terrain) {
-        const smoothed = JSON.parse(JSON.stringify(terrain));
+    smoothTransitions() {
+        const newTerrain = JSON.parse(JSON.stringify(this.terrain));
+        
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
-                if (terrain[y][x] === TILES.GRASS) {
-                    this.smoothGrassTransition(terrain, smoothed, x, y);
+                const currentTile = this.terrain[y][x];
+                const neighbors = this.getNeighbors(x, y);
+                
+                if (currentTile === TILES.GRASS) {
+                    if (this.countTileType(neighbors, TILES.WATER) > 4) {
+                        newTerrain[y][x] = TILES.WATER;
+                    } else if (this.countTileType(neighbors, TILES.TREE) > 4) {
+                        newTerrain[y][x] = TILES.TREE;
+                    } else if (this.countTileType(neighbors, TILES.FIELD) > 4) {
+                        newTerrain[y][x] = TILES.FIELD;
+                    }
                 }
             }
         }
-        return smoothed;
+        
+        this.terrain = newTerrain;
     }
+
+    getNeighbors(x, y) {
+        const neighbors = [];
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = x + dx;
+                const ny = y + dy;
+                if (this.isValidPosition(nx, ny)) {
+                    neighbors.push(this.terrain[ny][nx]);
+                }
+            }
+        }
+        return neighbors;
+    }
+
+    countTileType(tiles, type) {
+        return tiles.filter(tile => tile === type).length;
+    }
+
+    isValidPosition(x, y) {
+        return x >= 0 && x < this.width && y >= 0 && y < this.height;
+    }
+}
 
     smoothGrassTransition(terrain, smoothed, x, y) {
         const neighborhoodSize = 2;
