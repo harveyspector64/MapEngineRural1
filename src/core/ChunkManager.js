@@ -8,6 +8,7 @@ export default class ChunkManager {
         this.viewportWidth = viewportWidth;
         this.viewportHeight = viewportHeight;
         this.loadedChunks = new Map();
+        this.recentlyUnloaded = new Map(); // Cache for recently unloaded chunks
         console.log(`ChunkManager initialized with viewport: ${viewportWidth}x${viewportHeight}, chunkSize: ${chunkSize}`);
     }
 
@@ -19,9 +20,15 @@ export default class ChunkManager {
         visibleChunks.forEach(({x, y}) => {
             const key = `${x},${y}`;
             if (!this.loadedChunks.has(key)) {
-                console.log(`Generating new chunk at (${x}, ${y})`);
-                const chunk = this.mapGenerator.generateChunk(x, y);
-                this.loadedChunks.set(key, chunk);
+                if (this.recentlyUnloaded.has(key)) {
+                    console.log(`Reloading cached chunk at (${x}, ${y})`);
+                    this.loadedChunks.set(key, this.recentlyUnloaded.get(key));
+                    this.recentlyUnloaded.delete(key);
+                } else {
+                    console.log(`Generating new chunk at (${x}, ${y})`);
+                    const chunk = this.mapGenerator.generateChunk(x, y);
+                    this.loadedChunks.set(key, chunk);
+                }
             }
         });
 
@@ -30,18 +37,25 @@ export default class ChunkManager {
             const [x, y] = key.split(',').map(Number);
             if (!visibleChunks.some(vc => vc.x === x && vc.y === y)) {
                 console.log(`Unloading chunk at (${x}, ${y})`);
+                this.recentlyUnloaded.set(key, chunk);
                 this.loadedChunks.delete(key);
             }
         });
 
-        console.log(`Total loaded chunks: ${this.loadedChunks.size}`);
+        // Limit the size of recentlyUnloaded cache
+        if (this.recentlyUnloaded.size > 20) {
+            const oldestKey = this.recentlyUnloaded.keys().next().value;
+            this.recentlyUnloaded.delete(oldestKey);
+        }
+
+        console.log(`Total loaded chunks: ${this.loadedChunks.size}, Recently unloaded: ${this.recentlyUnloaded.size}`);
     }
 
     getVisibleChunkCoordinates(centerX, centerY) {
         const chunkCenterX = Math.floor(centerX / (this.chunkSize * 16));
         const chunkCenterY = Math.floor(centerY / (this.chunkSize * 16));
-        const viewChunksX = Math.ceil(this.viewportWidth / (this.chunkSize * 16)) + 1;
-        const viewChunksY = Math.ceil(this.viewportHeight / (this.chunkSize * 16)) + 1;
+        const viewChunksX = Math.ceil(this.viewportWidth / (this.chunkSize * 16)) + 2; // Added buffer
+        const viewChunksY = Math.ceil(this.viewportHeight / (this.chunkSize * 16)) + 2; // Added buffer
         
         const visibleChunks = [];
         for (let y = chunkCenterY - viewChunksY; y <= chunkCenterY + viewChunksY; y++) {
@@ -56,6 +70,6 @@ export default class ChunkManager {
 
     getChunk(x, y) {
         const key = `${x},${y}`;
-        return this.loadedChunks.get(key);
+        return this.loadedChunks.get(key) || this.recentlyUnloaded.get(key);
     }
 }
