@@ -1,28 +1,37 @@
 // main.js
-
-import MapGenerator from './src/core/MapGenerator.js';
+import ChunkManager from './src/core/ChunkManager.js';
 import Renderer from './src/rendering/Renderer.js';
 import { TILES } from './src/features/TerrainGenerator.js';
 
 const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
 
+let chunkManager;
+
 async function init() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const mapWidth = Math.ceil(canvas.width / renderer.tileSize);
-    const mapHeight = Math.ceil(canvas.height / renderer.tileSize);
-
     await renderer.loadSprites(Object.values(TILES).concat(['barn', 'silo', 'road']));
 
-    const mapGenerator = new MapGenerator(mapWidth, mapHeight);
-    const { terrain, structures, roads } = mapGenerator.generate();
-
-    renderer.render(terrain, roads);
+    chunkManager = new ChunkManager(canvas.width, canvas.height);
     
-    console.log('Map generated with dimensions:', mapWidth, 'x', mapHeight);
-    console.log('Structures:', structures);
+    // Initial update for center of the map
+    chunkManager.updateViewport(0, 0);
+
+    render();
+}
+
+function render() {
+    renderer.clear();
+    const visibleChunks = chunkManager.getVisibleChunkCoordinates(0, 0);
+    visibleChunks.forEach(({x, y}) => {
+        const chunk = chunkManager.getChunk(x, y);
+        if (chunk) {
+            renderer.renderChunk(chunk);
+        }
+    });
+    requestAnimationFrame(render);
 }
 
 window.addEventListener('load', init);
