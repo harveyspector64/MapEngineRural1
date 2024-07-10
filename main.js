@@ -23,10 +23,12 @@ async function init() {
 
     render();
     setupControls();
+    setupDebugInfo();
 }
 
 function render() {
     renderer.clear();
+    renderer.setCamera(cameraX, cameraY);
     const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
     visibleChunks.forEach(({x, y}) => {
         const chunk = chunkManager.getChunk(x, y);
@@ -34,12 +36,16 @@ function render() {
             renderer.renderChunk(chunk);
         }
     });
+    
+    // Draw chunk boundaries for debugging
+    renderer.drawChunkBoundaries(Array.from(chunkManager.loadedChunks.values()));
+
     requestAnimationFrame(render);
 }
 
 function setupControls() {
     window.addEventListener('keydown', (e) => {
-        const moveDistance = 5;
+        const moveDistance = 16; // One tile size
         switch(e.key) {
             case 'ArrowUp':
                 cameraY -= moveDistance;
@@ -55,7 +61,32 @@ function setupControls() {
                 break;
         }
         chunkManager.updateViewport(cameraX, cameraY);
+        updateDebugInfo();
     });
+}
+
+function setupDebugInfo() {
+    const debugDiv = document.createElement('div');
+    debugDiv.id = 'debug-info';
+    debugDiv.style.position = 'absolute';
+    debugDiv.style.top = '10px';
+    debugDiv.style.left = '10px';
+    debugDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    debugDiv.style.color = 'white';
+    debugDiv.style.padding = '10px';
+    document.body.appendChild(debugDiv);
+    updateDebugInfo();
+}
+
+function updateDebugInfo() {
+    const debugDiv = document.getElementById('debug-info');
+    const currentChunkX = Math.floor(cameraX / (chunkManager.chunkSize * renderer.tileSize));
+    const currentChunkY = Math.floor(cameraY / (chunkManager.chunkSize * renderer.tileSize));
+    debugDiv.innerHTML = `
+        Camera: (${cameraX}, ${cameraY})<br>
+        Current Chunk: (${currentChunkX}, ${currentChunkY})<br>
+        Loaded Chunks: ${chunkManager.loadedChunks.size}
+    `;
 }
 
 window.addEventListener('load', init);
