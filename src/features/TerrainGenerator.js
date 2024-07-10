@@ -9,21 +9,40 @@ export const TILES = {
     BUSH: 'bush'
 };
 
+const REGION_TYPES = {
+    FARMLAND: 'farmland',
+    FOREST: 'forest',
+    MIXED: 'mixed',
+    LAKESIDE: 'lakeside'
+};
+
 export default class TerrainGenerator {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.terrain = Array(height).fill().map(() => Array(width).fill(TILES.GRASS));
+        this.noiseSeed = Math.random();
+        this.gridSize = 64; // Defines the size of regions
+        
+        this.p = new Array(512);
+        const permutation = Array.from({length: 256}, (_, i) => i);
+        for (let i = 0; i < 256; i++) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [permutation[i], permutation[j]] = [permutation[j], permutation[i]];
+        }
+        for (let i = 0; i < 512; i++) {
+            this.p[i] = permutation[i & 255];
+        }
     }
 
     generate() {
-        this.generateBaseTerrain();
-        this.generateWater();
-        this.generateForests();
-        this.generateFarmland();
-        this.smoothTransitions();
-        return this.terrain;
+        let terrain = this.generateBaseTerrain();
+        const regions = this.assignRegions();
+        terrain = this.generateRegionFeatures(terrain, regions);
+        terrain = this.smoothTransitions(terrain);
+        terrain = this.addNaturalElements(terrain, regions);
+        return terrain;
     }
+
     generateBaseTerrain() {
         return Array(this.height).fill().map(() => Array(this.width).fill(TILES.GRASS));
     }
@@ -147,7 +166,7 @@ export default class TerrainGenerator {
         return terrain;
     }
 
-        addVegetationNearFarmland(terrain, region) {
+    addVegetationNearFarmland(terrain, region) {
         const openGrassChance = 1.5; // Higher chance for open grass near farmland
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
@@ -158,7 +177,7 @@ export default class TerrainGenerator {
         }
     }
 
-        addGeneralVegetation(terrain, region) {
+    addGeneralVegetation(terrain, region) {
         const openGrassChance = 0.3; // Lower chance for open grass in other regions
         for (let y = region.y; y < Math.min(region.y + this.gridSize, this.height); y++) {
             for (let x = region.x; x < Math.min(region.x + this.gridSize, this.width); x++) {
@@ -180,53 +199,17 @@ export default class TerrainGenerator {
         }
     }
 
-
-    smoothTransitions() {
-        const newTerrain = JSON.parse(JSON.stringify(this.terrain));
-        
+    smoothTransitions(terrain) {
+        const smoothed = JSON.parse(JSON.stringify(terrain));
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
-                const currentTile = this.terrain[y][x];
-                const neighbors = this.getNeighbors(x, y);
-                
-                if (currentTile === TILES.GRASS) {
-                    if (this.countTileType(neighbors, TILES.WATER) > 4) {
-                        newTerrain[y][x] = TILES.WATER;
-                    } else if (this.countTileType(neighbors, TILES.TREE) > 4) {
-                        newTerrain[y][x] = TILES.TREE;
-                    } else if (this.countTileType(neighbors, TILES.FIELD) > 4) {
-                        newTerrain[y][x] = TILES.FIELD;
-                    }
+                if (terrain[y][x] === TILES.GRASS) {
+                    this.smoothGrassTransition(terrain, smoothed, x, y);
                 }
             }
         }
-        
-        this.terrain = newTerrain;
+        return smoothed;
     }
-
-    getNeighbors(x, y) {
-        const neighbors = [];
-        for (let dy = -1; dy <= 1; dy++) {
-            for (let dx = -1; dx <= 1; dx++) {
-                if (dx === 0 && dy === 0) continue;
-                const nx = x + dx;
-                const ny = y + dy;
-                if (this.isValidPosition(nx, ny)) {
-                    neighbors.push(this.terrain[ny][nx]);
-                }
-            }
-        }
-        return neighbors;
-    }
-
-    countTileType(tiles, type) {
-        return tiles.filter(tile => tile === type).length;
-    }
-
-    isValidPosition(x, y) {
-        return x >= 0 && x < this.width && y >= 0 && y < this.height;
-    }
-}
 
     smoothGrassTransition(terrain, smoothed, x, y) {
         const neighborhoodSize = 2;
