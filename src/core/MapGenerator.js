@@ -4,33 +4,49 @@ import RoadGenerator from '../features/RoadGenerator.js';
 import StructureGenerator from '../features/StructureGenerator.js';
 
 export default class MapGenerator {
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
+    constructor(chunkSize = 64) {
+        this.chunkSize = chunkSize;
+        this.terrainGenerator = new TerrainGenerator(chunkSize, chunkSize);
+        this.roadGenerator = new RoadGenerator();
+        this.structureGenerator = new StructureGenerator();
     }
 
-    generate() {
-        // Generate terrain
-        const terrainGenerator = new TerrainGenerator(this.width, this.height);
-        const terrain = terrainGenerator.generate();
+    generateChunk(chunkX, chunkY) {
+        // Generate base terrain for the chunk
+        const terrain = this.terrainGenerator.generate();
 
-        // Generate structures
-        const structureGenerator = new StructureGenerator(terrain);
-        const structures = structureGenerator.generate();
+        // Generate structures for the chunk
+        const structures = this.structureGenerator.generate(terrain);
 
-        // Generate roads
-        const roadGenerator = new RoadGenerator(terrain, structures);
-        const roads = roadGenerator.generate();
+        // Generate roads for the chunk
+        // Note: This might need to be adjusted to work with neighboring chunks
+        const roads = this.roadGenerator.generate(terrain, structures);
 
         // Apply roads to terrain
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
+        for (let y = 0; y < this.chunkSize; y++) {
+            for (let x = 0; x < this.chunkSize; x++) {
                 if (roads[y][x]) {
                     terrain[y][x] = 'road';
                 }
             }
         }
 
-        return { terrain, structures };
+        return {
+            x: chunkX,
+            y: chunkY,
+            terrain,
+            structures,
+            roads
+        };
+    }
+
+    // Method to get neighboring chunk coordinates
+    getNeighboringChunks(chunkX, chunkY) {
+        return [
+            {x: chunkX - 1, y: chunkY},
+            {x: chunkX + 1, y: chunkY},
+            {x: chunkX, y: chunkY - 1},
+            {x: chunkX, y: chunkY + 1}
+        ];
     }
 }
