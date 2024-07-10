@@ -23,6 +23,7 @@ export default class Renderer {
             })
         );
         await Promise.all(loadPromises);
+        console.log("All sprites loaded successfully");
     }
 
     clear() {
@@ -30,8 +31,8 @@ export default class Renderer {
     }
 
     renderChunk(chunk) {
-        const { x: chunkX, y: chunkY, terrain, structures } = chunk;
-        const chunkPixelSize = chunk.terrain.length * this.tileSize;
+        const { x: chunkX, y: chunkY, terrain } = chunk;
+        const chunkPixelSize = terrain.length * this.tileSize;
         const offsetX = chunkX * chunkPixelSize - this.cameraX;
         const offsetY = chunkY * chunkPixelSize - this.cameraY;
 
@@ -41,7 +42,6 @@ export default class Renderer {
             return;
         }
 
-        // Render terrain
         for (let y = 0; y < terrain.length; y++) {
             for (let x = 0; x < terrain[y].length; x++) {
                 const tile = terrain[y][x];
@@ -57,20 +57,6 @@ export default class Renderer {
                 }
             }
         }
-
-        // Render structures
-        structures.forEach(structure => {
-            const sprite = this.sprites[structure.type];
-            if (sprite) {
-                this.ctx.drawImage(
-                    sprite,
-                    offsetX + structure.position.x * this.tileSize,
-                    offsetY + structure.position.y * this.tileSize,
-                    this.tileSize,
-                    this.tileSize
-                );
-            }
-        });
     }
 
     setCamera(x, y) {
