@@ -1,74 +1,50 @@
-import MapGenerator from './MapGenerator.js';
+import TerrainGenerator from '../features/TerrainGenerator.js';
+import RoadGenerator from '../features/RoadGenerator.js';
+import StructureGenerator from '../features/StructureGenerator.js';
 
-export default class ChunkManager {
-    constructor(viewportWidth, viewportHeight, chunkSize = 64) {
-        this.mapGenerator = new MapGenerator(chunkSize);
+export default class MapGenerator {
+    constructor(chunkSize = 64) {
         this.chunkSize = chunkSize;
-        this.viewportWidth = viewportWidth;
-        this.viewportHeight = viewportHeight;
-        this.loadedChunks = new Map();
-        this.recentlyUnloaded = new Map();
-        console.log(`ChunkManager initialized with viewport: ${viewportWidth}x${viewportHeight}, chunkSize: ${chunkSize}`);
+        this.terrainGenerator = new TerrainGenerator(chunkSize, chunkSize);
+        this.roadGenerator = new RoadGenerator();
+        this.structureGenerator = new StructureGenerator();
     }
 
-    updateViewport(centerX, centerY) {
-        console.log(`Updating viewport. Center: (${centerX}, ${centerY})`);
-        const visibleChunks = this.getVisibleChunkCoordinates(centerX, centerY);
-        
-        // Load new chunks
-        visibleChunks.forEach(({x, y}) => {
-            const key = `${x},${y}`;
-            if (!this.loadedChunks.has(key)) {
-                if (this.recentlyUnloaded.has(key)) {
-                    console.log(`Reloading cached chunk at (${x}, ${y})`);
-                    this.loadedChunks.set(key, this.recentlyUnloaded.get(key));
-                    this.recentlyUnloaded.delete(key);
-                } else {
-                    console.log(`Generating new chunk at (${x}, ${y})`);
-                    const chunk = this.mapGenerator.generateChunk(x, y);
-                    this.loadedChunks.set(key, chunk);
+    generateChunk(chunkX, chunkY) {
+        console.log(`Generating chunk at (${chunkX}, ${chunkY})`);
+        // Generate base terrain for the chunk
+        const terrain = this.terrainGenerator.generate(chunkX, chunkY);
+
+        // Generate structures for the chunk
+        const structures = this.structureGenerator.generate(terrain);
+
+        // Generate roads for the chunk
+        const roads = this.roadGenerator.generate(terrain, structures);
+
+        // Apply roads to terrain
+        for (let y = 0; y < this.chunkSize; y++) {
+            for (let x = 0; x < this.chunkSize; x++) {
+                if (roads[y][x]) {
+                    terrain[y][x] = 'road';
                 }
             }
-        });
-
-        // Unload chunks that are no longer visible
-        this.loadedChunks.forEach((chunk, key) => {
-            const [x, y] = key.split(',').map(Number);
-            if (!visibleChunks.some(vc => vc.x === x && vc.y === y)) {
-                console.log(`Unloading chunk at (${x}, ${y})`);
-                this.recentlyUnloaded.set(key, chunk);
-                this.loadedChunks.delete(key);
-            }
-        });
-
-        // Limit the size of recentlyUnloaded cache
-        if (this.recentlyUnloaded.size > 20) {
-            const oldestKey = this.recentlyUnloaded.keys().next().value;
-            this.recentlyUnloaded.delete(oldestKey);
         }
 
-        console.log(`Total loaded chunks: ${this.loadedChunks.size}, Recently unloaded: ${this.recentlyUnloaded.size}`);
+        return {
+            x: chunkX,
+            y: chunkY,
+            terrain,
+            structures,
+            roads
+        };
     }
 
-    getVisibleChunkCoordinates(centerX, centerY) {
-        const chunkCenterX = Math.floor(centerX / (this.chunkSize * 16));
-        const chunkCenterY = Math.floor(centerY / (this.chunkSize * 16));
-        const viewChunksX = Math.ceil(this.viewportWidth / (this.chunkSize * 16)) + 2; // Added buffer
-        const viewChunksY = Math.ceil(this.viewportHeight / (this.chunkSize * 16)) + 2; // Added buffer
-        
-        const visibleChunks = [];
-        for (let y = chunkCenterY - viewChunksY; y <= chunkCenterY + viewChunksY; y++) {
-            for (let x = chunkCenterX - viewChunksX; x <= chunkCenterX + viewChunksX; x++) {
-                visibleChunks.push({x, y});
-            }
-        }
-        
-        console.log(`Visible chunks: ${visibleChunks.length}`);
-        return visibleChunks;
-    }
-
-    getChunk(x, y) {
-        const key = `${x},${y}`;
-        return this.loadedChunks.get(key) || this.recentlyUnloaded.get(key);
+    getNeighboringChunks(chunkX, chunkY) {
+        return [
+            {x: chunkX - 1, y: chunkY},
+            {x: chunkX + 1, y: chunkY},
+            {x: chunkX, y: chunkY - 1},
+            {x: chunkX, y: chunkY + 1}
+        ];
     }
 }
