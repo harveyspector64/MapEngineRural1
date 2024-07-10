@@ -31,6 +31,11 @@ export default class Renderer {
     }
 
     renderChunk(chunk) {
+        if (!chunk || !chunk.terrain) {
+            console.error("Attempted to render invalid chunk:", chunk);
+            return;
+        }
+
         const { x: chunkX, y: chunkY, terrain } = chunk;
         const chunkPixelSize = terrain.length * this.tileSize;
         const offsetX = chunkX * chunkPixelSize - this.cameraX;
@@ -54,6 +59,8 @@ export default class Renderer {
                         this.tileSize, 
                         this.tileSize
                     );
+                } else {
+                    console.warn(`Missing sprite for tile type: ${tile}`);
                 }
             }
         }
@@ -68,6 +75,10 @@ export default class Renderer {
     drawChunkBoundaries(chunks) {
         this.ctx.strokeStyle = 'red';
         chunks.forEach(chunk => {
+            if (!chunk || !chunk.terrain) {
+                console.error("Invalid chunk in drawChunkBoundaries:", chunk);
+                return;
+            }
             const chunkSize = chunk.terrain.length * this.tileSize;
             this.ctx.strokeRect(
                 chunk.x * chunkSize - this.cameraX,
