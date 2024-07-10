@@ -8,54 +8,54 @@ export const STRUCTURES = {
 };
 
 export default class StructureGenerator {
-    constructor(terrain) {
-        this.terrain = terrain;
+    constructor() {
+        // No need for parameters in the constructor
     }
 
-    generate() {
+    generate(terrain) {
         const structures = [];
         
         // Place barns on farmland
         for (let i = 0; i < 3; i++) {
-            const position = this.findSuitablePosition(STRUCTURES.BARN);
+            const position = this.findSuitablePosition(terrain, STRUCTURES.BARN);
             if (position) {
                 structures.push({ type: STRUCTURES.BARN, position });
-                this.applyStructureToTerrain(position, STRUCTURES.BARN);
+                this.applyStructureToTerrain(terrain, position, STRUCTURES.BARN);
             }
         }
 
         // Place silos on farmland
         for (let i = 0; i < 2; i++) {
-            const position = this.findSuitablePosition(STRUCTURES.SILO);
+            const position = this.findSuitablePosition(terrain, STRUCTURES.SILO);
             if (position) {
                 structures.push({ type: STRUCTURES.SILO, position });
-                this.applyStructureToTerrain(position, STRUCTURES.SILO);
+                this.applyStructureToTerrain(terrain, position, STRUCTURES.SILO);
             }
         }
 
         return structures;
     }
 
-    findSuitablePosition(structureType) {
+    findSuitablePosition(terrain, structureType) {
         const maxAttempts = 100;
         for (let i = 0; i < maxAttempts; i++) {
-            const x = Math.floor(Math.random() * this.terrain[0].length);
-            const y = Math.floor(Math.random() * this.terrain.length);
+            const x = Math.floor(Math.random() * terrain[0].length);
+            const y = Math.floor(Math.random() * terrain.length);
 
-            if (this.isSuitableForStructure(x, y, structureType)) {
+            if (this.isSuitableForStructure(terrain, x, y, structureType)) {
                 return { x, y };
             }
         }
         return null;
     }
 
-    isSuitableForStructure(x, y, structureType) {
+    isSuitableForStructure(terrain, x, y, structureType) {
         // Ensure the structure is placed on farmland tiles (dirt or crop)
         const suitableTiles = [TILES.FIELD, TILES.CROP];
-        return suitableTiles.includes(this.terrain[y][x]);
+        return suitableTiles.includes(terrain[y][x]);
     }
 
-    applyStructureToTerrain(position, structureType) {
-        this.terrain[position.y][position.x] = structureType;
+    applyStructureToTerrain(terrain, position, structureType) {
+        terrain[position.y][position.x] = structureType;
     }
 }
