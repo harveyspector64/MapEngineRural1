@@ -5,65 +5,66 @@ import { TILES } from './TerrainGenerator.js';
 const ROAD_TILE = 'road';
 
 export default class RoadGenerator {
-    constructor(terrain, structures) {
-        this.terrain = terrain;
-        this.structures = structures;
-        this.width = terrain[0].length;
-        this.height = terrain.length;
-        this.roads = Array(this.height).fill().map(() => Array(this.width).fill(false));
+    constructor() {
+        // Remove any parameters from the constructor
+        // We'll generate roads for each chunk separately
     }
 
-    generate() {
-        this.generatePrimaryRoad();
-        this.generateSecondaryRoads();
-        this.connectStructures();
-        return this.roads;
+    generate(terrain, structures) {
+        const width = terrain[0].length;
+        const height = terrain.length;
+        const roads = Array(height).fill().map(() => Array(width).fill(false));
+
+        this.generatePrimaryRoad(terrain, roads);
+        this.generateSecondaryRoads(terrain, roads);
+        this.connectStructures(terrain, structures, roads);
+
+        return roads;
     }
 
-generatePrimaryRoad() {
-    let y = Math.floor(this.height / 2);
-    for (let x = 0; x < this.width; x++) {
-        if (Math.random() < 0.1) y += Math.random() < 0.5 ? 1 : -1;
-        y = Math.max(1, Math.min(this.height - 2, y));
-        if (this.isValidRoadPosition(x, y) && this.isValidRoadPosition(x, y + 1)) {
-            this.placeRoad(x, y);
-            this.placeRoad(x, y + 1);
-        } else if (this.isValidRoadPosition(x, y)) {
-            this.placeRoad(x, y);
-        }
-    }
-}
-
-    generateSecondaryRoads() {
-        const numSecondaryRoads = Math.floor(this.width / 50);
-        for (let i = 0; i < numSecondaryRoads; i++) {
-            const x = Math.floor((i + 1) * this.width / (numSecondaryRoads + 1));
-            this.createVerticalRoad(x);
-        }
-    }
-
-    createVerticalRoad(x) {
-        for (let y = 0; y < this.height; y++) {
-            if (this.isValidRoadPosition(x, y)) {
-                this.placeRoad(x, y);
+    generatePrimaryRoad(terrain, roads) {
+        const height = terrain.length;
+        const width = terrain[0].length;
+        let y = Math.floor(height / 2);
+        for (let x = 0; x < width; x++) {
+            if (Math.random() < 0.1) y += Math.random() < 0.5 ? 1 : -1;
+            y = Math.max(1, Math.min(height - 2, y));
+            if (this.isValidRoadPosition(terrain, x, y)) {
+                roads[y][x] = true;
             }
         }
     }
 
-    connectStructures() {
-        this.structures.forEach(structure => {
+    generateSecondaryRoads(terrain, roads) {
+        const width = terrain[0].length;
+        const height = terrain.length;
+        const numSecondaryRoads = Math.floor(width / 50);
+        for (let i = 0; i < numSecondaryRoads; i++) {
+            const x = Math.floor((i + 1) * width / (numSecondaryRoads + 1));
+            for (let y = 0; y < height; y++) {
+                if (this.isValidRoadPosition(terrain, x, y)) {
+                    roads[y][x] = true;
+                }
+            }
+        }
+    }
+
+    connectStructures(terrain, structures, roads) {
+        structures.forEach(structure => {
             const { x, y } = structure.position;
-            this.connectToNearestRoad(x, y);
+            this.connectToNearestRoad(terrain, roads, x, y);
         });
     }
 
-    connectToNearestRoad(startX, startY) {
-        const maxDistance = Math.max(this.width, this.height);
+    connectToNearestRoad(terrain, roads, startX, startY) {
+        const width = terrain[0].length;
+        const height = terrain.length;
+        const maxDistance = Math.max(width, height);
         for (let d = 1; d < maxDistance; d++) {
-            for (let y = Math.max(0, startY - d); y <= Math.min(this.height - 1, startY + d); y++) {
-                for (let x = Math.max(0, startX - d); x <= Math.min(this.width - 1, startX + d); x++) {
-                    if (this.roads[y][x]) {
-                        this.createSimplePath(startX, startY, x, y);
+            for (let y = Math.max(0, startY - d); y <= Math.min(height - 1, startY + d); y++) {
+                for (let x = Math.max(0, startX - d); x <= Math.min(width - 1, startX + d); x++) {
+                    if (roads[y][x]) {
+                        this.createSimplePath(terrain, roads, startX, startY, x, y);
                         return;
                     }
                 }
@@ -71,34 +72,21 @@ generatePrimaryRoad() {
         }
     }
 
-    createSimplePath(startX, startY, endX, endY) {
+    createSimplePath(terrain, roads, startX, startY, endX, endY) {
         let x = startX;
         let y = startY;
         while (x !== endX || y !== endY) {
             if (x !== endX) {
                 x += x < endX ? 1 : -1;
-                if (this.isValidRoadPosition(x, y)) this.placeRoad(x, y);
+                if (this.isValidRoadPosition(terrain, x, y)) roads[y][x] = true;
             } else if (y !== endY) {
                 y += y < endY ? 1 : -1;
-                if (this.isValidRoadPosition(x, y)) this.placeRoad(x, y);
+                if (this.isValidRoadPosition(terrain, x, y)) roads[y][x] = true;
             }
         }
     }
 
-isValidRoadPosition(x, y) {
-    if (!this.isValidPosition(x, y)) return false;
-    const tile = this.terrain[y][x];
-    return tile !== TILES.WATER && tile !== TILES.MOUNTAIN && !this.roads[y][x];
-}
-
-    isValidPosition(x, y) {
-        return x >= 0 && x < this.width && y >= 0 && y < this.height;
-    }
-
-    placeRoad(x, y) {
-        if (this.isValidPosition(x, y)) {
-            this.roads[y][x] = true;
-            this.terrain[y][x] = ROAD_TILE;
-        }
+    isValidRoadPosition(terrain, x, y) {
+        return terrain[y] && terrain[y][x] && terrain[y][x] !== TILES.WATER && terrain[y][x] !== TILES.MOUNTAIN;
     }
 }
