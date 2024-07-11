@@ -39,8 +39,8 @@ export default class TerrainGenerator {
         }
     }
 
-    generate(chunkX, chunkY) {
-        if (this.debug) console.log(`Generating terrain for chunk (${chunkX}, ${chunkY})`);
+generate(chunkX, chunkY) {
+    if (this.debug) console.log(`Generating terrain for chunk (${chunkX}, ${chunkY})`);
         let terrain = this.generateBaseTerrain();
         const regions = this.assignRegions(chunkX, chunkY);
         terrain = this.generateRegionFeatures(terrain, regions, chunkX, chunkY);
@@ -62,8 +62,8 @@ export default class TerrainGenerator {
         const regions = [];
         for (let y = 0; y < this.height; y += this.gridSize) {
             for (let x = 0; x < this.width; x += this.gridSize) {
-                const worldX = chunkX * this.width + x;
-                const worldY = chunkY * this.height + y;
+const worldX = chunkX * this.width + x;
+const worldY = chunkY * this.height + y;
                 const regionType = this.getRandomRegionType(worldX, worldY);
                 regions.push({x, y, type: regionType});
                 if (this.debug) console.log(`Region at (${x}, ${y}): ${regionType}`);
