@@ -103,44 +103,45 @@ const worldY = chunkY * this.height + y;
         return terrain;
     }
 
-    generateFarmland(terrain, region, chunkX, chunkY) {
-        if (this.debug) console.log(`Generating farmland at (${region.x}, ${region.y})`);
-        const minFieldSize = 8;
-        const maxFieldSize = 16;
-        let y = region.y;
-        while (y < Math.min(region.y + this.gridSize, this.height)) {
-            let x = region.x;
-            while (x < Math.min(region.x + this.gridSize, this.width)) {
-                const worldX = chunkX * this.width + x;
-                const worldY = chunkY * this.height + y;
-                if (this.noise(worldX / 100, worldY / 100, 0.5) > 0.3) {
-                    const fieldWidth = minFieldSize + Math.floor(this.noise(worldX / 50, worldY / 50, 1) * (maxFieldSize - minFieldSize));
-                    const fieldHeight = minFieldSize + Math.floor(this.noise(worldX / 50, worldY / 50, 2) * (maxFieldSize - minFieldSize));
-                    this.placeRectangularField(terrain, x, y, fieldWidth, fieldHeight, chunkX, chunkY);
-                    x += fieldWidth;
-                } else {
-                    x += minFieldSize;
-                }
+generateFarmland(terrain, region, chunkX, chunkY) {
+    if (this.debug) console.log(`Generating farmland at (${region.x}, ${region.y})`);
+    const minFieldSize = 8;
+    const maxFieldSize = 16;
+    let y = region.y;
+    while (y < Math.min(region.y + this.gridSize, this.height)) {
+        let x = region.x;
+        while (x < Math.min(region.x + this.gridSize, this.width)) {
+            const worldX = chunkX * this.width + x;
+            const worldY = chunkY * this.height + y;
+            if (this.noise(worldX / 100, worldY / 100, 0.5) > 0.3) {
+                const fieldWidth = minFieldSize + Math.floor(this.noise(worldX / 50, worldY / 50, 1) * (maxFieldSize - minFieldSize));
+                const fieldHeight = minFieldSize + Math.floor(this.noise(worldX / 50, worldY / 50, 2) * (maxFieldSize - minFieldSize));
+                this.placeRectangularField(terrain, x, y, fieldWidth, fieldHeight, chunkX, chunkY);
+                x += fieldWidth;
+            } else {
+                x += minFieldSize;
             }
-            y += maxFieldSize;
         }
+        y += maxFieldSize;
     }
+}
 
-    placeRectangularField(terrain, x, y, width, height, chunkX, chunkY) {
-        const worldX = chunkX * this.width + x;
-        const worldY = chunkY * this.height + y;
-        const isCrop = this.noise(worldX / 50, worldY / 50, 3) > 0.5;
-        for (let dy = 0; dy < height; dy++) {
-            for (let dx = 0; dx < width; dx++) {
-                const tx = x + dx;
-                const ty = y + dy;
-                if (tx < this.width && ty < this.height) {
-                    terrain[ty][tx] = isCrop ? TILES.CROP : TILES.FIELD;
-                }
+placeRectangularField(terrain, x, y, width, height, chunkX, chunkY) {
+    const worldX = chunkX * this.width + x;
+    const worldY = chunkY * this.height + y;
+    const isCrop = this.noise(worldX / 50, worldY / 50, 3) > 0.5;
+    for (let dy = 0; dy < height; dy++) {
+        for (let dx = 0; dx < width; dx++) {
+            const tx = x + dx;
+            const ty = y + dy;
+            if (tx < this.width && ty < this.height) {
+                terrain[ty][tx] = isCrop ? TILES.CROP : TILES.FIELD;
             }
         }
-        if (this.debug) console.log(`Placed ${isCrop ? 'crop' : 'field'} at (${x}, ${y}), size: ${width}x${height}`);
     }
+    if (this.debug) console.log(`Placed ${isCrop ? 'crop' : 'field'} at (${x}, ${y}), size: ${width}x${height}`);
+}
+
 
     generateForest(terrain, region, chunkX, chunkY) {
         if (this.debug) console.log(`Generating forest at (${region.x}, ${region.y})`);
@@ -226,21 +227,47 @@ const worldY = chunkY * this.height + y;
         }
     }
 
-    addTreesAndBushes(terrain, x, y, openGrassChance, chunkX, chunkY) {
-        const worldX = chunkX * this.width + x;
-        const worldY = chunkY * this.height + y;
-        const chance = this.noise(worldX / 10, worldY / 10, 8);
-        if (chance < 0.05) {
-            terrain[y][x] = TILES.TREE;
-            if (this.debug) console.log(`Placed tree at (${x}, ${y})`);
-        } else if (chance < 0.1) {
-            terrain[y][x] = TILES.BUSH;
-            if (this.debug) console.log(`Placed bush at (${x}, ${y})`);
-        } else if (chance < openGrassChance) {
-            terrain[y][x] = TILES.GRASS;
+addTreesAndBushes(terrain, x, y, openGrassChance, chunkX, chunkY) {
+    const worldX = chunkX * this.width + x;
+    const worldY = chunkY * this.height + y;
+    const chance = this.noise(worldX / 10, worldY / 10, 8);
+    if (chance < 0.05) {
+        this.placeTreeCluster(terrain, x, y);
+    } else if (chance < 0.1) {
+        this.placeBushCluster(terrain, x, y);
+    } else if (chance < openGrassChance) {
+        terrain[y][x] = TILES.GRASS;
+    }
+}
+
+placeTreeCluster(terrain, centerX, centerY) {
+    const clusterSize = 3;
+    for (let dy = -clusterSize; dy <= clusterSize; dy++) {
+        for (let dx = -clusterSize; dx <= clusterSize; dx++) {
+            const x = centerX + dx;
+            const y = centerY + dy;
+            if (x >= 0 && x < this.width && y >= 0 && y < this.height && Math.random() < 0.7) {
+                terrain[y][x] = TILES.TREE;
+            }
         }
     }
+    if (this.debug) console.log(`Placed tree cluster at (${centerX}, ${centerY})`);
+}
 
+    placeBushCluster(terrain, centerX, centerY) {
+    const clusterSize = 2;
+    for (let dy = -clusterSize; dy <= clusterSize; dy++) {
+        for (let dx = -clusterSize; dx <= clusterSize; dx++) {
+            const x = centerX + dx;
+            const y = centerY + dy;
+            if (x >= 0 && x < this.width && y >= 0 && y < this.height && Math.random() < 0.5) {
+                terrain[y][x] = TILES.BUSH;
+            }
+        }
+    }
+    if (this.debug) console.log(`Placed bush cluster at (${centerX}, ${centerY})`);
+}
+    
     smoothTransitions(terrain) {
         if (this.debug) console.log("Smoothing terrain transitions...");
         const smoothed = JSON.parse(JSON.stringify(terrain));
