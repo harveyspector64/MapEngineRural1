@@ -75,7 +75,7 @@ export default class TerrainGenerator {
 
     getRandomRegionType(x, y) {
         const noiseValue = this.noise(x / 1000, y / 1000, 0);
-        if (this.debug) console.log(`Noise value for region: ${noiseValue}`);
+        if (this.debug) console.log(`Noise value for region at (${x}, ${y}): ${noiseValue}`);
         if (noiseValue < 0.3) return REGION_TYPES.FARMLAND;
         if (noiseValue < 0.6) return REGION_TYPES.FOREST;
         if (noiseValue < 0.8) return REGION_TYPES.MIXED;
@@ -241,7 +241,7 @@ export default class TerrainGenerator {
         }
     }
 
-smoothTransitions(terrain) {
+    smoothTransitions(terrain) {
         if (this.debug) console.log("Smoothing terrain transitions...");
         const smoothed = JSON.parse(JSON.stringify(terrain));
         for (let y = 0; y < this.height; y++) {
@@ -254,7 +254,7 @@ smoothTransitions(terrain) {
         return smoothed;
     }
 
-    smoothGrassTransition(terrain, smoothed, x, y) {
+smoothGrassTransition(terrain, smoothed, x, y) {
         const neighborhoodSize = 2;
         let treesCount = 0;
         let bushesCount = 0;
