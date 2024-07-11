@@ -27,6 +27,7 @@ async function init() {
 
     render();
     setupControls();
+    setupMobileControls();
     setupDebugInfo();
 }
 
@@ -68,6 +69,42 @@ function setupControls() {
         }
         chunkManager.updateViewport(cameraX, cameraY);
         updateDebugInfo();
+    });
+}
+
+function setupMobileControls() {
+    let touchStartX, touchStartY;
+    let isTouching = false;
+
+    canvas.addEventListener('touchstart', (e) => {
+        isTouching = true;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        if (!isTouching) return;
+
+        e.preventDefault(); // Prevent default scrolling behavior
+
+        const touchEndX = e.touches[0].clientX;
+        const touchEndY = e.touches[0].clientY;
+
+        const dx = touchStartX - touchEndX;
+        const dy = touchStartY - touchEndY;
+
+        cameraX += dx;
+        cameraY += dy;
+
+        touchStartX = touchEndX;
+        touchStartY = touchEndY;
+
+        chunkManager.updateViewport(cameraX, cameraY);
+        updateDebugInfo();
+    });
+
+    canvas.addEventListener('touchend', () => {
+        isTouching = false;
     });
 }
 
