@@ -228,7 +228,7 @@ export default class TerrainGenerator {
         console.log("Smoothing terrain transitions...");
         const smoothed = JSON.parse(JSON.stringify(terrain));
         for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width); x++) {
+            for (let x = 0; x < this.width; x++) {
                 if (terrain[y][x] === TILES.GRASS) {
                     this.smoothGrassTransition(terrain, smoothed, x, y);
                 }
@@ -255,7 +255,7 @@ export default class TerrainGenerator {
 
         if (treesCount > 0 && Math.random() < treesCount / 10) {
             smoothed[y][x] = TILES.TREE;
-        } else if (bushesCount > 0 && Math.random() < bushesCount / 8) {
+        } else if bushesCount > 0 && Math.random() < bushesCount / 8) {
             smoothed[y][x] = TILES.BUSH;
         }
     }
