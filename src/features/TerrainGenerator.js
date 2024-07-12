@@ -37,16 +37,25 @@ export default class TerrainGenerator {
         console.log(`TerrainGenerator initialized with dimensions: ${width}x${height}`);
     }
 
-    generate() {
-        console.log("Starting terrain generation...");
-        let terrain = this.generateBaseTerrain();
-        const regions = this.assignRegions();
-        terrain = this.generateRegionFeatures(terrain, regions);
-        terrain = this.smoothTransitions(terrain);
-        terrain = this.addNaturalElements(terrain, regions);
-        console.log("Terrain generation completed.");
-        return terrain;
-    }
+generate(chunkX, chunkY) {
+    // Set a unique seed based on the chunk's coordinates
+    this.seedNoise(chunkX, chunkY);
+    console.log(`Generating terrain for chunk (${chunkX}, ${chunkY}) with seed ${this.noiseSeed}`);
+    
+    // Proceed with the terrain generation process
+    let terrain = this.generateBaseTerrain();
+    const regions = this.assignRegions();
+    terrain = this.generateRegionFeatures(terrain, regions);
+    terrain = this.smoothTransitions(terrain);
+    terrain = this.addNaturalElements(terrain, regions);
+    return terrain;
+}
+
+seedNoise(chunkX, chunkY) {
+    // Introduce variation by incorporating chunk coordinates into the noise seed
+    // This makes sure that each chunk has a different starting point for its terrain pattern
+    this.noiseSeed = this.perlinNoise(chunkX * 100, chunkY * 100, this.noiseSeed);
+}
 
     generateBaseTerrain() {
         console.log("Generating base terrain (all grass)");
