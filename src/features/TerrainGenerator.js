@@ -253,12 +253,12 @@ export default class TerrainGenerator {
             }
         }
 
-        if (treesCount > 0 && Math.random() < treesCount / 10) {
-            smoothed[y][x] = TILES.TREE;
-        } else if (bushesCount > 0 && Math.random() < bushesCount / 8) {
-            smoothed[y][x] = TILES.BUSH;
-        }
-    }
+if (treesCount > 0 && Math.random() < treesCount / 10) {
+    smoothed[y][x] = TILES.TREE;
+} else if (bushesCount > 0 && Math.random() < bushesCount / 8) { // This line
+    smoothed[y][x] = TILES.BUSH;
+}
+
 
     // Existing Perlin noise implementation
     noise(x, y) {
