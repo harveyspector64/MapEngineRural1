@@ -56,7 +56,7 @@ export default class TerrainGenerator {
     // A simple hash function to generate a more unique seed
     hash(x, y, seed) {
         const h = 31 * x + 17 * y + seed * 101;
-        return h & h;
+        return h & 0x7fffffff; // Ensure positive hash value
     }
 
     generateBaseTerrain() {
