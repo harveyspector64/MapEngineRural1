@@ -11,33 +11,28 @@ export default class MapGenerator {
         this.structureGenerator = new StructureGenerator();
     }
 
-    generateChunk(chunkX, chunkY) {
-        // Generate base terrain for the chunk
-        const terrain = this.terrainGenerator.generate();
+generateChunk(chunkX, chunkY) {
+    // Generate terrain for this chunk
+    const terrain = this.terrainGenerator.generate(chunkX, chunkY);
+    const structures = this.structureGenerator.generate(terrain);
+    const roads = this.roadGenerator.generate(terrain, structures);
 
-        // Generate structures for the chunk
-        const structures = this.structureGenerator.generate(terrain);
-
-        // Generate roads for the chunk
-        const roads = this.roadGenerator.generate(terrain, structures);
-
-        // Apply roads to terrain
-        for (let y = 0; y < this.chunkSize; y++) {
-            for (let x = 0; x < this.chunkSize; x++) {
-                if (roads[y][x]) {
-                    terrain[y][x] = 'road';
-                }
+    for (let y = 0; y < this.chunkSize; y++) {
+        for (let x = 0; x < this.chunkSize; x++) {
+            if (roads[y][x]) {
+                terrain[y][x] = 'road';
             }
         }
-
-        return {
-            x: chunkX,
-            y: chunkY,
-            terrain,
-            structures,
-            roads
-        };
     }
+
+    return {
+        x: chunkX,
+        y: chunkY,
+        terrain,
+        structures,
+        roads
+    };
+}
 
     getNeighboringChunks(chunkX, chunkY) {
         return [
