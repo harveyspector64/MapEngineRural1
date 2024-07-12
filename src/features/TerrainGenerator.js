@@ -49,13 +49,14 @@ export default class TerrainGenerator {
     }
 
     seedNoise(chunkX, chunkY) {
-        // Modify the existing noise seed setup to incorporate chunk coordinates
-        this.noiseSeed = this.combineSeeds(chunkX, chunkY);
+        // Use a hash function to combine chunk coordinates with the initial noise seed
+        this.noiseSeed = this.hash(chunkX, chunkY, this.noiseSeed);
     }
 
-    combineSeeds(x, y) {
-        // Combine chunk coordinates to create a unique seed
-        return x * 100000 + y;
+    // A simple hash function to generate a more unique seed
+    hash(x, y, seed) {
+        const h = 31 * x + 17 * y + seed * 101;
+        return h & h;
     }
 
     generateBaseTerrain() {
@@ -227,7 +228,7 @@ export default class TerrainGenerator {
         console.log("Smoothing terrain transitions...");
         const smoothed = JSON.parse(JSON.stringify(terrain));
         for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
+            for (let x = 0; x < this.width); x++) {
                 if (terrain[y][x] === TILES.GRASS) {
                     this.smoothGrassTransition(terrain, smoothed, x, y);
                 }
@@ -272,8 +273,8 @@ export default class TerrainGenerator {
 
         return this.lerp(v, this.lerp(u, this.grad(this.p[AA], x, y),
             this.grad(this.p[BA], x - 1, y)),
-            this.lerp(u, this.grad(this.p[AB], x, y - 1),
-                this.grad(this.p[BB], x - 1, y - 1)));
+        this.lerp(u, this.grad(this.p[AB], x, y - 1),
+            this.grad(this.p[BB], x - 1, y - 1)));
     }
 
     fade(t) {
