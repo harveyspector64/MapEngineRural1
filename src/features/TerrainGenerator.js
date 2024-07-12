@@ -1,5 +1,3 @@
-// src/features/TerrainGenerator.js
-
 export const TILES = {
     GRASS: 'grass',
     WATER: 'water',
@@ -22,10 +20,10 @@ export default class TerrainGenerator {
         this.height = height;
         this.noiseSeed = Math.random();
         this.gridSize = 64; // Defines the size of regions
-        
+
         // Initialize permutation table for Perlin noise
         this.p = new Array(512);
-        const permutation = Array.from({length: 256}, (_, i) => i);
+        const permutation = Array.from({ length: 256 }, (_, i) => i);
         for (let i = 0; i < 256; i++) {
             const j = Math.floor(Math.random() * (i + 1));
             [permutation[i], permutation[j]] = [permutation[j], permutation[i]];
@@ -37,25 +35,28 @@ export default class TerrainGenerator {
         console.log(`TerrainGenerator initialized with dimensions: ${width}x${height}`);
     }
 
-generate(chunkX, chunkY) {
-    // Set a unique seed based on the chunk's coordinates
-    this.seedNoise(chunkX, chunkY);
-    console.log(`Generating terrain for chunk (${chunkX}, ${chunkY}) with seed ${this.noiseSeed}`);
-    
-    // Proceed with the terrain generation process
-    let terrain = this.generateBaseTerrain();
-    const regions = this.assignRegions();
-    terrain = this.generateRegionFeatures(terrain, regions);
-    terrain = this.smoothTransitions(terrain);
-    terrain = this.addNaturalElements(terrain, regions);
-    return terrain;
-}
+    generate(chunkX, chunkY) {
+        // Set a unique seed based on the chunk's coordinates
+        this.seedNoise(chunkX, chunkY);
+        console.log(`Generating terrain for chunk (${chunkX}, ${chunkY}) with seed ${this.noiseSeed}`);
 
-seedNoise(chunkX, chunkY) {
-    // Introduce variation by incorporating chunk coordinates into the noise seed
-    // This makes sure that each chunk has a different starting point for its terrain pattern
-    this.noiseSeed = this.perlinNoise(chunkX * 100, chunkY * 100, this.noiseSeed);
-}
+        let terrain = this.generateBaseTerrain();
+        const regions = this.assignRegions();
+        terrain = this.generateRegionFeatures(terrain, regions);
+        terrain = this.smoothTransitions(terrain);
+        terrain = this.addNaturalElements(terrain, regions);
+        return terrain;
+    }
+
+    seedNoise(chunkX, chunkY) {
+        // Modify the existing noise seed setup to incorporate chunk coordinates
+        this.noiseSeed = this.combineSeeds(chunkX, chunkY);
+    }
+
+    combineSeeds(x, y) {
+        // Combine chunk coordinates to create a unique seed
+        return x * 100000 + y;
+    }
 
     generateBaseTerrain() {
         console.log("Generating base terrain (all grass)");
@@ -68,7 +69,7 @@ seedNoise(chunkX, chunkY) {
         for (let y = 0; y < this.height; y += this.gridSize) {
             for (let x = 0; x < this.width; x += this.gridSize) {
                 const regionType = this.getRandomRegionType();
-                regions.push({x, y, type: regionType});
+                regions.push({ x, y, type: regionType });
             }
         }
         console.log(`${regions.length} regions assigned.`);
@@ -258,7 +259,7 @@ seedNoise(chunkX, chunkY) {
         }
     }
 
-    // Perlin noise implementation
+    // Existing Perlin noise implementation
     noise(x, y) {
         const X = Math.floor(x) & 255;
         const Y = Math.floor(y) & 255;
@@ -266,15 +267,23 @@ seedNoise(chunkX, chunkY) {
         y -= Math.floor(y);
         const u = this.fade(x);
         const v = this.fade(y);
-        const A = this.p[X] + Y, B = this.p[X + 1] + Y;
-        return this.lerp(v, this.lerp(u, this.grad(this.p[A], x, y), 
-                                         this.grad(this.p[B], x - 1, y)),
-                            this.lerp(u, this.grad(this.p[A + 1], x, y - 1),
-                                         this.grad(this.p[B + 1], x - 1, y - 1)));
+        const A = this.p[X] + Y, AA = this.p[A], AB = this.p[A + 1];
+        const B = this.p[X + 1] + Y, BA = this.p[B], BB = this.p[B + 1];
+
+        return this.lerp(v, this.lerp(u, this.grad(this.p[AA], x, y),
+            this.grad(this.p[BA], x - 1, y)),
+            this.lerp(u, this.grad(this.p[AB], x, y - 1),
+                this.grad(this.p[BB], x - 1, y - 1)));
     }
 
-    fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
-    lerp(t, a, b) { return a + t * (b - a); }
+    fade(t) {
+        return t * t * t * (t * (t * 6 - 15) + 10);
+    }
+
+    lerp(t, a, b) {
+        return a + t * (b - a);
+    }
+
     grad(hash, x, y) {
         const h = hash & 15;
         const u = h < 8 ? x : y;
