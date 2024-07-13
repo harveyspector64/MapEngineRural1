@@ -5,17 +5,32 @@ export default class UFO {
         this.x = x;
         this.y = y;
         this.speed = speed;
-        this.sprite = null;
         this.rotation = 0;
-        
+        this.vx = 0;
+        this.vy = 0;
+        this.acceleration = 0.2;
+        this.maxSpeed = 10;
+        this.friction = 0.95;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+        if (this.vx !== 0 || this.vy !== 0) {
+            this.rotation = Math.atan2(this.vy, this.vx);
+        }
     }
 
     move(dx, dy) {
-        this.x += dx * this.speed;
-        this.y += dy * this.speed;
-        if (dx !== 0 || dy !== 0) {
-            this.rotation = Math.atan2(dy, dx);
-            }
+        this.vx += dx * this.acceleration;
+        this.vy += dy * this.acceleration;
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (speed > this.maxSpeed) {
+            const ratio = this.maxSpeed / speed;
+            this.vx *= ratio;
+            this.vy *= ratio;
         }
     }
 
