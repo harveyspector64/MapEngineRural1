@@ -12,7 +12,7 @@ export default class Renderer {
     }
 
     async loadSprites(tileTypes) {
-        const loadPromises = tileTypes.map(type => 
+        const loadPromises = [...tileTypes, 'ufo'].map(type => 
             new Promise((resolve, reject) => {
                 const img = new Image();
                 img.onload = () => {
@@ -29,6 +29,20 @@ export default class Renderer {
 
     clear() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+        renderUFO(ufo) {
+        const sprite = this.sprites['ufo'];
+        if (sprite) {
+            const { x, y } = ufo.getPosition();
+            this.ctx.drawImage(
+                sprite,
+                (x - this.cameraX) * this.zoomLevel,
+                (y - this.cameraY) * this.zoomLevel,
+                32 * this.zoomLevel,
+                32 * this.zoomLevel
+            );
+        }
     }
 
     renderChunk(chunk) {
