@@ -104,12 +104,15 @@ function handleWheel(e) {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     
-    cameraX += (mouseX / zoomLevel - mouseX / newZoom);
-    cameraY += (mouseY / zoomLevel - mouseY / newZoom);
+    const worldX = cameraX + mouseX / zoomLevel;
+    const worldY = cameraY + mouseY / zoomLevel;
     
     zoomLevel = newZoom;
     renderer.setZoom(zoomLevel);
     chunkManager.setZoom(zoomLevel);
+    
+    cameraX = worldX - mouseX / zoomLevel;
+    cameraY = worldY - mouseY / zoomLevel;
 }
 
 function handleTouchStart(e) {
@@ -131,7 +134,7 @@ function handleTouchMove(e) {
         const deltaX = (touchX - lastTouchX) / zoomLevel;
         const deltaY = (touchY - lastTouchY) / zoomLevel;
 
-        ufo.move(deltaX / UFO_SPEED, deltaY / UFO_SPEED);
+        ufo.move(deltaX / 10, deltaY / 10);
 
         lastTouchX = touchX;
         lastTouchY = touchY;
@@ -149,12 +152,15 @@ function handleTouchMove(e) {
         const canvasMidX = midX - rect.left;
         const canvasMidY = midY - rect.top;
         
-        cameraX += (canvasMidX / zoomLevel - canvasMidX / newZoom);
-        cameraY += (canvasMidY / zoomLevel - canvasMidY / newZoom);
+        const worldX = cameraX + canvasMidX / zoomLevel;
+        const worldY = cameraY + canvasMidY / zoomLevel;
         
         zoomLevel = newZoom;
         renderer.setZoom(zoomLevel);
         chunkManager.setZoom(zoomLevel);
+        
+        cameraX = worldX - canvasMidX / zoomLevel;
+        cameraY = worldY - canvasMidY / zoomLevel;
         
         lastTouchDistance = currentDistance;
     }
@@ -176,20 +182,24 @@ function preventDefaultTouch(e) {
 }
 
 function setupDebugInfo() {
-    const debugDiv = document.createElement('div');
-    debugDiv.id = 'debug-info';
-    debugDiv.style.position = 'absolute';
-    debugDiv.style.top = '10px';
-    debugDiv.style.left = '10px';
-    debugDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    debugDiv.style.color = 'white';
-    debugDiv.style.padding = '10px';
-    document.body.appendChild(debugDiv);
-    updateDebugInfo();
+    let debugDiv = document.getElementById('debug-info');
+    if (!debugDiv) {
+        debugDiv = document.createElement('div');
+        debugDiv.id = 'debug-info';
+        debugDiv.style.position = 'absolute';
+        debugDiv.style.top = '10px';
+        debugDiv.style.left = '10px';
+        debugDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        debugDiv.style.color = 'white';
+        debugDiv.style.padding = '10px';
+        document.body.appendChild(debugDiv);
+    }
 }
 
 function updateDebugInfo() {
     const debugDiv = document.getElementById('debug-info');
+    if (!debugDiv) return;
+
     const currentChunkX = Math.floor(cameraX / (chunkManager.chunkSize * renderer.tileSize));
     const currentChunkY = Math.floor(cameraY / (chunkManager.chunkSize * renderer.tileSize));
     const ufoPos = ufo.getPosition();
