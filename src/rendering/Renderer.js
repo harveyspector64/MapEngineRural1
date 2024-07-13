@@ -31,20 +31,6 @@ export default class Renderer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-        renderUFO(ufo) {
-        const sprite = this.sprites['ufo'];
-        if (sprite) {
-            const { x, y } = ufo.getPosition();
-            this.ctx.drawImage(
-                sprite,
-                (x - this.cameraX) * this.zoomLevel,
-                (y - this.cameraY) * this.zoomLevel,
-                32 * this.zoomLevel,
-                32 * this.zoomLevel
-            );
-        }
-    }
-
     renderChunk(chunk) {
         if (!chunk || !chunk.terrain) {
             console.error("Attempted to render invalid chunk:", chunk);
@@ -78,6 +64,20 @@ export default class Renderer {
                     console.warn(`Missing sprite for tile type: ${tile}`);
                 }
             }
+        }
+    }
+
+    renderUFO(ufo) {
+        const sprite = this.sprites['ufo'];
+        if (sprite) {
+            const { x, y } = ufo.getPosition();
+            this.ctx.drawImage(
+                sprite,
+                (x - this.cameraX) * this.zoomLevel,
+                (y - this.cameraY) * this.zoomLevel,
+                32 * this.zoomLevel,
+                32 * this.zoomLevel
+            );
         }
     }
 
