@@ -8,8 +8,8 @@ export default class UFO {
         this.rotation = 0;
         this.vx = 0;
         this.vy = 0;
-        this.acceleration = 0.2;
-        this.maxSpeed = 10;
+        this.acceleration = 0.4;
+        this.maxSpeed = 15;
         this.friction = 0.95;
     }
 
