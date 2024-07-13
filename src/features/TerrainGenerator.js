@@ -17,24 +17,31 @@ const REGION_TYPES = {
 };
 
 export default class TerrainGenerator {
-    constructor(width, height) {
+    constructor(width, height, seed, chunkX, chunkY) {
         this.width = width;
         this.height = height;
-        this.noiseSeed = Math.random();
-        this.gridSize = 64; // Defines the size of regions
+        this.noiseSeed = seed;
+        this.chunkX = chunkX;
+        this.chunkY = chunkY;
+        this.gridSize = 64;
         
         // Initialize permutation table for Perlin noise
         this.p = new Array(512);
         const permutation = Array.from({length: 256}, (_, i) => i);
         for (let i = 0; i < 256; i++) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = Math.floor(this.seededRandom() * (i + 1));
             [permutation[i], permutation[j]] = [permutation[j], permutation[i]];
         }
         for (let i = 0; i < 512; i++) {
             this.p[i] = permutation[i & 255];
         }
 
-        console.log(`TerrainGenerator initialized with dimensions: ${width}x${height}`);
+        console.log(`TerrainGenerator initialized for chunk (${chunkX}, ${chunkY}) with seed: ${seed}`);
+    }
+
+    seededRandom() {
+        const x = Math.sin(this.noiseSeed++) * 10000;
+        return x - Math.floor(x);
     }
 
     generate() {
@@ -253,6 +260,8 @@ export default class TerrainGenerator {
     noise(x, y) {
         const X = Math.floor(x) & 255;
         const Y = Math.floor(y) & 255;
+        x += this.chunkX * this.width;
+        y += this.chunkY * this.height;
         x -= Math.floor(x);
         y -= Math.floor(y);
         const u = this.fade(x);
