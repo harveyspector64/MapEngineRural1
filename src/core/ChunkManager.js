@@ -1,8 +1,10 @@
 // src/core/ChunkManager.js
 import MapGenerator from './MapGenerator.js';
+import WorldManager from './WorldManager.js';
 
 export default class ChunkManager {
     constructor(viewportWidth, viewportHeight, chunkSize = 64) {
+        this.worldManager = new WorldManager();
         this.mapGenerator = new MapGenerator(chunkSize);
         this.chunkSize = chunkSize;
         this.viewportWidth = viewportWidth;
@@ -72,4 +74,12 @@ export default class ChunkManager {
         const key = `${x},${y}`;
         return this.loadedChunks.get(key) || this.recentlyUnloaded.get(key);
     }
+
+        generateChunk(x, y) {
+        const chunkSeed = this.worldManager.getChunkSeed(x, y);
+        const regionType = this.worldManager.getRegionType(x, y);
+        console.log(`Generating chunk (${x}, ${y}) with seed: ${chunkSeed}, region: ${regionType}`);
+        return this.mapGenerator.generateChunk(x, y, chunkSeed, regionType);
+    }
+}
 }
