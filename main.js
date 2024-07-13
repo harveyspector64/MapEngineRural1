@@ -3,6 +3,7 @@ import ChunkManager from './src/core/ChunkManager.js';
 import Renderer from './src/rendering/Renderer.js';
 import { TILES } from './src/features/TerrainGenerator.js';
 import WorldManager from './src/core/WorldManager.js';
+import UFO from './src/entities/UFO.js';
 
 const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
@@ -16,6 +17,7 @@ let isDragging = false;
 let lastTouchX = 0;
 let lastTouchY = 0;
 let lastTouchDistance = 0;
+let ufo;
 
 async function init() {
     canvas.width = window.innerWidth;
@@ -27,9 +29,11 @@ async function init() {
 
     await renderer.loadSprites(availableSprites);
 
-    worldManager = new WorldManager(Math.random()); // You can provide a specific seed if desired
+    worldManager = new WorldManager(Math.random());
     chunkManager = new ChunkManager(canvas.width, canvas.height);
     
+    ufo = new UFO(canvas.width / 2, canvas.height / 2);
+
     // Initial update for center of the map
     chunkManager.updateViewport(cameraX, cameraY);
 
@@ -52,6 +56,8 @@ function render() {
         }
     });
     
+    renderer.renderUFO(ufo);
+    
     // Draw chunk boundaries for debugging
     renderer.drawChunkBoundaries(Array.from(chunkManager.loadedChunks.values()));
 
@@ -72,15 +78,30 @@ function setupControls() {
 
     // Prevent default touch behavior
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+
+    // Mobile UFO controls
+    setupMobileControls();
 }
 
 function handleKeyDown(e) {
-    const moveDistance = 16 / zoomLevel; // Adjust movement based on zoom
+    const moveDistance = 16 / zoomLevel;
     switch(e.key) {
-        case 'ArrowUp': cameraY -= moveDistance; break;
-        case 'ArrowDown': cameraY += moveDistance; break;
-        case 'ArrowLeft': cameraX -= moveDistance; break;
-        case 'ArrowRight': cameraX += moveDistance; break;
+        case 'ArrowUp': 
+            ufo.move(0, -1);
+            cameraY -= moveDistance; 
+            break;
+        case 'ArrowDown': 
+            ufo.move(0, 1);
+            cameraY += moveDistance; 
+            break;
+        case 'ArrowLeft': 
+            ufo.move(-1, 0);
+            cameraX -= moveDistance; 
+            break;
+        case 'ArrowRight': 
+            ufo.move(1, 0);
+            cameraX += moveDistance; 
+            break;
     }
     chunkManager.updateViewport(cameraX, cameraY);
     updateDebugInfo();
@@ -102,6 +123,7 @@ function handleWheel(e) {
     
     zoomLevel = newZoom;
     renderer.setZoom(zoomLevel);
+    chunkManager.setZoom(zoomLevel);
     chunkManager.updateViewport(cameraX, cameraY);
     updateDebugInfo();
 }
@@ -140,7 +162,7 @@ function handleTouchMove(e) {
         const distanceDelta = currentDistance - lastTouchDistance;
         
         // Adjust zoom based on pinch gesture
-        const zoomDelta = distanceDelta * 0.005; // Adjust this value to change zoom sensitivity
+        const zoomDelta = distanceDelta * 0.005;
         const newZoom = Math.max(0.5, Math.min(4, zoomLevel + zoomDelta));
         
         // Calculate the midpoint of the two touches
@@ -170,7 +192,6 @@ function handleTouchEnd() {
     lastTouchDistance = 0;
 }
 
-// Add this new helper function
 function getTouchDistance(touches) {
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
@@ -179,6 +200,58 @@ function getTouchDistance(touches) {
 
 function preventDefaultTouch(e) {
     e.preventDefault();
+}
+
+function setupMobileControls() {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.id = 'mobile-controls';
+    controlsDiv.style.position = 'absolute';
+    controlsDiv.style.bottom = '20px';
+    controlsDiv.style.left = '50%';
+    controlsDiv.style.transform = 'translateX(-50%)';
+    controlsDiv.style.display = 'flex';
+    controlsDiv.style.justifyContent = 'center';
+    controlsDiv.style.alignItems = 'center';
+
+    const directions = ['up', 'down', 'left', 'right'];
+    directions.forEach(direction => {
+        const button = document.createElement('button');
+        button.textContent = direction;
+        button.style.margin = '0 10px';
+        button.style.padding = '20px';
+        button.style.fontSize = '24px';
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveUFO(direction);
+        });
+        controlsDiv.appendChild(button);
+    });
+
+    document.body.appendChild(controlsDiv);
+}
+
+function moveUFO(direction) {
+    const moveDistance = 16 / zoomLevel;
+    switch(direction) {
+        case 'up':
+            ufo.move(0, -1);
+            cameraY -= moveDistance;
+            break;
+        case 'down':
+            ufo.move(0, 1);
+            cameraY += moveDistance;
+            break;
+        case 'left':
+            ufo.move(-1, 0);
+            cameraX -= moveDistance;
+            break;
+        case 'right':
+            ufo.move(1, 0);
+            cameraX += moveDistance;
+            break;
+    }
+    chunkManager.updateViewport(cameraX, cameraY);
+    updateDebugInfo();
 }
 
 function setupDebugInfo() {
@@ -198,8 +271,10 @@ function updateDebugInfo() {
     const debugDiv = document.getElementById('debug-info');
     const currentChunkX = Math.floor(cameraX / (chunkManager.chunkSize * renderer.tileSize));
     const currentChunkY = Math.floor(cameraY / (chunkManager.chunkSize * renderer.tileSize));
+    const ufoPos = ufo.getPosition();
     debugDiv.innerHTML = `
         Camera: (${cameraX.toFixed(2)}, ${cameraY.toFixed(2)})<br>
+        UFO: (${ufoPos.x.toFixed(2)}, ${ufoPos.y.toFixed(2)})<br>
         Zoom: ${zoomLevel.toFixed(2)}x<br>
         Current Chunk: (${currentChunkX}, ${currentChunkY})<br>
         Loaded Chunks: ${chunkManager.loadedChunks.size}<br>
