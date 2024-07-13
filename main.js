@@ -1,12 +1,15 @@
 // main.js
+
 import ChunkManager from './src/core/ChunkManager.js';
 import Renderer from './src/rendering/Renderer.js';
 import { TILES } from './src/features/TerrainGenerator.js';
+import WorldManager from './src/core/WorldManager.js';
 
 const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
 
 let chunkManager;
+let worldManager;
 let cameraX = 0;
 let cameraY = 0;
 
@@ -20,6 +23,7 @@ async function init() {
 
     await renderer.loadSprites(availableSprites);
 
+    worldManager = new WorldManager(Math.random()); // You can provide a specific seed if desired
     chunkManager = new ChunkManager(canvas.width, canvas.height);
     
     // Initial update for center of the map
