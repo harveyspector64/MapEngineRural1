@@ -152,7 +152,7 @@ function handleTouchMove(e) {
         const deltaX = (touchX - lastTouchX) / zoomLevel;
         const deltaY = (touchY - lastTouchY) / zoomLevel;
 
-        ufo.move(deltaX / 10, deltaY / 10);
+    ufo.move(deltaX / 20, deltaY / 20); // Increase the divisor to reduce sensitivity
 
         lastTouchX = touchX;
         lastTouchY = touchY;
