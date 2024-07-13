@@ -67,19 +67,17 @@ export default class Renderer {
         }
     }
 
-    renderUFO(ufo) {
-        const sprite = this.sprites['ufo'];
-        if (sprite) {
-            const { x, y } = ufo.getPosition();
-            this.ctx.drawImage(
-                sprite,
-                (x - this.cameraX) * this.zoomLevel,
-                (y - this.cameraY) * this.zoomLevel,
-                32 * this.zoomLevel,
-                32 * this.zoomLevel
-            );
-        }
+renderUFO(ufo) {
+    const sprite = this.sprites['ufo'];
+    if (sprite) {
+        const { x, y } = ufo.getPosition();
+        this.ctx.save();
+        this.ctx.translate((x - this.cameraX) * this.zoomLevel, (y - this.cameraY) * this.zoomLevel);
+        this.ctx.rotate(ufo.rotation);
+        this.ctx.drawImage(sprite, -16 * this.zoomLevel, -16 * this.zoomLevel, 32 * this.zoomLevel, 32 * this.zoomLevel);
+        this.ctx.restore();
     }
+}
 
     setCamera(x, y) {
         this.cameraX = x;
