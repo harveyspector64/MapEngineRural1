@@ -85,15 +85,33 @@ function setupControls() {
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
 }
 
+const keys = new Set();
+
 function handleKeyDown(e) {
-    switch(e.key) {
-        case 'ArrowUp': ufo.move(0, -1); break;
-        case 'ArrowDown': ufo.move(0, 1); break;
-        case 'ArrowLeft': ufo.move(-1, 0); break;
-        case 'ArrowRight': ufo.move(1, 0); break;
-    }
+    keys.add(e.key);
+    updateUFOMovement();
 }
 
+function handleKeyUp(e) {
+    keys.delete(e.key);
+    updateUFOMovement();
+}
+
+function updateUFOMovement() {
+    let dx = 0, dy = 0;
+    if (keys.has('ArrowUp')) dy -= 1;
+    if (keys.has('ArrowDown')) dy += 1;
+    if (keys.has('ArrowLeft')) dx -= 1;
+    if (keys.has('ArrowRight')) dx += 1;
+    
+    // Normalize diagonal movement
+    if (dx !== 0 && dy !== 0) {
+        dx /= Math.sqrt(2);
+        dy /= Math.sqrt(2);
+    }
+    
+    ufo.move(dx, dy);
+}
 function handleWheel(e) {
     e.preventDefault();
     const zoomSpeed = 0.1;
