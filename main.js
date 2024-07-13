@@ -47,6 +47,7 @@ async function init() {
 }
 
 function render() {
+    ufo.update(); 
     // Smoothly move camera towards UFO
     const targetCameraX = ufo.x - canvas.width / 2;
     const targetCameraY = ufo.y - canvas.height / 2;
@@ -112,6 +113,11 @@ function updateUFOMovement() {
     
     ufo.move(dx, dy);
 }
+
+// Don't forget to add the event listener for keyup
+window.addEventListener('keyup', handleKeyUp);
+
+
 function handleWheel(e) {
     e.preventDefault();
     const zoomSpeed = 0.1;
