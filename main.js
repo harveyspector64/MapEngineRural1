@@ -19,6 +19,9 @@ let lastTouchY = 0;
 let lastTouchDistance = 0;
 let ufo;
 
+const UFO_SPEED = 3; // Adjust this value to change UFO speed
+const CAMERA_LERP = 0.1; // Adjust this value to change camera smoothness (0-1)
+
 async function init() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -32,9 +35,10 @@ async function init() {
     worldManager = new WorldManager(Math.random());
     chunkManager = new ChunkManager(canvas.width, canvas.height);
     
-    ufo = new UFO(canvas.width / 2, canvas.height / 2);
+    ufo = new UFO(canvas.width / 2, canvas.height / 2, UFO_SPEED);
+    cameraX = ufo.x - canvas.width / 2;
+    cameraY = ufo.y - canvas.height / 2;
 
-    // Initial update for center of the map
     chunkManager.updateViewport(cameraX, cameraY);
 
     render();
@@ -43,6 +47,12 @@ async function init() {
 }
 
 function render() {
+    // Smoothly move camera towards UFO
+    const targetCameraX = ufo.x - canvas.width / 2;
+    const targetCameraY = ufo.y - canvas.height / 2;
+    cameraX += (targetCameraX - cameraX) * CAMERA_LERP;
+    cameraY += (targetCameraY - cameraY) * CAMERA_LERP;
+
     renderer.clear();
     renderer.setCamera(cameraX, cameraY);
     renderer.setZoom(zoomLevel);
@@ -58,53 +68,30 @@ function render() {
     
     renderer.renderUFO(ufo);
     
-    // Draw chunk boundaries for debugging
     renderer.drawChunkBoundaries(Array.from(chunkManager.loadedChunks.values()));
+
+    chunkManager.updateViewport(cameraX, cameraY);
+    updateDebugInfo();
 
     requestAnimationFrame(render);
 }
 
 function setupControls() {
-    // Keyboard controls
     window.addEventListener('keydown', handleKeyDown);
-
-    // Mouse wheel zoom
     canvas.addEventListener('wheel', handleWheel, { passive: false });
-
-    // Touch controls
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
-
-    // Prevent default touch behavior
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
-
-    // Mobile UFO controls
-    setupMobileControls();
 }
 
 function handleKeyDown(e) {
-    const moveDistance = 16 / zoomLevel;
     switch(e.key) {
-        case 'ArrowUp': 
-            ufo.move(0, -1);
-            cameraY -= moveDistance; 
-            break;
-        case 'ArrowDown': 
-            ufo.move(0, 1);
-            cameraY += moveDistance; 
-            break;
-        case 'ArrowLeft': 
-            ufo.move(-1, 0);
-            cameraX -= moveDistance; 
-            break;
-        case 'ArrowRight': 
-            ufo.move(1, 0);
-            cameraX += moveDistance; 
-            break;
+        case 'ArrowUp': ufo.move(0, -1); break;
+        case 'ArrowDown': ufo.move(0, 1); break;
+        case 'ArrowLeft': ufo.move(-1, 0); break;
+        case 'ArrowRight': ufo.move(1, 0); break;
     }
-    chunkManager.updateViewport(cameraX, cameraY);
-    updateDebugInfo();
 }
 
 function handleWheel(e) {
@@ -113,7 +100,6 @@ function handleWheel(e) {
     const zoomDelta = -Math.sign(e.deltaY) * zoomSpeed;
     const newZoom = Math.max(0.5, Math.min(4, zoomLevel + zoomDelta));
     
-    // Zoom towards cursor position
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -124,8 +110,6 @@ function handleWheel(e) {
     zoomLevel = newZoom;
     renderer.setZoom(zoomLevel);
     chunkManager.setZoom(zoomLevel);
-    chunkManager.updateViewport(cameraX, cameraY);
-    updateDebugInfo();
 }
 
 function handleTouchStart(e) {
@@ -134,7 +118,6 @@ function handleTouchStart(e) {
         lastTouchX = e.touches[0].clientX;
         lastTouchY = e.touches[0].clientY;
     } else if (e.touches.length === 2) {
-        // Start of pinch, record initial distance
         lastTouchDistance = getTouchDistance(e.touches);
     }
 }
@@ -148,28 +131,20 @@ function handleTouchMove(e) {
         const deltaX = (touchX - lastTouchX) / zoomLevel;
         const deltaY = (touchY - lastTouchY) / zoomLevel;
 
-        cameraX -= deltaX;
-        cameraY -= deltaY;
+        ufo.move(deltaX / UFO_SPEED, deltaY / UFO_SPEED);
 
         lastTouchX = touchX;
         lastTouchY = touchY;
-
-        chunkManager.updateViewport(cameraX, cameraY);
-        updateDebugInfo();
     } else if (e.touches.length === 2) {
-        // Pinch-to-zoom
         const currentDistance = getTouchDistance(e.touches);
         const distanceDelta = currentDistance - lastTouchDistance;
         
-        // Adjust zoom based on pinch gesture
         const zoomDelta = distanceDelta * 0.005;
         const newZoom = Math.max(0.5, Math.min(4, zoomLevel + zoomDelta));
         
-        // Calculate the midpoint of the two touches
         const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
         const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
         
-        // Zoom towards the midpoint of the pinch
         const rect = canvas.getBoundingClientRect();
         const canvasMidX = midX - rect.left;
         const canvasMidY = midY - rect.top;
@@ -180,8 +155,6 @@ function handleTouchMove(e) {
         zoomLevel = newZoom;
         renderer.setZoom(zoomLevel);
         chunkManager.setZoom(zoomLevel);
-        chunkManager.updateViewport(cameraX, cameraY);
-        updateDebugInfo();
         
         lastTouchDistance = currentDistance;
     }
@@ -200,58 +173,6 @@ function getTouchDistance(touches) {
 
 function preventDefaultTouch(e) {
     e.preventDefault();
-}
-
-function setupMobileControls() {
-    const controlsDiv = document.createElement('div');
-    controlsDiv.id = 'mobile-controls';
-    controlsDiv.style.position = 'absolute';
-    controlsDiv.style.bottom = '20px';
-    controlsDiv.style.left = '50%';
-    controlsDiv.style.transform = 'translateX(-50%)';
-    controlsDiv.style.display = 'flex';
-    controlsDiv.style.justifyContent = 'center';
-    controlsDiv.style.alignItems = 'center';
-
-    const directions = ['up', 'down', 'left', 'right'];
-    directions.forEach(direction => {
-        const button = document.createElement('button');
-        button.textContent = direction;
-        button.style.margin = '0 10px';
-        button.style.padding = '20px';
-        button.style.fontSize = '24px';
-        button.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            moveUFO(direction);
-        });
-        controlsDiv.appendChild(button);
-    });
-
-    document.body.appendChild(controlsDiv);
-}
-
-function moveUFO(direction) {
-    const moveDistance = 16 / zoomLevel;
-    switch(direction) {
-        case 'up':
-            ufo.move(0, -1);
-            cameraY -= moveDistance;
-            break;
-        case 'down':
-            ufo.move(0, 1);
-            cameraY += moveDistance;
-            break;
-        case 'left':
-            ufo.move(-1, 0);
-            cameraX -= moveDistance;
-            break;
-        case 'right':
-            ufo.move(1, 0);
-            cameraX += moveDistance;
-            break;
-    }
-    chunkManager.updateViewport(cameraX, cameraY);
-    updateDebugInfo();
 }
 
 function setupDebugInfo() {
