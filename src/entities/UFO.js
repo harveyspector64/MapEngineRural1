@@ -1,11 +1,11 @@
 // src/entities/UFO.js
 
 export default class UFO {
-    constructor(x, y) {
+    constructor(x, y, speed = 5) {
         this.x = x;
         this.y = y;
-        this.speed = 5;
-        this.sprite = null; // We'll load this in the Renderer
+        this.speed = speed;
+        this.sprite = null;
     }
 
     move(dx, dy) {
@@ -15,5 +15,10 @@ export default class UFO {
 
     getPosition() {
         return { x: this.x, y: this.y };
+    }
+
+    setPosition(x, y) {
+        this.x = x;
+        this.y = y;
     }
 }
