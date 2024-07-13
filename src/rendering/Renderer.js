@@ -8,6 +8,7 @@ export default class Renderer {
         this.sprites = {};
         this.cameraX = 0;
         this.cameraY = 0;
+        this.zoomLevel = 1;
     }
 
     async loadSprites(tileTypes) {
@@ -38,12 +39,12 @@ export default class Renderer {
 
         const { x: chunkX, y: chunkY, terrain } = chunk;
         const chunkPixelSize = terrain.length * this.tileSize;
-        const offsetX = chunkX * chunkPixelSize - this.cameraX;
-        const offsetY = chunkY * chunkPixelSize - this.cameraY;
+        const offsetX = (chunkX * chunkPixelSize - this.cameraX) * this.zoomLevel;
+        const offsetY = (chunkY * chunkPixelSize - this.cameraY) * this.zoomLevel;
 
         // Only render if the chunk is visible
-        if (offsetX + chunkPixelSize < 0 || offsetX > this.canvas.width ||
-            offsetY + chunkPixelSize < 0 || offsetY > this.canvas.height) {
+        if (offsetX + chunkPixelSize * this.zoomLevel < 0 || offsetX > this.canvas.width ||
+            offsetY + chunkPixelSize * this.zoomLevel < 0 || offsetY > this.canvas.height) {
             return;
         }
 
@@ -54,10 +55,10 @@ export default class Renderer {
                 if (sprite) {
                     this.ctx.drawImage(
                         sprite, 
-                        offsetX + x * this.tileSize, 
-                        offsetY + y * this.tileSize, 
-                        this.tileSize, 
-                        this.tileSize
+                        offsetX + x * this.tileSize * this.zoomLevel, 
+                        offsetY + y * this.tileSize * this.zoomLevel, 
+                        this.tileSize * this.zoomLevel, 
+                        this.tileSize * this.zoomLevel
                     );
                 } else {
                     console.warn(`Missing sprite for tile type: ${tile}`);
@@ -71,7 +72,10 @@ export default class Renderer {
         this.cameraY = y;
     }
 
-    // Debug method to show chunk boundaries
+    setZoom(zoom) {
+        this.zoomLevel = zoom;
+    }
+
     drawChunkBoundaries(chunks) {
         this.ctx.strokeStyle = 'red';
         chunks.forEach(chunk => {
@@ -81,10 +85,10 @@ export default class Renderer {
             }
             const chunkSize = chunk.terrain.length * this.tileSize;
             this.ctx.strokeRect(
-                chunk.x * chunkSize - this.cameraX,
-                chunk.y * chunkSize - this.cameraY,
-                chunkSize,
-                chunkSize
+                (chunk.x * chunkSize - this.cameraX) * this.zoomLevel,
+                (chunk.y * chunkSize - this.cameraY) * this.zoomLevel,
+                chunkSize * this.zoomLevel,
+                chunkSize * this.zoomLevel
             );
         });
     }
