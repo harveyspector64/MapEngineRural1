@@ -15,6 +15,7 @@ let zoomLevel = 1;
 let isDragging = false;
 let lastTouchX = 0;
 let lastTouchY = 0;
+let lastTouchDistance = 0;
 
 async function init() {
     canvas.width = window.innerWidth;
@@ -110,30 +111,70 @@ function handleTouchStart(e) {
         isDragging = true;
         lastTouchX = e.touches[0].clientX;
         lastTouchY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+        // Start of pinch, record initial distance
+        lastTouchDistance = getTouchDistance(e.touches);
     }
 }
 
 function handleTouchMove(e) {
-    if (!isDragging) return;
     e.preventDefault();
 
-    const touchX = e.touches[0].clientX;
-    const touchY = e.touches[0].clientY;
-    const deltaX = (touchX - lastTouchX) / zoomLevel;
-    const deltaY = (touchY - lastTouchY) / zoomLevel;
+    if (e.touches.length === 1 && isDragging) {
+        const touchX = e.touches[0].clientX;
+        const touchY = e.touches[0].clientY;
+        const deltaX = (touchX - lastTouchX) / zoomLevel;
+        const deltaY = (touchY - lastTouchY) / zoomLevel;
 
-    cameraX -= deltaX;
-    cameraY -= deltaY;
+        cameraX -= deltaX;
+        cameraY -= deltaY;
 
-    lastTouchX = touchX;
-    lastTouchY = touchY;
+        lastTouchX = touchX;
+        lastTouchY = touchY;
 
-    chunkManager.updateViewport(cameraX, cameraY);
-    updateDebugInfo();
+        chunkManager.updateViewport(cameraX, cameraY);
+        updateDebugInfo();
+    } else if (e.touches.length === 2) {
+        // Pinch-to-zoom
+        const currentDistance = getTouchDistance(e.touches);
+        const distanceDelta = currentDistance - lastTouchDistance;
+        
+        // Adjust zoom based on pinch gesture
+        const zoomDelta = distanceDelta * 0.005; // Adjust this value to change zoom sensitivity
+        const newZoom = Math.max(0.5, Math.min(4, zoomLevel + zoomDelta));
+        
+        // Calculate the midpoint of the two touches
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        
+        // Zoom towards the midpoint of the pinch
+        const rect = canvas.getBoundingClientRect();
+        const canvasMidX = midX - rect.left;
+        const canvasMidY = midY - rect.top;
+        
+        cameraX += (canvasMidX / zoomLevel - canvasMidX / newZoom);
+        cameraY += (canvasMidY / zoomLevel - canvasMidY / newZoom);
+        
+        zoomLevel = newZoom;
+        renderer.setZoom(zoomLevel);
+        chunkManager.setZoom(zoomLevel);
+        chunkManager.updateViewport(cameraX, cameraY);
+        updateDebugInfo();
+        
+        lastTouchDistance = currentDistance;
+    }
 }
 
 function handleTouchEnd() {
     isDragging = false;
+    lastTouchDistance = 0;
+}
+
+// Add this new helper function
+function getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
 }
 
 function preventDefaultTouch(e) {
