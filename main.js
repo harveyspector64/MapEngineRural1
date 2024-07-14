@@ -5,6 +5,7 @@ import { TILES } from './src/features/TerrainGenerator.js';
 import WorldManager from './src/core/WorldManager.js';
 import UFO from './src/entities/UFO.js';
 import VirtualJoystick from './src/controls/VirtualJoystick.js';
+import MobileUIController from './src/controls/MobileUIController.js';
 
 const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
@@ -24,6 +25,7 @@ let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.
 let targetZoomLevel = 1;
 let targetCameraX = 0;
 let targetCameraY = 0;
+let mobileUIController;
 
 const keys = new Set();
 
@@ -42,6 +44,9 @@ async function init() {
     
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
     joystick = new VirtualJoystick(canvas);
+    if (isMobile) {
+    mobileUIController = new MobileUIController(canvas, ufo);
+}
 
     cameraX = ufo.x - canvas.width / 2;
     cameraY = ufo.y - canvas.height / 2;
@@ -85,6 +90,10 @@ function render() {
     
     renderer.renderUFO(ufo);
     renderer.drawBeam(ufo);
+
+        if (isMobile) {
+        mobileUIController.draw();
+    }
     
     if (isMobile) {
         joystick.draw();
@@ -214,6 +223,10 @@ function handleTouchStart(e) {
     e.preventDefault();
     if (e.touches.length === 1) {
         const touch = e.touches[0];
+        if (isMobile && mobileUIController.handleTouch(touch.clientX, touch.clientY)) {
+            // Touch was handled by mobile UI
+            return;
+        }
         joystick.start(touch.clientX, touch.clientY);
     } else if (e.touches.length === 2) {
         lastTouchDistance = getTouchDistance(e.touches);
