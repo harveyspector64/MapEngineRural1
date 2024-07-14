@@ -44,19 +44,17 @@ async function init() {
     
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
     joystick = new VirtualJoystick(canvas);
-    if (isMobile) {
-    mobileUIController = new MobileUIController(canvas, ufo);
-}
-    if (isMobile) {
-    mobileUIController = new MobileUIController(canvas, ufo);
-    mobileUIController.onZoomIn = zoomIn;
-    mobileUIController.onZoomOut = zoomOut;
-}
 
     cameraX = ufo.x - canvas.width / 2;
     cameraY = ufo.y - canvas.height / 2;
 
     chunkManager.updateViewport(cameraX, cameraY);
+
+    if (isMobile) {
+        mobileUIController = new MobileUIController(canvas, ufo);
+        mobileUIController.onZoomIn = zoomIn;
+        mobileUIController.onZoomOut = zoomOut;
+    }
 
     render();
     setupControls();
@@ -238,16 +236,6 @@ function handleTouchStart(e) {
     }
 }
 
-function zoomIn() {
-    targetZoomLevel = Math.min(targetZoomLevel + 0.1, 4);
-    console.log(`Zooming in. New zoom level: ${targetZoomLevel.toFixed(2)}`);
-}
-
-function zoomOut() {
-    targetZoomLevel = Math.max(targetZoomLevel - 0.1, 0.5);
-    console.log(`Zooming out. New zoom level: ${targetZoomLevel.toFixed(2)}`);
-}
-
 function handleTouchMove(e) {
     e.preventDefault();
     if (e.touches.length === 1) {
@@ -342,3 +330,13 @@ function updateDebugInfo() {
 
 window.addEventListener('load', init);
 window.addEventListener('resize', init);
+
+function zoomIn() {
+    targetZoomLevel = Math.min(targetZoomLevel + 0.1, 4);
+    console.log(`Zooming in. New zoom level: ${targetZoomLevel.toFixed(2)}`);
+}
+
+function zoomOut() {
+    targetZoomLevel = Math.max(targetZoomLevel - 0.1, 0.5);
+    console.log(`Zooming out. New zoom level: ${targetZoomLevel.toFixed(2)}`);
+}
