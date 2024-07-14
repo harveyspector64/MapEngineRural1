@@ -131,12 +131,12 @@ function handleBeamControls(e) {
     } else if (ufo.beam.isActive) {
         switch(e.key) {
             case 'ArrowUp':
-                ufo.beam.increaseLength();
-                console.log(`Beam length increased: ${ufo.beam.length}`);
+                ufo.setBeamDirection(0, -1);
+                console.log('Beam direction: Up');
                 break;
             case 'ArrowDown':
-                ufo.beam.decreaseLength();
-                console.log(`Beam length decreased: ${ufo.beam.length}`);
+                ufo.setBeamDirection(0, 1);
+                console.log('Beam direction: Down');
                 break;
             case 'ArrowLeft':
                 ufo.setBeamDirection(-1, 0);
@@ -145,6 +145,15 @@ function handleBeamControls(e) {
             case 'ArrowRight':
                 ufo.setBeamDirection(1, 0);
                 console.log('Beam direction: Right');
+                break;
+            case '+':
+            case '=':
+                ufo.beam.increaseLength();
+                console.log(`Beam length increased: ${ufo.beam.length}`);
+                break;
+            case '-':
+                ufo.beam.decreaseLength();
+                console.log(`Beam length decreased: ${ufo.beam.length}`);
                 break;
         }
     }
@@ -323,11 +332,11 @@ window.addEventListener('load', init);
 window.addEventListener('resize', init);
 
 function zoomIn() {
-    targetZoomLevel = Math.min(targetZoomLevel + 0.1, 4);
-    console.log(`Zooming in. New zoom level: ${targetZoomLevel.toFixed(2)}`);
+    targetZoomLevel = Math.min(targetZoomLevel * 1.1, 4);
+    console.log(`Zooming in. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
 }
 
 function zoomOut() {
-    targetZoomLevel = Math.max(targetZoomLevel - 0.1, 0.5);
-    console.log(`Zooming out. New zoom level: ${targetZoomLevel.toFixed(2)}`);
+    targetZoomLevel = Math.max(targetZoomLevel / 1.1, 0.5);
+    console.log(`Zooming out. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
 }
