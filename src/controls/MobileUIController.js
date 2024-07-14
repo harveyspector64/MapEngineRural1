@@ -6,6 +6,8 @@ export default class MobileUIController {
         this.ufo = ufo;
         this.ctx = canvas.getContext('2d');
         this.isExpanded = false;
+        
+        // Define UI element positions
         this.beamControlButton = { x: 20, y: 20, radius: 30 };
         this.zoomInButton = { x: canvas.width - 70, y: canvas.height - 70, width: 50, height: 50 };
         this.zoomOutButton = { x: canvas.width - 70, y: canvas.height - 130, width: 50, height: 50 };
@@ -16,10 +18,19 @@ export default class MobileUIController {
             height: 250,
             toggleButton: { x: 120, y: 90, radius: 30 },
             directionPad: { x: 120, y: 170, radius: 50 },
-            lengthSlider: { x: 40, y: 240, width: 160, height: 20 }
+            lengthSlider: { x: 40, y: 240, width: 160, height: 20 },
+            modeButton: { x: 40, y: 90, width: 60, height: 30 }
         };
+        
+        // Touch handling flags
         this.isDraggingDirection = false;
         this.isDraggingLength = false;
+        
+        // Zoom control
+        this.zoomInterval = null;
+        this.zoomSpeed = 0.05;
+        
+        console.log('MobileUIController initialized');
     }
 
     draw() {
@@ -101,21 +112,31 @@ export default class MobileUIController {
                           (this.ufo.beam.maxLength - this.ufo.beam.minLength) * e.lengthSlider.width;
         this.ctx.fillStyle = 'white';
         this.ctx.fillRect(handlePos - 5, e.lengthSlider.y - 5, 10, e.lengthSlider.height + 10);
+
+        // Draw mode button
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        this.ctx.fillRect(e.modeButton.x, e.modeButton.y, e.modeButton.width, e.modeButton.height);
+        this.ctx.strokeStyle = 'white';
+        this.ctx.strokeRect(e.modeButton.x, e.modeButton.y, e.modeButton.width, e.modeButton.height);
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '14px Arial';
+        this.ctx.fillText(this.ufo.beam.mode, e.modeButton.x + 5, e.modeButton.y + 20);
     }
 
     handleTouch(x, y) {
         if (this.isPointInCircle(x, y, this.beamControlButton)) {
             this.isExpanded = !this.isExpanded;
+            console.log(`Beam control ${this.isExpanded ? 'expanded' : 'collapsed'}`);
             return true;
         }
 
         if (this.isPointInRect(x, y, this.zoomInButton)) {
-            this.zoomIn();
+            this.startZoom('in');
             return true;
         }
 
         if (this.isPointInRect(x, y, this.zoomOutButton)) {
-            this.zoomOut();
+            this.startZoom('out');
             return true;
         }
 
@@ -123,6 +144,7 @@ export default class MobileUIController {
             const e = this.expandedControls;
             if (this.isPointInCircle(x, y, e.toggleButton)) {
                 this.ufo.toggleBeam();
+                console.log(`Beam ${this.ufo.beam.isActive ? 'activated' : 'deactivated'}`);
                 return true;
             }
             if (this.isPointInCircle(x, y, e.directionPad)) {
@@ -133,6 +155,11 @@ export default class MobileUIController {
             if (this.isPointInRect(x, y, e.lengthSlider)) {
                 this.isDraggingLength = true;
                 this.handleLengthTouch(x);
+                return true;
+            }
+            if (this.isPointInRect(x, y, e.modeButton)) {
+                this.ufo.beam.cycleMode();
+                console.log(`Beam mode changed to: ${this.ufo.beam.mode}`);
                 return true;
             }
         }
@@ -153,6 +180,7 @@ export default class MobileUIController {
     }
 
     handleEnd() {
+        this.stopZoom();
         this.isDraggingDirection = false;
         this.isDraggingLength = false;
     }
@@ -164,6 +192,7 @@ export default class MobileUIController {
         const length = Math.sqrt(dx * dx + dy * dy);
         if (length !== 0) {
             this.ufo.setBeamDirection(dx / length, dy / length);
+            console.log(`Beam direction set to: (${(dx / length).toFixed(2)}, ${(dy / length).toFixed(2)})`);
         }
     }
 
@@ -172,6 +201,7 @@ export default class MobileUIController {
         const ratio = (x - e.lengthSlider.x) / e.lengthSlider.width;
         const newLength = this.ufo.beam.minLength + ratio * (this.ufo.beam.maxLength - this.ufo.beam.minLength);
         this.ufo.beam.setLength(newLength);
+        console.log(`Beam length set to: ${newLength.toFixed(2)}`);
     }
 
     isPointInCircle(x, y, circle) {
@@ -185,11 +215,35 @@ export default class MobileUIController {
                y >= rect.y && y <= rect.y + rect.height;
     }
 
+    startZoom(direction) {
+        this.stopZoom(); // Clear any existing interval
+        this.zoomInterval = setInterval(() => {
+            if (direction === 'in') {
+                this.zoomIn();
+            } else {
+                this.zoomOut();
+            }
+        }, 100); // Adjust the interval for smooth zooming
+    }
+
+    stopZoom() {
+        if (this.zoomInterval) {
+            clearInterval(this.zoomInterval);
+            this.zoomInterval = null;
+        }
+    }
+
     zoomIn() {
-        if (this.onZoomIn) this.onZoomIn();
+        if (this.onZoomIn) {
+            this.onZoomIn();
+            console.log('Zooming in');
+        }
     }
 
     zoomOut() {
-        if (this.onZoomOut) this.onZoomOut();
+        if (this.onZoomOut) {
+            this.onZoomOut();
+            console.log('Zooming out');
+        }
     }
 }
