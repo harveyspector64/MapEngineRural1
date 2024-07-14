@@ -79,39 +79,46 @@ export default class Renderer {
         }
     }
 
-    drawBeam(ufo) {
-        // Only draw the beam if it's active
-        if (!ufo.beam.isActive) return;
+drawBeam(ufo) {
+    if (!ufo.beam.isActive) return;
 
-        const startPoint = ufo.getPosition();
-        const endPoint = ufo.beam.getEndPoint();
+    const startPoint = ufo.getPosition();
+    const endPoint = ufo.beam.getEndPoint();
 
-        // Debug: Log beam coordinates
-        console.log(`Drawing beam from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.moveTo(
+        (startPoint.x - this.cameraX) * this.zoomLevel,
+        (startPoint.y - this.cameraY) * this.zoomLevel
+    );
+    this.ctx.lineTo(
+        (endPoint.x - this.cameraX) * this.zoomLevel,
+        (endPoint.y - this.cameraY) * this.zoomLevel
+    );
 
-        this.ctx.save();
-        this.ctx.beginPath();
-        this.ctx.moveTo(
-            (startPoint.x - this.cameraX) * this.zoomLevel,
-            (startPoint.y - this.cameraY) * this.zoomLevel
-        );
-        this.ctx.lineTo(
-            (endPoint.x - this.cameraX) * this.zoomLevel,
-            (endPoint.y - this.cameraY) * this.zoomLevel
-        );
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        this.ctx.lineWidth = 4 * this.zoomLevel;
-        this.ctx.stroke();
+    // Create gradient for beam effect
+    const gradient = this.ctx.createLinearGradient(
+        (startPoint.x - this.cameraX) * this.zoomLevel,
+        (startPoint.y - this.cameraY) * this.zoomLevel,
+        (endPoint.x - this.cameraX) * this.zoomLevel,
+        (endPoint.y - this.cameraY) * this.zoomLevel
+    );
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
-        // Add a glow effect
-        this.ctx.shadowBlur = 10;
-        this.ctx.shadowColor = 'white';
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        this.ctx.lineWidth = 8 * this.zoomLevel;
-        this.ctx.stroke();
+    this.ctx.strokeStyle = gradient;
+    this.ctx.lineWidth = 8 * this.zoomLevel;
+    this.ctx.stroke();
 
-        this.ctx.restore();
-    }
+    // Add glow effect
+    this.ctx.shadowBlur = 15;
+    this.ctx.shadowColor = 'white';
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    this.ctx.lineWidth = 4 * this.zoomLevel;
+    this.ctx.stroke();
+
+    this.ctx.restore();
+}
 
     setCamera(x, y) {
         this.cameraX = x;
