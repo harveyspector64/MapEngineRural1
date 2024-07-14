@@ -103,43 +103,43 @@ export default class MobileUIController {
         this.ctx.fillRect(handlePos - 5, e.lengthSlider.y - 5, 10, e.lengthSlider.height + 10);
     }
 
-    handleTouch(x, y) {
-        if (this.isPointInCircle(x, y, this.beamControlButton)) {
-            this.isExpanded = !this.isExpanded;
-            return true;
-        }
-
-        if (this.isPointInRect(x, y, this.zoomInButton)) {
-            // Implement zoom in
-            return true;
-        }
-
-        if (this.isPointInRect(x, y, this.zoomOutButton)) {
-            // Implement zoom out
-            return true;
-        }
-
-        if (this.isExpanded) {
-            const e = this.expandedControls;
-            if (this.isPointInCircle(x, y, e.toggleButton)) {
-                this.ufo.toggleBeam();
-                return true;
-            }
-            if (this.isPointInCircle(x, y, e.directionPad)) {
-                this.isDraggingDirection = true;
-                this.handleDirectionTouch(x, y);
-                return true;
-            }
-            if (this.isPointInRect(x, y, e.lengthSlider)) {
-                this.isDraggingLength = true;
-                this.handleLengthTouch(x);
-                return true;
-            }
-        }
-
-        return false;
+handleTouch(x, y) {
+    if (this.isPointInCircle(x, y, this.beamControlButton)) {
+        this.isExpanded = !this.isExpanded;
+        return true;
     }
 
+    if (this.isPointInRect(x, y, this.zoomInButton)) {
+        this.zoomIn();
+        return true;
+    }
+
+    if (this.isPointInRect(x, y, this.zoomOutButton)) {
+        this.zoomOut();
+        return true;
+    }
+
+    if (this.isExpanded) {
+        const e = this.expandedControls;
+        if (this.isPointInCircle(x, y, e.toggleButton)) {
+            this.ufo.toggleBeam();
+            return true;
+        }
+        if (this.isPointInCircle(x, y, e.directionPad)) {
+            this.isDraggingDirection = true;
+            this.handleDirectionTouch(x, y);
+            return true;
+        }
+        if (this.isPointInRect(x, y, e.lengthSlider)) {
+            this.isDraggingLength = true;
+            this.handleLengthTouch(x);
+            return true;
+        }
+    }
+
+    return false;
+}
+    
     handleMove(x, y) {
         if (this.isDraggingDirection) {
             this.handleDirectionTouch(x, y);
