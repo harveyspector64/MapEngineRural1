@@ -84,6 +84,7 @@ function render() {
     });
     
     renderer.renderUFO(ufo);
+    renderer.drawBeam(ufo);
     
     if (isMobile) {
         joystick.draw();
@@ -100,11 +101,42 @@ function render() {
 function setupControls() {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('keydown', handleBeamControls);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+}
+
+function handleBeamControls(e) {
+    // Toggle beam with 'B' key
+    if (e.key === 'b' || e.key === 'B') {
+        ufo.toggleBeam();
+        console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
+    }
+
+    // Control beam direction if active
+    if (ufo.beam.isActive) {
+        switch(e.key) {
+            case 'ArrowUp':
+                ufo.setBeamDirection(0, -1);
+                console.log('Beam direction: Up');
+                break;
+            case 'ArrowDown':
+                ufo.setBeamDirection(0, 1);
+                console.log('Beam direction: Down');
+                break;
+            case 'ArrowLeft':
+                ufo.setBeamDirection(-1, 0);
+                console.log('Beam direction: Left');
+                break;
+            case 'ArrowRight':
+                ufo.setBeamDirection(1, 0);
+                console.log('Beam direction: Right');
+                break;
+        }
+    }
 }
 
 function handleKeyDown(e) {
