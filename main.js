@@ -5,6 +5,7 @@ import { TILES } from './src/features/TerrainGenerator.js';
 import WorldManager from './src/core/WorldManager.js';
 import UFO from './src/entities/UFO.js';
 import VirtualJoystick from './src/controls/VirtualJoystick.js';
+import UFOBeam from './src/entities/UFOBeam.js';
 
 const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
@@ -24,12 +25,14 @@ let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.
 let targetZoomLevel = 1;
 let targetCameraX = 0;
 let targetCameraY = 0;
+let ufoBeam;
 
 const keys = new Set();
 
 async function init() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    ufoBeam = new UFOBeam(ufo);
 
     const availableSprites = [
         'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water'
@@ -55,6 +58,7 @@ async function init() {
 
 function render() {
     ufo.update();
+    renderer.renderBeam(ufoBeam);
 
     // Smoothly adjust zoom level
     const zoomLerpFactor = 0.1;
@@ -100,11 +104,35 @@ function render() {
 function setupControls() {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('keydown', handleBeamControl);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+
+    function handleBeamControl(e) {
+    if (e.key === 'b' || e.key === 'B') {
+        if (ufoBeam.isActive) {
+            ufoBeam.deactivate();
+        } else {
+            ufoBeam.activate();
+            ufo.setVelocity(0, 0); // Stop the UFO when beam is activated
+        }
+    }
+
+    if (ufoBeam.isActive) {
+        let dx = 0, dy = 0;
+        if (e.key === 'ArrowUp') dy = -1;
+        if (e.key === 'ArrowDown') dy = 1;
+        if (e.key === 'ArrowLeft') dx = -1;
+        if (e.key === 'ArrowRight') dx = 1;
+        if (dx !== 0 || dy !== 0) {
+            ufoBeam.setDirection(dx, dy);
+        }
+    }
+}
+    
 }
 
 function handleKeyDown(e) {
