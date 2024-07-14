@@ -88,6 +88,32 @@ export default class Renderer {
         this.zoomLevel = zoom;
     }
 
+    renderBeam(beam) {
+    if (!beam.isActive) return;
+
+    const ufoPos = beam.ufo.getPosition();
+    const beamEnd = beam.getBeamEnd();
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(
+        (ufoPos.x - this.cameraX) * this.zoomLevel,
+        (ufoPos.y - this.cameraY) * this.zoomLevel
+    );
+    this.ctx.lineTo(
+        (beamEnd.x - this.cameraX) * this.zoomLevel,
+        (beamEnd.y - this.cameraY) * this.zoomLevel
+    );
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    this.ctx.lineWidth = 10 * this.zoomLevel;
+    this.ctx.stroke();
+
+    // Add a glow effect
+    this.ctx.shadowBlur = 15;
+    this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+    this.ctx.stroke();
+    this.ctx.shadowBlur = 0;
+}
+
     drawChunkBoundaries(chunks) {
         this.ctx.strokeStyle = 'red';
         chunks.forEach(chunk => {
