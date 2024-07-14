@@ -101,12 +101,15 @@ function render() {
 function setupControls() {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('keydown', handleBeamControls);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+    
+    // Add these new lines
+    window.addEventListener('keydown', handleBeamControls);
+    canvas.addEventListener('wheel', handleMouseWheel, { passive: false });
 }
 
 function handleBeamControls(e) {
@@ -116,7 +119,7 @@ function handleBeamControls(e) {
         console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
     }
 
-    // Control beam direction if active
+    // Control beam direction and length if active
     if (ufo.beam.isActive) {
         switch(e.key) {
             case 'ArrowUp':
@@ -135,6 +138,15 @@ function handleBeamControls(e) {
                 ufo.setBeamDirection(1, 0);
                 console.log('Beam direction: Right');
                 break;
+            case '+':
+            case '=':
+                ufo.beam.increaseLength();
+                console.log(`Beam length increased: ${ufo.beam.length}`);
+                break;
+            case '-':
+                ufo.beam.decreaseLength();
+                console.log(`Beam length decreased: ${ufo.beam.length}`);
+                break;
         }
     }
 }
@@ -147,6 +159,18 @@ function handleKeyDown(e) {
 function handleKeyUp(e) {
     keys.delete(e.key);
     updateUFOMovement();
+}
+
+function handleMouseWheel(e) {
+    if (ufo.beam.isActive) {
+        if (e.deltaY < 0) {
+            ufo.beam.increaseLength();
+        } else {
+            ufo.beam.decreaseLength();
+        }
+        console.log(`Beam length adjusted: ${ufo.beam.length}`);
+        e.preventDefault();
+    }
 }
 
 function updateUFOMovement() {
