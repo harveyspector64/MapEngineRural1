@@ -56,3 +56,7 @@ export default class UFO {
         this.beam.setDirection(dx, dy);
     }
 }
+
+setBeamLength(length) {
+    this.beam.setLength(length);
+}
