@@ -4,6 +4,7 @@ import Renderer from './src/rendering/Renderer.js';
 import { TILES } from './src/features/TerrainGenerator.js';
 import WorldManager from './src/core/WorldManager.js';
 import UFO from './src/entities/UFO.js';
+import VirtualJoystick from './src/controls/VirtualJoystick.js';
 
 const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
@@ -18,9 +19,10 @@ let lastTouchX = 0;
 let lastTouchY = 0;
 let lastTouchDistance = 0;
 let ufo;
+let joystick;
+let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-const UFO_SPEED = 3; // Adjust this value to change UFO speed
-const CAMERA_LERP = 0.1; // Adjust this value to change camera smoothness (0-1)
+const keys = new Set();
 
 async function init() {
     canvas.width = window.innerWidth;
@@ -35,7 +37,9 @@ async function init() {
     worldManager = new WorldManager(Math.random());
     chunkManager = new ChunkManager(canvas.width, canvas.height);
     
-    ufo = new UFO(canvas.width / 2, canvas.height / 2, UFO_SPEED);
+    ufo = new UFO(canvas.width / 2, canvas.height / 2);
+    joystick = new VirtualJoystick(canvas);
+
     cameraX = ufo.x - canvas.width / 2;
     cameraY = ufo.y - canvas.height / 2;
 
@@ -47,10 +51,12 @@ async function init() {
 }
 
 function render() {
-    ufo.update(); 
+    ufo.update();
+
     // Smoothly move camera towards UFO
     const targetCameraX = ufo.x - canvas.width / 2;
     const targetCameraY = ufo.y - canvas.height / 2;
+    const CAMERA_LERP = 0.1;
     cameraX += (targetCameraX - cameraX) * CAMERA_LERP;
     cameraY += (targetCameraY - cameraY) * CAMERA_LERP;
 
@@ -69,6 +75,10 @@ function render() {
     
     renderer.renderUFO(ufo);
     
+    if (isMobile) {
+        joystick.draw();
+    }
+
     renderer.drawChunkBoundaries(Array.from(chunkManager.loadedChunks.values()));
 
     chunkManager.updateViewport(cameraX, cameraY);
@@ -79,14 +89,13 @@ function render() {
 
 function setupControls() {
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
 }
-
-const keys = new Set();
 
 function handleKeyDown(e) {
     keys.add(e.key);
@@ -114,10 +123,6 @@ function updateUFOMovement() {
     ufo.move(dx, dy);
 }
 
-// Don't forget to add the event listener for keyup
-window.addEventListener('keyup', handleKeyUp);
-
-
 function handleWheel(e) {
     e.preventDefault();
     const zoomSpeed = 0.1;
@@ -128,22 +133,23 @@ function handleWheel(e) {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     
-    const worldX = cameraX + mouseX / zoomLevel;
-    const worldY = cameraY + mouseY / zoomLevel;
+    const ufoPos = ufo.getPosition();
+    const worldX = (ufoPos.x - cameraX) * zoomLevel + mouseX;
+    const worldY = (ufoPos.y - cameraY) * zoomLevel + mouseY;
     
     zoomLevel = newZoom;
     renderer.setZoom(zoomLevel);
     chunkManager.setZoom(zoomLevel);
     
-    cameraX = worldX - mouseX / zoomLevel;
-    cameraY = worldY - mouseY / zoomLevel;
+    cameraX = ufoPos.x - worldX / zoomLevel + mouseX / zoomLevel;
+    cameraY = ufoPos.y - worldY / zoomLevel + mouseY / zoomLevel;
 }
 
 function handleTouchStart(e) {
+    e.preventDefault();
     if (e.touches.length === 1) {
-        isDragging = true;
-        lastTouchX = e.touches[0].clientX;
-        lastTouchY = e.touches[0].clientY;
+        const touch = e.touches[0];
+        joystick.start(touch.clientX, touch.clientY);
     } else if (e.touches.length === 2) {
         lastTouchDistance = getTouchDistance(e.touches);
     }
@@ -151,17 +157,11 @@ function handleTouchStart(e) {
 
 function handleTouchMove(e) {
     e.preventDefault();
-
-    if (e.touches.length === 1 && isDragging) {
-        const touchX = e.touches[0].clientX;
-        const touchY = e.touches[0].clientY;
-        const deltaX = (touchX - lastTouchX) / zoomLevel;
-        const deltaY = (touchY - lastTouchY) / zoomLevel;
-
-    ufo.move(deltaX / 20, deltaY / 20); // Increase the divisor to reduce sensitivity
-
-        lastTouchX = touchX;
-        lastTouchY = touchY;
+    if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        joystick.move(touch.clientX, touch.clientY);
+        const { dx, dy } = joystick.getInput();
+        ufo.move(dx, dy);
     } else if (e.touches.length === 2) {
         const currentDistance = getTouchDistance(e.touches);
         const distanceDelta = currentDistance - lastTouchDistance;
@@ -176,21 +176,25 @@ function handleTouchMove(e) {
         const canvasMidX = midX - rect.left;
         const canvasMidY = midY - rect.top;
         
-        const worldX = cameraX + canvasMidX / zoomLevel;
-        const worldY = cameraY + canvasMidY / zoomLevel;
+        const ufoPos = ufo.getPosition();
+        const worldX = (ufoPos.x - cameraX) * zoomLevel + canvasMidX;
+        const worldY = (ufoPos.y - cameraY) * zoomLevel + canvasMidY;
         
         zoomLevel = newZoom;
         renderer.setZoom(zoomLevel);
         chunkManager.setZoom(zoomLevel);
         
-        cameraX = worldX - canvasMidX / zoomLevel;
-        cameraY = worldY - canvasMidY / zoomLevel;
+        cameraX = ufoPos.x - worldX / zoomLevel + canvasMidX / zoomLevel;
+        cameraY = ufoPos.y - worldY / zoomLevel + canvasMidY / zoomLevel;
         
         lastTouchDistance = currentDistance;
     }
 }
 
-function handleTouchEnd() {
+function handleTouchEnd(e) {
+    if (e.touches.length === 0) {
+        joystick.end();
+    }
     isDragging = false;
     lastTouchDistance = 0;
 }
