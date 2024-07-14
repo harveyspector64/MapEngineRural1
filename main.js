@@ -134,15 +134,18 @@ function handleWheel(e) {
     const mouseY = e.clientY - rect.top;
     
     const ufoPos = ufo.getPosition();
-    const worldX = (ufoPos.x - cameraX) * zoomLevel + mouseX;
-    const worldY = (ufoPos.y - cameraY) * zoomLevel + mouseY;
+    
+    // Calculate the point to zoom towards (80% UFO position, 20% mouse position)
+    const zoomTargetX = ufoPos.x * 0.8 + (cameraX + mouseX / zoomLevel) * 0.2;
+    const zoomTargetY = ufoPos.y * 0.8 + (cameraY + mouseY / zoomLevel) * 0.2;
+    
+    // Adjust camera position
+    cameraX = zoomTargetX - (canvas.width / 2) / newZoom;
+    cameraY = zoomTargetY - (canvas.height / 2) / newZoom;
     
     zoomLevel = newZoom;
     renderer.setZoom(zoomLevel);
     chunkManager.setZoom(zoomLevel);
-    
-    cameraX = ufoPos.x - worldX / zoomLevel + mouseX / zoomLevel;
-    cameraY = ufoPos.y - worldY / zoomLevel + mouseY / zoomLevel;
 }
 
 function handleTouchStart(e) {
