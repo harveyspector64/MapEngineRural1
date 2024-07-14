@@ -56,12 +56,19 @@ async function init() {
 function render() {
     ufo.update();
 
-    // Smoothly move camera towards UFO
-    const targetCameraX = ufo.x - canvas.width / 2;
-    const targetCameraY = ufo.y - canvas.height / 2;
-    const CAMERA_LERP = 0.1;
-    cameraX += (targetCameraX - cameraX) * CAMERA_LERP;
-    cameraY += (targetCameraY - cameraY) * CAMERA_LERP;
+    // Smoothly adjust zoom level
+    const zoomLerpFactor = 0.1;
+    zoomLevel += (targetZoomLevel - zoomLevel) * zoomLerpFactor;
+
+    // Smoothly adjust camera position
+    const cameraLerpFactor = 0.1;
+    cameraX += (targetCameraX - cameraX) * cameraLerpFactor;
+    cameraY += (targetCameraY - cameraY) * cameraLerpFactor;
+
+    // Update target camera position to follow UFO
+    const ufoPos = ufo.getPosition();
+    targetCameraX = ufoPos.x - canvas.width / (2 * zoomLevel);
+    targetCameraY = ufoPos.y - canvas.height / (2 * zoomLevel);
 
     renderer.clear();
     renderer.setCamera(cameraX, cameraY);
@@ -130,7 +137,7 @@ function handleWheel(e) {
     e.preventDefault();
     const zoomSpeed = 0.1;
     const zoomDelta = -Math.sign(e.deltaY) * zoomSpeed;
-    const newZoom = Math.max(0.5, Math.min(4, zoomLevel + zoomDelta));
+    targetZoomLevel = Math.max(0.5, Math.min(4, targetZoomLevel + zoomDelta));
     
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
@@ -142,13 +149,9 @@ function handleWheel(e) {
     const zoomTargetX = ufoPos.x * 0.8 + (cameraX + mouseX / zoomLevel) * 0.2;
     const zoomTargetY = ufoPos.y * 0.8 + (cameraY + mouseY / zoomLevel) * 0.2;
     
-    // Adjust camera position
-    cameraX = zoomTargetX - (canvas.width / 2) / newZoom;
-    cameraY = zoomTargetY - (canvas.height / 2) / newZoom;
-    
-    zoomLevel = newZoom;
-    renderer.setZoom(zoomLevel);
-    chunkManager.setZoom(zoomLevel);
+    // Set target camera position
+    targetCameraX = zoomTargetX - (canvas.width / 2) / targetZoomLevel;
+    targetCameraY = zoomTargetY - (canvas.height / 2) / targetZoomLevel;
 }
 
 function handleTouchStart(e) {
