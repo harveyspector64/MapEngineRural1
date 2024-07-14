@@ -103,43 +103,43 @@ export default class MobileUIController {
         this.ctx.fillRect(handlePos - 5, e.lengthSlider.y - 5, 10, e.lengthSlider.height + 10);
     }
 
-handleTouch(x, y) {
-    if (this.isPointInCircle(x, y, this.beamControlButton)) {
-        this.isExpanded = !this.isExpanded;
-        return true;
-    }
-
-    if (this.isPointInRect(x, y, this.zoomInButton)) {
-        this.zoomIn();
-        return true;
-    }
-
-    if (this.isPointInRect(x, y, this.zoomOutButton)) {
-        this.zoomOut();
-        return true;
-    }
-
-    if (this.isExpanded) {
-        const e = this.expandedControls;
-        if (this.isPointInCircle(x, y, e.toggleButton)) {
-            this.ufo.toggleBeam();
+    handleTouch(x, y) {
+        if (this.isPointInCircle(x, y, this.beamControlButton)) {
+            this.isExpanded = !this.isExpanded;
             return true;
         }
-        if (this.isPointInCircle(x, y, e.directionPad)) {
-            this.isDraggingDirection = true;
-            this.handleDirectionTouch(x, y);
+
+        if (this.isPointInRect(x, y, this.zoomInButton)) {
+            this.zoomIn();
             return true;
         }
-        if (this.isPointInRect(x, y, e.lengthSlider)) {
-            this.isDraggingLength = true;
-            this.handleLengthTouch(x);
+
+        if (this.isPointInRect(x, y, this.zoomOutButton)) {
+            this.zoomOut();
             return true;
         }
+
+        if (this.isExpanded) {
+            const e = this.expandedControls;
+            if (this.isPointInCircle(x, y, e.toggleButton)) {
+                this.ufo.toggleBeam();
+                return true;
+            }
+            if (this.isPointInCircle(x, y, e.directionPad)) {
+                this.isDraggingDirection = true;
+                this.handleDirectionTouch(x, y);
+                return true;
+            }
+            if (this.isPointInRect(x, y, e.lengthSlider)) {
+                this.isDraggingLength = true;
+                this.handleLengthTouch(x);
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    return false;
-}
-    
     handleMove(x, y) {
         if (this.isDraggingDirection) {
             this.handleDirectionTouch(x, y);
@@ -184,40 +184,12 @@ handleTouch(x, y) {
         return x >= rect.x && x <= rect.x + rect.width &&
                y >= rect.y && y <= rect.y + rect.height;
     }
-}
 
-    handleTouch(x, y) {
-        if (this.isPointInCircle(x, y, this.beamControlButton)) {
-            this.isExpanded = !this.isExpanded;
-            return true;
-        }
-
-        if (this.isPointInRect(x, y, this.zoomInButton)) {
-            // Implement zoom in
-            return true;
-        }
-
-        if (this.isPointInRect(x, y, this.zoomOutButton)) {
-            // Implement zoom out
-            return true;
-        }
-
-        if (this.isExpanded) {
-            // Handle touches in the expanded control area
-            return true;
-        }
-
-        return false;
+    zoomIn() {
+        if (this.onZoomIn) this.onZoomIn();
     }
 
-    isPointInCircle(x, y, circle) {
-        const dx = x - circle.x;
-        const dy = y - circle.y;
-        return dx * dx + dy * dy <= circle.radius * circle.radius;
-    }
-
-    isPointInRect(x, y, rect) {
-        return x >= rect.x && x <= rect.x + rect.width &&
-               y >= rect.y && y <= rect.y + rect.height;
+    zoomOut() {
+        if (this.onZoomOut) this.onZoomOut();
     }
 }
