@@ -21,6 +21,9 @@ let lastTouchDistance = 0;
 let ufo;
 let joystick;
 let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+let targetZoomLevel = 1;
+let targetCameraX = 0;
+let targetCameraY = 0;
 
 const keys = new Set();
 
