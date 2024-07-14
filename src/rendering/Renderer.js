@@ -79,6 +79,40 @@ export default class Renderer {
         }
     }
 
+    drawBeam(ufo) {
+        // Only draw the beam if it's active
+        if (!ufo.beam.isActive) return;
+
+        const startPoint = ufo.getPosition();
+        const endPoint = ufo.beam.getEndPoint();
+
+        // Debug: Log beam coordinates
+        console.log(`Drawing beam from (${startPoint.x}, ${startPoint.y}) to (${endPoint.x}, ${endPoint.y})`);
+
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.moveTo(
+            (startPoint.x - this.cameraX) * this.zoomLevel,
+            (startPoint.y - this.cameraY) * this.zoomLevel
+        );
+        this.ctx.lineTo(
+            (endPoint.x - this.cameraX) * this.zoomLevel,
+            (endPoint.y - this.cameraY) * this.zoomLevel
+        );
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        this.ctx.lineWidth = 4 * this.zoomLevel;
+        this.ctx.stroke();
+
+        // Add a glow effect
+        this.ctx.shadowBlur = 10;
+        this.ctx.shadowColor = 'white';
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        this.ctx.lineWidth = 8 * this.zoomLevel;
+        this.ctx.stroke();
+
+        this.ctx.restore();
+    }
+
     setCamera(x, y) {
         this.cameraX = x;
         this.cameraY = y;
