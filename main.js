@@ -47,6 +47,11 @@ async function init() {
     if (isMobile) {
     mobileUIController = new MobileUIController(canvas, ufo);
 }
+    if (isMobile) {
+    mobileUIController = new MobileUIController(canvas, ufo);
+    mobileUIController.onZoomIn = zoomIn;
+    mobileUIController.onZoomOut = zoomOut;
+}
 
     cameraX = ufo.x - canvas.width / 2;
     cameraY = ufo.y - canvas.height / 2;
@@ -233,10 +238,24 @@ function handleTouchStart(e) {
     }
 }
 
+function zoomIn() {
+    targetZoomLevel = Math.min(targetZoomLevel + 0.1, 4);
+    console.log(`Zooming in. New zoom level: ${targetZoomLevel.toFixed(2)}`);
+}
+
+function zoomOut() {
+    targetZoomLevel = Math.max(targetZoomLevel - 0.1, 0.5);
+    console.log(`Zooming out. New zoom level: ${targetZoomLevel.toFixed(2)}`);
+}
+
 function handleTouchMove(e) {
     e.preventDefault();
     if (e.touches.length === 1) {
         const touch = e.touches[0];
+        if (isMobile && mobileUIController.handleMove(touch.clientX, touch.clientY)) {
+            // Touch move was handled by mobile UI
+            return;
+        }
         joystick.move(touch.clientX, touch.clientY);
         const { dx, dy } = joystick.getInput();
         ufo.move(dx, dy);
@@ -272,11 +291,13 @@ function handleTouchMove(e) {
 function handleTouchEnd(e) {
     if (e.touches.length === 0) {
         joystick.end();
+        if (isMobile) {
+            mobileUIController.handleEnd();
+        }
     }
     isDragging = false;
     lastTouchDistance = 0;
 }
-
 function getTouchDistance(touches) {
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
