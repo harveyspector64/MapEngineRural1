@@ -125,22 +125,18 @@ function setupControls() {
 }
 
 function handleBeamControls(e) {
-    // Toggle beam with 'B' key
     if (e.key === 'b' || e.key === 'B') {
         ufo.toggleBeam();
         console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
-    }
-
-    // Control beam direction and length if active
-    if (ufo.beam.isActive) {
+    } else if (ufo.beam.isActive) {
         switch(e.key) {
             case 'ArrowUp':
-                ufo.setBeamDirection(0, -1);
-                console.log('Beam direction: Up');
+                ufo.beam.increaseLength();
+                console.log(`Beam length increased: ${ufo.beam.length}`);
                 break;
             case 'ArrowDown':
-                ufo.setBeamDirection(0, 1);
-                console.log('Beam direction: Down');
+                ufo.beam.decreaseLength();
+                console.log(`Beam length decreased: ${ufo.beam.length}`);
                 break;
             case 'ArrowLeft':
                 ufo.setBeamDirection(-1, 0);
@@ -149,15 +145,6 @@ function handleBeamControls(e) {
             case 'ArrowRight':
                 ufo.setBeamDirection(1, 0);
                 console.log('Beam direction: Right');
-                break;
-            case '+':
-            case '=':
-                ufo.beam.increaseLength();
-                console.log(`Beam length increased: ${ufo.beam.length}`);
-                break;
-            case '-':
-                ufo.beam.decreaseLength();
-                console.log(`Beam length decreased: ${ufo.beam.length}`);
                 break;
         }
     }
