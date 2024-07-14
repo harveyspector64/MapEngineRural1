@@ -82,7 +82,9 @@ export default class Renderer {
 drawBeam(ufo) {
     if (!ufo.beam.isActive) return;
 
-    const startPoint = ufo.getPosition();
+    const ufoPos = ufo.getPosition();
+    const beamStartY = ufoPos.y + 16; // Adjust this value to position the beam below the UFO
+    const startPoint = { x: ufoPos.x, y: beamStartY };
     const endPoint = ufo.beam.getEndPoint();
 
     this.ctx.save();
