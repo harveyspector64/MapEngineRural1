@@ -204,6 +204,15 @@ export default class MobileUIController {
         console.log(`Beam length set to: ${newLength.toFixed(2)}`);
     }
 
+    handleZoom(direction) {
+    if (direction === 'in') {
+        this.zoomIn();
+    } else {
+        this.zoomOut();
+    }
+    this.startZoom(direction);
+}
+
     isPointInCircle(x, y, circle) {
         const dx = x - circle.x;
         const dy = y - circle.y;
