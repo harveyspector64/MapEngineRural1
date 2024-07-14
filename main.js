@@ -284,21 +284,25 @@ function preventDefaultTouch(e) {
 }
 
 function setupDebugInfo() {
-    let debugDiv = document.getElementById('debug-info');
-    if (!debugDiv) {
-        debugDiv = document.createElement('div');
-        debugDiv.id = 'debug-info';
-        debugDiv.style.position = 'absolute';
-        debugDiv.style.top = '10px';
-        debugDiv.style.left = '10px';
-        debugDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        debugDiv.style.color = 'white';
-        debugDiv.style.padding = '10px';
-        document.body.appendChild(debugDiv);
+    if (!isMobile) {
+        let debugDiv = document.getElementById('debug-info');
+        if (!debugDiv) {
+            debugDiv = document.createElement('div');
+            debugDiv.id = 'debug-info';
+            debugDiv.style.position = 'absolute';
+            debugDiv.style.top = '10px';
+            debugDiv.style.left = '10px';
+            debugDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            debugDiv.style.color = 'white';
+            debugDiv.style.padding = '10px';
+            document.body.appendChild(debugDiv);
+        }
     }
 }
 
 function updateDebugInfo() {
+    if (isMobile) return;
+
     const debugDiv = document.getElementById('debug-info');
     if (!debugDiv) return;
 
