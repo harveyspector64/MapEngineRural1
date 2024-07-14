@@ -5,12 +5,14 @@ import { TILES } from './src/features/TerrainGenerator.js';
 import WorldManager from './src/core/WorldManager.js';
 import UFO from './src/entities/UFO.js';
 import VirtualJoystick from './src/controls/VirtualJoystick.js';
+import Beam from './src/entities/Beam.js';
 
 const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
 
 let chunkManager;
 let worldManager;
+let beam;
 let cameraX = 0;
 let cameraY = 0;
 let zoomLevel = 1;
@@ -41,6 +43,7 @@ async function init() {
     chunkManager = new ChunkManager(canvas.width, canvas.height);
     
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
+    beam = new Beam(ufo);
     joystick = new VirtualJoystick(canvas);
 
     cameraX = ufo.x - canvas.width / 2;
@@ -84,6 +87,7 @@ function render() {
     });
     
     renderer.renderUFO(ufo);
+    renderer.renderBeam(beam);
     
     if (isMobile) {
         joystick.draw();
@@ -105,6 +109,22 @@ function setupControls() {
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+    window.addEventListener('keydown', handleBeamKeyDown);
+}
+
+function handleBeamKeyDown(e) {
+    if (e.key === 'b') {
+        // Toggle beam on/off
+        beam.isActive ? beam.deactivate() : beam.activate();
+    } else if (beam.isActive) {
+        // Change beam direction if it's active
+        switch(e.key) {
+            case 'ArrowUp': beam.setDirection(0, -1); break;
+            case 'ArrowDown': beam.setDirection(0, 1); break;
+            case 'ArrowLeft': beam.setDirection(-1, 0); break;
+            case 'ArrowRight': beam.setDirection(1, 0); break;
+        }
+    }
 }
 
 function handleKeyDown(e) {
