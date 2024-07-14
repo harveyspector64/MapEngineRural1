@@ -79,6 +79,28 @@ export default class Renderer {
         }
     }
 
+renderBeam(beam) {
+    if (!beam.isActive) return;
+
+    const ufoPos = beam.ufo.getPosition();
+    const endPoint = beam.getEndPoint();
+
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.moveTo(
+        (ufoPos.x - this.cameraX) * this.zoomLevel, 
+        (ufoPos.y - this.cameraY) * this.zoomLevel
+    );
+    this.ctx.lineTo(
+        (endPoint.x - this.cameraX) * this.zoomLevel, 
+        (endPoint.y - this.cameraY) * this.zoomLevel
+    );
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    this.ctx.lineWidth = 5 * this.zoomLevel;
+    this.ctx.stroke();
+    this.ctx.restore();
+}
+    
     setCamera(x, y) {
         this.cameraX = x;
         this.cameraY = y;
