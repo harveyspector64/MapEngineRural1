@@ -10,7 +10,7 @@ export default class UFO {
         this.vy = 0;
         this.acceleration = 0.99;
         this.maxSpeed = 35;
-        this.friction = 0.75;
+        this.friction = 0.82;
     }
 
     update() {
