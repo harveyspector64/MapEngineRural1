@@ -11,6 +11,7 @@ export default class UFO {
         this.acceleration = 0.99;
         this.maxSpeed = 35;
         this.friction = 0.82;
+        this.beam = new Beam(this);
     }
 
     update() {
@@ -41,5 +42,14 @@ export default class UFO {
     setPosition(x, y) {
         this.x = x;
         this.y = y;
+    }
+}
+
+    toggleBeam() {
+        this.beam.toggle();
+    }
+
+    setBeamDirection(dx, dy) {
+        this.beam.setDirection(dx, dy);
     }
 }
