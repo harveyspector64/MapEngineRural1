@@ -26,7 +26,6 @@ let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.
 let targetZoomLevel = 1;
 let targetCameraX = 0;
 let targetCameraY = 0;
-let isHoldingE = false;
 let mousePosition = { x: 0, y: 0 };
 
 const keys = new Set();
@@ -69,7 +68,8 @@ function setupControls() {
     window.addEventListener('keydown', handleKeyboardZoom);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('click', handleMouseClick);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
@@ -78,18 +78,11 @@ function setupControls() {
 
 function handleKeyDown(e) {
     keys.add(e.key.toLowerCase());
-    if (e.key.toLowerCase() === 'e') {
-        isHoldingE = true;
-        toggleBeam();
-    }
     updateUFOMovement();
 }
 
 function handleKeyUp(e) {
     keys.delete(e.key.toLowerCase());
-    if (e.key.toLowerCase() === 'e') {
-        isHoldingE = false;
-    }
     updateUFOMovement();
 }
 
@@ -112,22 +105,10 @@ function updateUFOMovement() {
 function handleWheel(e) {
     e.preventDefault();
     const delta = -Math.sign(e.deltaY);
-    
-    if (ufo.beam.isActive && isHoldingE) {
-        // Adjust beam length
-        if (delta > 0) {
-            ufo.beam.increaseLength();
-        } else {
-            ufo.beam.decreaseLength();
-        }
-        console.log(`Beam length adjusted: ${ufo.beam.length}`);
-    } else {
-        // Zoom in/out
-        const zoomSpeed = 0.1;
-        const zoomDelta = delta * zoomSpeed;
-        targetZoomLevel = Math.max(0.5, Math.min(4, targetZoomLevel + zoomDelta));
-        console.log(`Zoom level adjusted: ${targetZoomLevel.toFixed(2)}`);
-    }
+    const zoomSpeed = 0.1;
+    const zoomDelta = delta * zoomSpeed;
+    targetZoomLevel = Math.max(0.5, Math.min(4, targetZoomLevel + zoomDelta));
+    console.log(`Zoom level adjusted: ${targetZoomLevel.toFixed(2)}`);
 }
 
 function handleMouseMove(e) {
@@ -136,18 +117,22 @@ function handleMouseMove(e) {
     mousePosition.y = (e.clientY - rect.top) / zoomLevel + cameraY;
 }
 
-function handleMouseClick(e) {
-    if (ufo.beam.isActive) {
-        const ufoPos = ufo.getPosition();
-        const dx = mousePosition.x - ufoPos.x;
-        const dy = mousePosition.y - ufoPos.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        ufo.setBeamDirection(dx / distance, dy / distance);
-        ufo.setBeamLength(distance);
-        
-        console.log(`Beam directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${distance.toFixed(2)}`);
-    }
+function handleMouseDown(e) {
+    const ufoPos = ufo.getPosition();
+    const dx = mousePosition.x - ufoPos.x;
+    const dy = mousePosition.y - ufoPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    ufo.setBeamDirection(dx / distance, dy / distance);
+    ufo.setBeamLength(distance);
+    ufo.activateBeam();
+    
+    console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${distance.toFixed(2)}`);
+}
+
+function handleMouseUp(e) {
+    ufo.deactivateBeam();
+    console.log('Beam deactivated');
 }
 
 function handleTouchStart(e) {
@@ -223,11 +208,6 @@ function getTouchDistance(touches) {
 
 function preventDefaultTouch(e) {
     e.preventDefault();
-}
-
-function toggleBeam() {
-    ufo.toggleBeam();
-    console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
 }
 
 function handleKeyboardZoom(e) {
