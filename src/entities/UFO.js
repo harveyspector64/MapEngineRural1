@@ -45,8 +45,12 @@ export default class UFO {
         this.y = y;
     }
 
-    toggleBeam() {
-        this.beam.toggle();
+    activateBeam() {
+        this.beam.activate();
+    }
+
+    deactivateBeam() {
+        this.beam.deactivate();
     }
 
     setBeamDirection(dx, dy) {
