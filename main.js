@@ -27,7 +27,7 @@ let targetZoomLevel = 1;
 let targetCameraX = 0;
 let targetCameraY = 0;
 let isHoldingE = false;
-const AUTO_ZOOM_LEVEL = 2; // Adjust this value for desired auto-zoom level
+const AUTO_ZOOM_LEVEL = 3; // Adjust this value for desired auto-zoom level
 
 const keys = new Set();
 
@@ -79,9 +79,7 @@ function handleKeyDown(e) {
     keys.add(e.key.toLowerCase());
     if (e.key.toLowerCase() === 'e') {
         isHoldingE = true;
-        if (!ufo.beam.isActive) {
-            toggleBeam();
-        }
+        toggleBeam();
     }
     updateUFOMovement();
     updateBeamDirection();
@@ -151,7 +149,7 @@ function handleWheel(e) {
             ufo.beam.decreaseLength();
         }
         console.log(`Beam length adjusted: ${ufo.beam.length}`);
-    } else if (!ufo.beam.isActive) {
+    } else {
         // Zoom in/out
         const zoomSpeed = 0.1;
         const zoomDelta = delta * zoomSpeed;
@@ -163,8 +161,12 @@ function handleWheel(e) {
 function toggleBeam() {
     ufo.toggleBeam();
     if (ufo.beam.isActive) {
-        // Auto-zoom when activating the beam
-        targetZoomLevel = Math.min(AUTO_ZOOM_LEVEL, targetZoomLevel);
+        // Store current zoom level and auto-zoom when activating the beam
+        previousZoomLevel = targetZoomLevel;
+        targetZoomLevel = Math.max(AUTO_ZOOM_LEVEL, targetZoomLevel);
+    } else {
+        // Restore previous zoom level when deactivating the beam
+        targetZoomLevel = previousZoomLevel;
     }
     console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
 }
@@ -176,6 +178,16 @@ function handleKeyboardZoom(e) {
     } else if (e.key === '-' || e.key === '_') {
         zoomOut();
     }
+}
+
+function zoomIn() {
+    targetZoomLevel = Math.min(targetZoomLevel * 1.1, 4);
+    console.log(`Zooming in. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
+}
+
+function zoomOut() {
+    targetZoomLevel = Math.max(targetZoomLevel / 1.1, 0.5);
+    console.log(`Zooming out. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
 }
 
 
