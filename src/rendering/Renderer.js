@@ -80,7 +80,7 @@ export default class Renderer {
     }
 
 drawBeam(ufo) {
-    if (!ufo.beam.isActive) return;
+    if (!ufo.beam.isActive || ufo.beam.length === 0) return;
 
     const ufoPos = ufo.getPosition();
     const startPoint = { x: ufoPos.x, y: ufoPos.y };
