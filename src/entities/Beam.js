@@ -25,9 +25,12 @@ export default class Beam {
         }
     }
 
-    setLength(length) {
-        this.length = Math.max(this.minLength, Math.min(length, this.maxLength));
+setLength(length) {
+    this.length = Math.max(0, Math.min(length, this.maxLength));
+    if (this.length === 0) {
+        this.isActive = false;
     }
+}
 
     getEndPoint() {
         const ufoPos = this.ufo.getPosition();
