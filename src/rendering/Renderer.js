@@ -83,8 +83,7 @@ drawBeam(ufo) {
     if (!ufo.beam.isActive) return;
 
     const ufoPos = ufo.getPosition();
-    const beamStartY = ufoPos.y + 16; // Adjust this value to position the beam below the UFO
-    const startPoint = { x: ufoPos.x, y: beamStartY };
+    const startPoint = { x: ufoPos.x, y: ufoPos.y };
     const endPoint = ufo.beam.getEndPoint();
 
     this.ctx.save();
@@ -105,8 +104,9 @@ drawBeam(ufo) {
         (endPoint.x - this.cameraX) * this.zoomLevel,
         (endPoint.y - this.cameraY) * this.zoomLevel
     );
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)'); // Start transparent
+    gradient.addColorStop(0.1, 'rgba(255, 255, 255, 0.8)'); // Quickly fade in
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)'); // Fade out at the end
 
     this.ctx.strokeStyle = gradient;
     this.ctx.lineWidth = 8 * this.zoomLevel;
