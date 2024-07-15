@@ -11,6 +11,7 @@ export default class Beam {
         this.lengthChangeRate = 2; // Pixels to change per update
         this.mode = 'scan'; // Default mode
         this.availableModes = ['scan', 'abduct', 'mutilate', 'crop-circle'];
+        this.direction = { x: 0, y: 1 }; // Default direction is down
         
         console.log('Beam initialized');
     }
