@@ -21,14 +21,11 @@ let lastTouchY = 0;
 let lastTouchDistance = 0;
 let ufo;
 let joystick;
+let mobileUIController;
 let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 let targetZoomLevel = 1;
 let targetCameraX = 0;
 let targetCameraY = 0;
-let mobileUIController;
-let isBeamExtensionMode = false;
-let keys = new Set();
-
 
 const keys = new Set();
 
@@ -64,57 +61,6 @@ async function init() {
     setupDebugInfo();
 }
 
-function render() {
-    ufo.update();
-    updateUFOMovement();
-    updateBeamDirection();
-
-    // Smoothly adjust zoom level
-    const zoomLerpFactor = 0.1;
-    zoomLevel += (targetZoomLevel - zoomLevel) * zoomLerpFactor;
-
-    // Smoothly adjust camera position
-    const cameraLerpFactor = 0.1;
-    cameraX += (targetCameraX - cameraX) * cameraLerpFactor;
-    cameraY += (targetCameraY - cameraY) * cameraLerpFactor;
-
-    // Update target camera position to follow UFO
-    const ufoPos = ufo.getPosition();
-    targetCameraX = ufoPos.x - canvas.width / (2 * zoomLevel);
-    targetCameraY = ufoPos.y - canvas.height / (2 * zoomLevel);
-
-    renderer.clear();
-    renderer.setCamera(cameraX, cameraY);
-    renderer.setZoom(zoomLevel);
-    const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
-    visibleChunks.forEach(({x, y}) => {
-        const chunk = chunkManager.getChunk(x, y);
-        if (chunk) {
-            renderer.renderChunk(chunk);
-        } else {
-            console.warn(`Missing chunk at (${x}, ${y})`);
-        }
-    });
-    
-    renderer.renderUFO(ufo);
-    renderer.drawBeam(ufo);
-
-        if (isMobile) {
-        mobileUIController.draw();
-    }
-    
-    if (isMobile) {
-        joystick.draw();
-    }
-
-    renderer.drawChunkBoundaries(Array.from(chunkManager.loadedChunks.values()));
-
-    chunkManager.updateViewport(cameraX, cameraY);
-    updateDebugInfo();
-
-    requestAnimationFrame(render);
-}
-
 function setupControls() {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -123,26 +69,6 @@ function setupControls() {
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
-}
-
-function handleBeamControls(e) {
-    if (e.key === 'b' || e.key === 'B') {
-        ufo.toggleBeam();
-        console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
-    } else if (ufo.beam.isActive) {
-        const diagonalDistance = Math.sqrt(2) / 2;
-        switch(e.key) {
-            case 'ArrowUp': ufo.setBeamDirection(0, -1); break;
-            case 'ArrowDown': ufo.setBeamDirection(0, 1); break;
-            case 'ArrowLeft': ufo.setBeamDirection(-1, 0); break;
-            case 'ArrowRight': ufo.setBeamDirection(1, 0); break;
-            case 'Home': ufo.setBeamDirection(-diagonalDistance, -diagonalDistance); break; // NW
-            case 'PageUp': ufo.setBeamDirection(diagonalDistance, -diagonalDistance); break; // NE
-            case 'End': ufo.setBeamDirection(-diagonalDistance, diagonalDistance); break; // SW
-            case 'PageDown': ufo.setBeamDirection(diagonalDistance, diagonalDistance); break; // SE
-        }
-        console.log(`Beam direction set to: (${ufo.beam.direction.x.toFixed(2)}, ${ufo.beam.direction.y.toFixed(2)})`);
-    }
 }
 
 function handleKeyDown(e) {
@@ -158,18 +84,6 @@ function handleKeyDown(e) {
 function handleKeyUp(e) {
     keys.delete(e.key.toLowerCase());
     updateUFOMovement();
-}
-
-function handleMouseWheel(e) {
-    if (ufo.beam.isActive) {
-        if (e.deltaY < 0) {
-            ufo.beam.increaseLength();
-        } else {
-            ufo.beam.decreaseLength();
-        }
-        console.log(`Beam length adjusted: ${ufo.beam.length}`);
-        e.preventDefault();
-    }
 }
 
 function updateUFOMovement() {
@@ -291,6 +205,7 @@ function handleTouchEnd(e) {
     isDragging = false;
     lastTouchDistance = 0;
 }
+
 function getTouchDistance(touches) {
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
@@ -337,8 +252,53 @@ function updateDebugInfo() {
     `;
 }
 
-window.addEventListener('load', init);
-window.addEventListener('resize', init);
+function render() {
+    ufo.update();
+    updateUFOMovement();
+    updateBeamDirection();
+
+    // Smoothly adjust zoom level
+    const zoomLerpFactor = 0.1;
+    zoomLevel += (targetZoomLevel - zoomLevel) * zoomLerpFactor;
+
+    // Smoothly adjust camera position
+    const cameraLerpFactor = 0.1;
+    cameraX += (targetCameraX - cameraX) * cameraLerpFactor;
+    cameraY += (targetCameraY - cameraY) * cameraLerpFactor;
+
+    // Update target camera position to follow UFO
+    const ufoPos = ufo.getPosition();
+    targetCameraX = ufoPos.x - canvas.width / (2 * zoomLevel);
+    targetCameraY = ufoPos.y - canvas.height / (2 * zoomLevel);
+
+    renderer.clear();
+    renderer.setCamera(cameraX, cameraY);
+    renderer.setZoom(zoomLevel);
+    const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
+    visibleChunks.forEach(({x, y}) => {
+        const chunk = chunkManager.getChunk(x, y);
+        if (chunk) {
+            renderer.renderChunk(chunk);
+        } else {
+            console.warn(`Missing chunk at (${x}, ${y})`);
+        }
+    });
+    
+    renderer.renderUFO(ufo);
+    renderer.drawBeam(ufo);
+    
+    if (isMobile) {
+        joystick.draw();
+        mobileUIController.draw();
+    }
+
+    renderer.drawChunkBoundaries(Array.from(chunkManager.loadedChunks.values()));
+
+    chunkManager.updateViewport(cameraX, cameraY);
+    updateDebugInfo();
+
+    requestAnimationFrame(render);
+}
 
 function zoomIn() {
     targetZoomLevel = Math.min(targetZoomLevel * 1.1, 4);
@@ -349,3 +309,6 @@ function zoomOut() {
     targetZoomLevel = Math.max(targetZoomLevel / 1.1, 0.5);
     console.log(`Zooming out. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
 }
+
+window.addEventListener('load', init);
+window.addEventListener('resize', init);
