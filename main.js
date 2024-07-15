@@ -27,6 +27,7 @@ let targetZoomLevel = 1;
 let targetCameraX = 0;
 let targetCameraY = 0;
 let mousePosition = { x: 0, y: 0 };
+let isMouseDown = false;
 
 const keys = new Set();
 
@@ -67,8 +68,8 @@ function setupControls() {
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('keydown', handleKeyboardZoom);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
-    canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -111,13 +112,28 @@ function handleWheel(e) {
     console.log(`Zoom level adjusted: ${targetZoomLevel.toFixed(2)}`);
 }
 
+function handleMouseDown(e) {
+    isMouseDown = true;
+    updateBeamFromMouse(e);
+}
+
 function handleMouseMove(e) {
     const rect = canvas.getBoundingClientRect();
     mousePosition.x = (e.clientX - rect.left) / zoomLevel + cameraX;
     mousePosition.y = (e.clientY - rect.top) / zoomLevel + cameraY;
+
+    if (isMouseDown) {
+        updateBeamFromMouse(e);
+    }
 }
 
-function handleMouseDown(e) {
+function handleMouseUp(e) {
+    isMouseDown = false;
+    ufo.deactivateBeam();
+    console.log('Beam deactivated');
+}
+
+function updateBeamFromMouse(e) {
     const ufoPos = ufo.getPosition();
     const dx = mousePosition.x - ufoPos.x;
     const dy = mousePosition.y - ufoPos.y;
@@ -128,11 +144,6 @@ function handleMouseDown(e) {
     ufo.activateBeam();
     
     console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${distance.toFixed(2)}`);
-}
-
-function handleMouseUp(e) {
-    ufo.deactivateBeam();
-    console.log('Beam deactivated');
 }
 
 function handleTouchStart(e) {
