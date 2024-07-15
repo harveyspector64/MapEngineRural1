@@ -164,17 +164,19 @@ function updateBeamFromMouse(e) {
     const dy = mousePosition.y - ufoPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // Define the UFO's radius (adjust this value as needed)
-    const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
-
-    if (distance > ufoRadius) {
-        ufo.setBeamDirection(dx / distance, dy / distance);
-        ufo.setBeamLength(distance - ufoRadius);
+    // Always set the beam direction, even if it's inside the UFO
+    ufo.setBeamDirection(dx / distance, dy / distance);
+    
+    // Set the beam length, allowing it to smoothly retract into the UFO
+    ufo.setBeamLength(Math.max(0, distance));
+    
+    // Activate the beam if the length is greater than 0, otherwise deactivate
+    if (distance > 0) {
         ufo.activateBeam();
-        console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
+        console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${distance.toFixed(2)}`);
     } else {
         ufo.deactivateBeam();
-        console.log('Beam retracted into UFO');
+        console.log('Beam fully retracted');
     }
 }
 
