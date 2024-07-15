@@ -88,9 +88,15 @@ drawBeam(ufo) {
 
     this.ctx.save();
     this.ctx.beginPath();
+
+    // Calculate the beam start point to be just outside the UFO sprite
+    const ufoRadius = 16; // Assuming UFO sprite is 32x32 pixels
+    const beamStartX = startPoint.x + ufo.beam.direction.x * ufoRadius;
+    const beamStartY = startPoint.y + ufo.beam.direction.y * ufoRadius;
+
     this.ctx.moveTo(
-        (startPoint.x - this.cameraX) * this.zoomLevel,
-        (startPoint.y - this.cameraY) * this.zoomLevel
+        (beamStartX - this.cameraX) * this.zoomLevel,
+        (beamStartY - this.cameraY) * this.zoomLevel
     );
     this.ctx.lineTo(
         (endPoint.x - this.cameraX) * this.zoomLevel,
@@ -99,14 +105,13 @@ drawBeam(ufo) {
 
     // Create gradient for beam effect
     const gradient = this.ctx.createLinearGradient(
-        (startPoint.x - this.cameraX) * this.zoomLevel,
-        (startPoint.y - this.cameraY) * this.zoomLevel,
+        (beamStartX - this.cameraX) * this.zoomLevel,
+        (beamStartY - this.cameraY) * this.zoomLevel,
         (endPoint.x - this.cameraX) * this.zoomLevel,
         (endPoint.y - this.cameraY) * this.zoomLevel
     );
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)'); // Start transparent
-    gradient.addColorStop(0.1, 'rgba(255, 255, 255, 0.8)'); // Quickly fade in
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)'); // Fade out at the end
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
     this.ctx.strokeStyle = gradient;
     this.ctx.lineWidth = 8 * this.zoomLevel;
