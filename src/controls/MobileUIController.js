@@ -14,12 +14,12 @@ export default class MobileUIController {
         this.expandedControls = {
             x: 20,
             y: 70,
-            width: 200,
-            height: 250,
-            toggleButton: { x: 120, y: 90, radius: 30 },
-            directionPad: { x: 120, y: 170, radius: 50 },
-            lengthSlider: { x: 40, y: 240, width: 160, height: 20 },
-            modeButton: { x: 40, y: 90, width: 60, height: 30 }
+            width: 180,  // Reduced width
+            height: 220, // Reduced height
+            toggleButton: { x: 110, y: 90, radius: 25 },
+            directionPad: { x: 110, y: 160, radius: 45 },
+            lengthSlider: { x: 40, y: 220, width: 140, height: 30 }, // Increased height
+            modeButton: { x: 40, y: 90, width: 50, height: 30 }
         };
         
         // Touch handling flags
@@ -78,7 +78,7 @@ export default class MobileUIController {
         const e = this.expandedControls;
         
         // Draw expanded control background
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'; // Increased opacity
         this.ctx.fillRect(e.x, e.y, e.width, e.height);
         
         // Draw beam toggle button
