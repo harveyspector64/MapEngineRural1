@@ -26,6 +26,8 @@ let targetZoomLevel = 1;
 let targetCameraX = 0;
 let targetCameraY = 0;
 let mobileUIController;
+let isBeamExtensionMode = false;
+
 
 const keys = new Set();
 
@@ -119,9 +121,7 @@ function setupControls() {
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
     
-    // Add these new lines
     window.addEventListener('keydown', handleBeamControls);
-    canvas.addEventListener('wheel', handleMouseWheel, { passive: false });
 }
 
 function handleBeamControls(e) {
@@ -129,43 +129,48 @@ function handleBeamControls(e) {
         ufo.toggleBeam();
         console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
     } else if (ufo.beam.isActive) {
+        const diagonalDistance = Math.sqrt(2) / 2;
         switch(e.key) {
-            case 'ArrowUp':
-                ufo.setBeamDirection(0, -1);
-                console.log('Beam direction: Up');
-                break;
-            case 'ArrowDown':
-                ufo.setBeamDirection(0, 1);
-                console.log('Beam direction: Down');
-                break;
-            case 'ArrowLeft':
-                ufo.setBeamDirection(-1, 0);
-                console.log('Beam direction: Left');
-                break;
-            case 'ArrowRight':
-                ufo.setBeamDirection(1, 0);
-                console.log('Beam direction: Right');
-                break;
-            case '+':
-            case '=':
-                ufo.beam.increaseLength();
-                console.log(`Beam length increased: ${ufo.beam.length}`);
-                break;
-            case '-':
-                ufo.beam.decreaseLength();
-                console.log(`Beam length decreased: ${ufo.beam.length}`);
-                break;
+            case 'ArrowUp': ufo.setBeamDirection(0, -1); break;
+            case 'ArrowDown': ufo.setBeamDirection(0, 1); break;
+            case 'ArrowLeft': ufo.setBeamDirection(-1, 0); break;
+            case 'ArrowRight': ufo.setBeamDirection(1, 0); break;
+            case 'Home': ufo.setBeamDirection(-diagonalDistance, -diagonalDistance); break; // NW
+            case 'PageUp': ufo.setBeamDirection(diagonalDistance, -diagonalDistance); break; // NE
+            case 'End': ufo.setBeamDirection(-diagonalDistance, diagonalDistance); break; // SW
+            case 'PageDown': ufo.setBeamDirection(diagonalDistance, diagonalDistance); break; // SE
         }
+        console.log(`Beam direction set to: (${ufo.beam.direction.x.toFixed(2)}, ${ufo.beam.direction.y.toFixed(2)})`);
     }
 }
 
 function handleKeyDown(e) {
-    keys.add(e.key);
+    switch(e.key.toLowerCase()) {
+        case 'w': keys.add('ArrowUp'); break;
+        case 'a': keys.add('ArrowLeft'); break;
+        case 's': keys.add('ArrowDown'); break;
+        case 'd': keys.add('ArrowRight'); break;
+        case 'e': 
+            isBeamExtensionMode = true;
+            console.log('Beam extension mode activated');
+            break;
+        default: keys.add(e.key);
+    }
     updateUFOMovement();
 }
 
 function handleKeyUp(e) {
-    keys.delete(e.key);
+    switch(e.key.toLowerCase()) {
+        case 'w': keys.delete('ArrowUp'); break;
+        case 'a': keys.delete('ArrowLeft'); break;
+        case 's': keys.delete('ArrowDown'); break;
+        case 'd': keys.delete('ArrowRight'); break;
+        case 'e':
+            isBeamExtensionMode = false;
+            console.log('Beam extension mode deactivated');
+            break;
+        default: keys.delete(e.key);
+    }
     updateUFOMovement();
 }
 
@@ -199,23 +204,20 @@ function updateUFOMovement() {
 
 function handleWheel(e) {
     e.preventDefault();
-    const zoomSpeed = 0.1;
-    const zoomDelta = -Math.sign(e.deltaY) * zoomSpeed;
-    targetZoomLevel = Math.max(0.5, Math.min(4, targetZoomLevel + zoomDelta));
-    
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    const ufoPos = ufo.getPosition();
-    
-    // Calculate the point to zoom towards (80% UFO position, 20% mouse position)
-    const zoomTargetX = ufoPos.x * 0.8 + (cameraX + mouseX / zoomLevel) * 0.2;
-    const zoomTargetY = ufoPos.y * 0.8 + (cameraY + mouseY / zoomLevel) * 0.2;
-    
-    // Set target camera position
-    targetCameraX = zoomTargetX - (canvas.width / 2) / targetZoomLevel;
-    targetCameraY = zoomTargetY - (canvas.height / 2) / targetZoomLevel;
+    if (isBeamExtensionMode && ufo.beam.isActive) {
+        const zoomDelta = -Math.sign(e.deltaY) * 0.1;
+        if (zoomDelta > 0) {
+            ufo.beam.increaseLength();
+        } else {
+            ufo.beam.decreaseLength();
+        }
+        console.log(`Beam length adjusted: ${ufo.beam.length}`);
+    } else {
+        const zoomSpeed = 0.1;
+        const zoomDelta = -Math.sign(e.deltaY) * zoomSpeed;
+        targetZoomLevel = Math.max(0.5, Math.min(4, targetZoomLevel + zoomDelta));
+        console.log(`Zoom level adjusted: ${targetZoomLevel.toFixed(2)}`);
+    }
 }
 
 function handleTouchStart(e) {
