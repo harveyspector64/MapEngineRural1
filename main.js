@@ -351,15 +351,6 @@ function render() {
     requestAnimationFrame(render);
 }
 
-function zoomIn() {
-    targetZoomLevel = Math.min(targetZoomLevel * 1.1, 4);
-    console.log(`Zooming in. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
-}
-
-function zoomOut() {
-    targetZoomLevel = Math.max(targetZoomLevel / 1.1, 0.5);
-    console.log(`Zooming out. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
-}
 
 window.addEventListener('load', init);
 window.addEventListener('resize', init);
