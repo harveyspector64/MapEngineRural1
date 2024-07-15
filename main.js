@@ -27,6 +27,7 @@ let targetCameraX = 0;
 let targetCameraY = 0;
 let mobileUIController;
 let isBeamExtensionMode = false;
+let keys = new Set();
 
 
 const keys = new Set();
@@ -65,6 +66,8 @@ async function init() {
 
 function render() {
     ufo.update();
+    updateUFOMovement();
+    updateBeamDirection();
 
     // Smoothly adjust zoom level
     const zoomLerpFactor = 0.1;
@@ -120,8 +123,6 @@ function setupControls() {
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
-    
-    window.addEventListener('keydown', handleBeamControls);
 }
 
 function handleBeamControls(e) {
@@ -145,32 +146,17 @@ function handleBeamControls(e) {
 }
 
 function handleKeyDown(e) {
-    switch(e.key.toLowerCase()) {
-        case 'w': keys.add('ArrowUp'); break;
-        case 'a': keys.add('ArrowLeft'); break;
-        case 's': keys.add('ArrowDown'); break;
-        case 'd': keys.add('ArrowRight'); break;
-        case 'e': 
-            isBeamExtensionMode = true;
-            console.log('Beam extension mode activated');
-            break;
-        default: keys.add(e.key);
+    keys.add(e.key.toLowerCase());
+    if (e.key.toLowerCase() === 'e') {
+        ufo.toggleBeam();
+        console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
     }
     updateUFOMovement();
+    updateBeamDirection();
 }
 
 function handleKeyUp(e) {
-    switch(e.key.toLowerCase()) {
-        case 'w': keys.delete('ArrowUp'); break;
-        case 'a': keys.delete('ArrowLeft'); break;
-        case 's': keys.delete('ArrowDown'); break;
-        case 'd': keys.delete('ArrowRight'); break;
-        case 'e':
-            isBeamExtensionMode = false;
-            console.log('Beam extension mode deactivated');
-            break;
-        default: keys.delete(e.key);
-    }
+    keys.delete(e.key.toLowerCase());
     updateUFOMovement();
 }
 
@@ -188,10 +174,10 @@ function handleMouseWheel(e) {
 
 function updateUFOMovement() {
     let dx = 0, dy = 0;
-    if (keys.has('ArrowUp')) dy -= 1;
-    if (keys.has('ArrowDown')) dy += 1;
-    if (keys.has('ArrowLeft')) dx -= 1;
-    if (keys.has('ArrowRight')) dx += 1;
+    if (keys.has('w')) dy -= 1;
+    if (keys.has('s')) dy += 1;
+    if (keys.has('a')) dx -= 1;
+    if (keys.has('d')) dx += 1;
     
     // Normalize diagonal movement
     if (dx !== 0 && dy !== 0) {
@@ -202,11 +188,32 @@ function updateUFOMovement() {
     ufo.move(dx, dy);
 }
 
+function updateBeamDirection() {
+    if (!ufo.beam.isActive) return;
+
+    let dx = 0, dy = 0;
+    if (keys.has('arrowup')) dy -= 1;
+    if (keys.has('arrowdown')) dy += 1;
+    if (keys.has('arrowleft')) dx -= 1;
+    if (keys.has('arrowright')) dx += 1;
+
+    // Normalize diagonal movement
+    if (dx !== 0 && dy !== 0) {
+        dx /= Math.sqrt(2);
+        dy /= Math.sqrt(2);
+    }
+
+    if (dx !== 0 || dy !== 0) {
+        ufo.setBeamDirection(dx, dy);
+        console.log(`Beam direction set to: (${dx.toFixed(2)}, ${dy.toFixed(2)})`);
+    }
+}
+
 function handleWheel(e) {
     e.preventDefault();
-    if (isBeamExtensionMode && ufo.beam.isActive) {
-        const zoomDelta = -Math.sign(e.deltaY) * 0.1;
-        if (zoomDelta > 0) {
+    if (ufo.beam.isActive) {
+        const delta = -Math.sign(e.deltaY);
+        if (delta > 0) {
             ufo.beam.increaseLength();
         } else {
             ufo.beam.decreaseLength();
