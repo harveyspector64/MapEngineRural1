@@ -1,4 +1,6 @@
 // main.js
+// This script manages the main game loop, user input, and coordinates various game components
+
 import ChunkManager from './src/core/ChunkManager.js';
 import Renderer from './src/rendering/Renderer.js';
 import { TILES } from './src/features/TerrainGenerator.js';
@@ -7,9 +9,11 @@ import UFO from './src/entities/UFO.js';
 import VirtualJoystick from './src/controls/VirtualJoystick.js';
 import MobileUIController from './src/controls/MobileUIController.js';
 
+// Get the canvas element and create a renderer
 const canvas = document.getElementById('mapCanvas');
 const renderer = new Renderer(canvas);
 
+// Declare variables for game components and state
 let chunkManager;
 let worldManager;
 let cameraX = 0;
@@ -29,40 +33,53 @@ let targetCameraY = 0;
 let mousePosition = { x: 0, y: 0 };
 let isMouseDown = false;
 
+// Set to store currently pressed keys
 const keys = new Set();
 
+// Initialize the game
 async function init() {
+    // Set canvas dimensions
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    // Define available sprite types
     const availableSprites = [
         'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water'
     ];
 
+    // Load sprites
     await renderer.loadSprites(availableSprites);
 
+    // Initialize game components
     worldManager = new WorldManager(Math.random());
     chunkManager = new ChunkManager(canvas.width, canvas.height);
     
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
     joystick = new VirtualJoystick(canvas);
 
+    // Set initial camera position
     cameraX = ufo.x - canvas.width / 2;
     cameraY = ufo.y - canvas.height / 2;
 
+    // Update the viewport
     chunkManager.updateViewport(cameraX, cameraY);
 
+    // Initialize mobile UI if on a mobile device
     if (isMobile) {
         mobileUIController = new MobileUIController(canvas, ufo);
         mobileUIController.onZoomIn = zoomIn;
         mobileUIController.onZoomOut = zoomOut;
     }
 
+    // Start the render loop
     render();
+    // Set up event listeners
     setupControls();
+    // Set up debug information display
     setupDebugInfo();
 }
 
+// Set up event listeners for user input
 function setupControls() {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -77,16 +94,19 @@ function setupControls() {
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
 }
 
+// Handle key press events
 function handleKeyDown(e) {
     keys.add(e.key.toLowerCase());
     updateUFOMovement();
 }
 
+// Handle key release events
 function handleKeyUp(e) {
     keys.delete(e.key.toLowerCase());
     updateUFOMovement();
 }
 
+// Update UFO movement based on pressed keys
 function updateUFOMovement() {
     let dx = 0, dy = 0;
     if (keys.has('w') || keys.has('arrowup')) dy -= 1;
@@ -103,6 +123,7 @@ function updateUFOMovement() {
     ufo.move(dx, dy);
 }
 
+// Handle mouse wheel events for zooming
 function handleWheel(e) {
     e.preventDefault();
     const delta = -Math.sign(e.deltaY);
@@ -112,11 +133,13 @@ function handleWheel(e) {
     console.log(`Zoom level adjusted: ${targetZoomLevel.toFixed(2)}`);
 }
 
+// Handle mouse button press
 function handleMouseDown(e) {
     isMouseDown = true;
     updateBeamFromMouse(e);
 }
 
+// Handle mouse movement
 function handleMouseMove(e) {
     const rect = canvas.getBoundingClientRect();
     mousePosition.x = (e.clientX - rect.left) / zoomLevel + cameraX;
@@ -127,25 +150,35 @@ function handleMouseMove(e) {
     }
 }
 
+// Handle mouse button release
 function handleMouseUp(e) {
     isMouseDown = false;
     ufo.deactivateBeam();
     console.log('Beam deactivated');
 }
 
+// Update beam position and length based on mouse position
 function updateBeamFromMouse(e) {
     const ufoPos = ufo.getPosition();
     const dx = mousePosition.x - ufoPos.x;
     const dy = mousePosition.y - ufoPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    ufo.setBeamDirection(dx / distance, dy / distance);
-    ufo.setBeamLength(distance);
-    ufo.activateBeam();
-    
-    console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${distance.toFixed(2)}`);
+    // Define the UFO's radius (adjust this value as needed)
+    const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
+
+    if (distance > ufoRadius) {
+        ufo.setBeamDirection(dx / distance, dy / distance);
+        ufo.setBeamLength(distance - ufoRadius);
+        ufo.activateBeam();
+        console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
+    } else {
+        ufo.deactivateBeam();
+        console.log('Beam retracted into UFO');
+    }
 }
 
+// Handle touch start events
 function handleTouchStart(e) {
     e.preventDefault();
     if (e.touches.length === 1) {
@@ -160,6 +193,7 @@ function handleTouchStart(e) {
     }
 }
 
+// Handle touch move events
 function handleTouchMove(e) {
     e.preventDefault();
     if (e.touches.length === 1) {
@@ -200,6 +234,7 @@ function handleTouchMove(e) {
     }
 }
 
+// Handle touch end events
 function handleTouchEnd(e) {
     if (e.touches.length === 0) {
         joystick.end();
@@ -211,16 +246,19 @@ function handleTouchEnd(e) {
     lastTouchDistance = 0;
 }
 
+// Calculate distance between two touch points
 function getTouchDistance(touches) {
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
     return Math.sqrt(dx * dx + dy * dy);
 }
 
+// Prevent default touch behavior
 function preventDefaultTouch(e) {
     e.preventDefault();
 }
 
+// Handle keyboard zoom events
 function handleKeyboardZoom(e) {
     if (e.key === '=' || e.key === '+') {
         zoomIn();
@@ -229,16 +267,19 @@ function handleKeyboardZoom(e) {
     }
 }
 
+// Zoom in function
 function zoomIn() {
     targetZoomLevel = Math.min(targetZoomLevel * 1.1, 4);
     console.log(`Zooming in. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
 }
 
+// Zoom out function
 function zoomOut() {
     targetZoomLevel = Math.max(targetZoomLevel / 1.1, 0.5);
     console.log(`Zooming out. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
 }
 
+// Set up debug information display
 function setupDebugInfo() {
     if (!isMobile) {
         let debugDiv = document.getElementById('debug-info');
@@ -256,6 +297,7 @@ function setupDebugInfo() {
     }
 }
 
+// Update debug information
 function updateDebugInfo() {
     if (isMobile) return;
 
@@ -275,6 +317,7 @@ function updateDebugInfo() {
     `;
 }
 
+// Main render loop
 function render() {
     ufo.update();
     updateUFOMovement();
@@ -322,5 +365,6 @@ function render() {
     requestAnimationFrame(render);
 }
 
+// Event listeners for game initialization and window resizing
 window.addEventListener('load', init);
 window.addEventListener('resize', init);
