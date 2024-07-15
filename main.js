@@ -26,6 +26,8 @@ let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.
 let targetZoomLevel = 1;
 let targetCameraX = 0;
 let targetCameraY = 0;
+let isHoldingE = false;
+const AUTO_ZOOM_LEVEL = 2; // Adjust this value for desired auto-zoom level
 
 const keys = new Set();
 
@@ -61,9 +63,11 @@ async function init() {
     setupDebugInfo();
 }
 
+// Update setupControls to include the new keyboard zoom handler
 function setupControls() {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('keydown', handleKeyboardZoom);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -74,8 +78,10 @@ function setupControls() {
 function handleKeyDown(e) {
     keys.add(e.key.toLowerCase());
     if (e.key.toLowerCase() === 'e') {
-        ufo.toggleBeam();
-        console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
+        isHoldingE = true;
+        if (!ufo.beam.isActive) {
+            toggleBeam();
+        }
     }
     updateUFOMovement();
     updateBeamDirection();
@@ -83,15 +89,18 @@ function handleKeyDown(e) {
 
 function handleKeyUp(e) {
     keys.delete(e.key.toLowerCase());
+    if (e.key.toLowerCase() === 'e') {
+        isHoldingE = false;
+    }
     updateUFOMovement();
 }
 
 function updateUFOMovement() {
     let dx = 0, dy = 0;
-    if (keys.has('w')) dy -= 1;
-    if (keys.has('s')) dy += 1;
-    if (keys.has('a')) dx -= 1;
-    if (keys.has('d')) dx += 1;
+    if (keys.has('w') || keys.has('arrowup')) dy -= 1;
+    if (keys.has('s') || keys.has('arrowdown')) dy += 1;
+    if (keys.has('a') || keys.has('arrowleft')) dx -= 1;
+    if (keys.has('d') || keys.has('arrowright')) dx += 1;
     
     // Normalize diagonal movement
     if (dx !== 0 && dy !== 0) {
@@ -99,8 +108,15 @@ function updateUFOMovement() {
         dy /= Math.sqrt(2);
     }
     
+    // Slow down movement if beam is active
+    if (ufo.beam.isActive) {
+        dx *= 0.5;
+        dy *= 0.5;
+    }
+    
     ufo.move(dx, dy);
 }
+
 
 function updateBeamDirection() {
     if (!ufo.beam.isActive) return;
@@ -125,21 +141,44 @@ function updateBeamDirection() {
 
 function handleWheel(e) {
     e.preventDefault();
-    if (ufo.beam.isActive) {
-        const delta = -Math.sign(e.deltaY);
+    const delta = -Math.sign(e.deltaY);
+    
+    if (ufo.beam.isActive && isHoldingE) {
+        // Adjust beam length
         if (delta > 0) {
             ufo.beam.increaseLength();
         } else {
             ufo.beam.decreaseLength();
         }
         console.log(`Beam length adjusted: ${ufo.beam.length}`);
-    } else {
+    } else if (!ufo.beam.isActive) {
+        // Zoom in/out
         const zoomSpeed = 0.1;
-        const zoomDelta = -Math.sign(e.deltaY) * zoomSpeed;
+        const zoomDelta = delta * zoomSpeed;
         targetZoomLevel = Math.max(0.5, Math.min(4, targetZoomLevel + zoomDelta));
         console.log(`Zoom level adjusted: ${targetZoomLevel.toFixed(2)}`);
     }
 }
+
+function toggleBeam() {
+    ufo.toggleBeam();
+    if (ufo.beam.isActive) {
+        // Auto-zoom when activating the beam
+        targetZoomLevel = Math.min(AUTO_ZOOM_LEVEL, targetZoomLevel);
+    }
+    console.log(`Beam ${ufo.beam.isActive ? 'activated' : 'deactivated'}`);
+}
+
+// Add these functions for +/- key zoom control
+function handleKeyboardZoom(e) {
+    if (e.key === '=' || e.key === '+') {
+        zoomIn();
+    } else if (e.key === '-' || e.key === '_') {
+        zoomOut();
+    }
+}
+
+
 
 function handleTouchStart(e) {
     e.preventDefault();
