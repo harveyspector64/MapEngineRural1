@@ -1,5 +1,4 @@
 // src/entities/UFO.js
-
 import Beam from './Beam.js';
 
 export default class UFO {
@@ -13,7 +12,7 @@ export default class UFO {
         this.acceleration = 0.99;
         this.maxSpeed = 35;
         this.friction = 0.82;
-        this.beam = new Beam(this); // Add beam to UFO
+        this.beam = new Beam(this);
     }
 
     update() {
@@ -46,19 +45,15 @@ export default class UFO {
         this.y = y;
     }
 
-    // New method to toggle beam
     toggleBeam() {
         this.beam.toggle();
     }
 
-    // New method to set beam direction
     setBeamDirection(dx, dy) {
         this.beam.setDirection(dx, dy);
     }
 
     setBeamLength(length) {
-    this.beam.setLength(length);
+        this.beam.setLength(length);
+    }
 }
-}
-
-
