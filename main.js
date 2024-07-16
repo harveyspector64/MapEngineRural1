@@ -45,6 +45,7 @@ async function init() {
     // Set canvas dimensions
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    setupBeamHandlers();
 
     // Define available sprite types
     const availableSprites = [
@@ -352,6 +353,30 @@ function zoomIn() {
 function zoomOut() {
     targetZoomLevel = Math.max(targetZoomLevel / 1.1, 0.5);
     console.log(`Zooming out. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
+}
+
+function setupBeamHandlers() {
+    ufo.beam.onObjectAbducted = handleObjectAbducted;
+    ufo.beam.onObjectThrown = handleObjectThrown;
+}
+
+function handleObjectAbducted() {
+    console.log("Object abducted by UFO");
+    // You can add more logic here, like increasing a score or updating UI
+}
+
+function handleObjectThrown(object) {
+    console.log("Object thrown:", object);
+    // Ensure the object remains in the game world
+    const chunkKey = getChunkKeyForPosition(object.x, object.y);
+    interactiveObjectManager.addObject(object, chunkKey);
+}
+
+function getChunkKeyForPosition(x, y) {
+    const chunkSize = chunkManager.chunkSize * renderer.tileSize;
+    const chunkX = Math.floor(x / chunkSize);
+    const chunkY = Math.floor(y / chunkSize);
+    return `${chunkX},${chunkY}`;
 }
 
 // Set up debug information display
