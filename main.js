@@ -122,16 +122,14 @@ function addObjectsToChunk(chunk, chunkKey) {
         }
     }
 
-    // Add canoes (with fishermen) to some water tiles
-    let canoeAdded = false;
-    for (let y = 0; y < chunkSize && !canoeAdded; y++) {
-        for (let x = 0; x < chunkSize && !canoeAdded; x++) {
+    // Add canoes to water tiles
+    for (let y = 0; y < chunkSize; y++) {
+        for (let x = 0; x < chunkSize; x++) {
             if (chunk.terrain[y][x] === TILES.WATER && Math.random() < 0.05) {
                 const worldX = chunk.x * chunkPixelSize + x * tileSize;
                 const worldY = chunk.y * chunkPixelSize + y * tileSize;
                 const canoe = createInteractiveObject(OBJECT_TYPES.CANOE, worldX, worldY);
                 interactiveObjectManager.addObject(canoe, chunkKey);
-                canoeAdded = true;
             }
         }
     }
