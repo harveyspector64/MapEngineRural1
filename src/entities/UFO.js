@@ -16,15 +16,28 @@ export default class UFO {
     }
 
     update(deltaTime) {
+        const oldX = this.x;
+        const oldY = this.y;
+        
         this.x += this.vx;
         this.y += this.vy;
         this.vx *= this.friction;
         this.vy *= this.friction;
+        
+        // Calculate actual velocity based on position change
+        this.actualVx = (this.x - oldX) / deltaTime;
+        this.actualVy = (this.y - oldY) / deltaTime;
+        
         if (this.vx !== 0 || this.vy !== 0) {
             this.rotation = Math.atan2(this.vy, this.vx);
         }
-        this.beam.update();
+        this.beam.update(deltaTime);
     }
+
+    getVelocity() {
+        return { x: this.actualVx, y: this.actualVy };
+    }
+}
 
     move(dx, dy) {
         this.vx += dx * this.acceleration;
