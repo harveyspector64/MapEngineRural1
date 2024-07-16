@@ -48,39 +48,39 @@ export default class Beam {
         }
     }
 
-    releaseObject() {
-        if (this.capturedObject) {
-            const ufoPos = this.ufo.getPosition();
-            const objPos = this.capturedObject.getPosition();
-            const distToUfo = Math.sqrt(
-                Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
-            );
+releaseObject() {
+    if (this.capturedObject) {
+        const ufoPos = this.ufo.getPosition();
+        const objPos = this.capturedObject.getPosition();
+        const distToUfo = Math.sqrt(
+            Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
+        );
 
-            if (distToUfo <= this.ufoRadius) {
-                // Object is under the UFO, make it disappear
-                console.log("Object abducted into UFO");
-                if (typeof this.onObjectAbducted === 'function') {
-                    this.onObjectAbducted(this.capturedObject);
-                }
-            } else {
-                // Throw the object
-                const throwSpeed = 500;
-                const ufoVelocity = this.ufo.getVelocity();
-                
-                this.capturedObject.velocity = {
-                    x: this.direction.x * throwSpeed + ufoVelocity.x,
-                    y: this.direction.y * throwSpeed + ufoVelocity.y
-                };
-                
-                if (typeof this.onObjectThrown === 'function') {
-                    this.onObjectThrown(this.capturedObject);
-                }
+        if (distToUfo <= this.ufoRadius) {
+            // Object is under the UFO, make it disappear
+            console.log("Object abducted into UFO");
+            if (typeof this.onObjectAbducted === 'function') {
+                this.onObjectAbducted(this.capturedObject);
             }
+        } else {
+            // Throw the object
+            const throwSpeed = 500;
+            const ufoVelocity = this.ufo.getVelocity();
             
-            this.capturedObject.isBeingAbducted = false;
-            this.capturedObject = null;
+            this.capturedObject.velocity = {
+                x: this.direction.x * throwSpeed + ufoVelocity.x,
+                y: this.direction.y * throwSpeed + ufoVelocity.y
+            };
+            
+            if (typeof this.onObjectThrown === 'function') {
+                this.onObjectThrown(this.capturedObject);
+            }
         }
+        
+        this.capturedObject.isBeingAbducted = false;
+        this.capturedObject = null;
     }
+}
 
     update(deltaTime) {
         if (this.capturedObject) {
