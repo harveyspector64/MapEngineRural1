@@ -10,6 +10,7 @@ export default class Beam {
         this.length = this.minLength;
         this.capturedObject = null;
         this.captureStrength = 0.2;
+        this.ufoRadius = 16; // Assuming UFO sprite is 32x32 pixels
     }
 
     activate() {
@@ -58,9 +59,14 @@ export default class Beam {
             };
             
             this.capturedObject.isBeingAbducted = false;
+            // Notify the game that an object has been thrown
+            if (typeof this.onObjectThrown === 'function') {
+                this.onObjectThrown(this.capturedObject);
+            }
             this.capturedObject = null;
         }
     }
+}
 
     update(deltaTime) {
         if (this.capturedObject) {
@@ -77,10 +83,15 @@ export default class Beam {
                 Math.pow(this.capturedObject.y - ufoPos.y, 2)
             );
 
-            if (distToUfo <= 16 && this.length <= this.minLength) {
+            // Check if the object is inside the UFO
+            if (distToUfo <= this.ufoRadius) {
                 console.log("Object fully retracted into UFO");
                 this.capturedObject.isBeingAbducted = false;
                 this.capturedObject = null;
+                // Notify the game that an object has been abducted
+                if (typeof this.onObjectAbducted === 'function') {
+                    this.onObjectAbducted();
+                }
             }
         }
     }
