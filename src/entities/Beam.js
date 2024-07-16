@@ -66,7 +66,6 @@ export default class Beam {
             this.capturedObject = null;
         }
     }
-}
 
     update(deltaTime) {
         if (this.capturedObject) {
@@ -87,11 +86,11 @@ export default class Beam {
             if (distToUfo <= this.ufoRadius) {
                 console.log("Object fully retracted into UFO");
                 this.capturedObject.isBeingAbducted = false;
-                this.capturedObject = null;
                 // Notify the game that an object has been abducted
                 if (typeof this.onObjectAbducted === 'function') {
                     this.onObjectAbducted();
                 }
+                this.capturedObject = null;
             }
         }
     }
