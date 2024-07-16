@@ -77,7 +77,7 @@ export default class Beam {
                 Math.pow(this.capturedObject.y - ufoPos.y, 2)
             );
 
-            if (distToUfo <= 16) {
+            if (distToUfo <= 16 && this.length <= this.minLength) {
                 console.log("Object fully retracted into UFO");
                 this.capturedObject.isBeingAbducted = false;
                 this.capturedObject = null;
