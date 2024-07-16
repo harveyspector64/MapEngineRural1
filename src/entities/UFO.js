@@ -15,14 +15,15 @@ export default class UFO {
         this.beam = new Beam(this);
     }
 
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
+    update(deltaTime) {
+        this.x += this.vx * deltaTime;
+        this.y += this.vy * deltaTime;
         this.vx *= this.friction;
         this.vy *= this.friction;
         if (this.vx !== 0 || this.vy !== 0) {
             this.rotation = Math.atan2(this.vy, this.vx);
         }
+        this.beam.update();
     }
 
     move(dx, dy) {
@@ -59,5 +60,13 @@ export default class UFO {
 
     setBeamLength(length) {
         this.beam.setLength(length);
+    }
+
+    captureObject(object) {
+        this.beam.captureObject(object);
+    }
+
+    releaseObject() {
+        this.beam.releaseObject();
     }
 }
