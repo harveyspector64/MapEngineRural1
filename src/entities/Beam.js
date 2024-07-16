@@ -82,5 +82,8 @@ export default class Beam {
 
     update() {
         this.updateCapturedObjectPosition();
+        if (this.capturedObject && this.length <= this.minLength) {
+            console.log("Object fully retracted into UFO");
+            this.capturedObject = null;
+        }
     }
-}
