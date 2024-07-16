@@ -42,8 +42,11 @@ export class InteractiveObject {
             const friction = 0.98;
             this.velocity.x *= friction;
             this.velocity.y *= friction;
+
+            // Apply rotation
+            this.rotation += this.angularVelocity * deltaTime;
+            this.angularVelocity *= friction;
         }
-    }
     }
 
     setPosition(x, y) {
@@ -53,16 +56,6 @@ export class InteractiveObject {
 
     getPosition() {
         return { x: this.x, y: this.y };
-    }
-
-    // Add a method for basic AI movement (e.g., for cows)
-    moveRandomly(deltaTime) {
-        if (Math.random() < 0.02) { // 2% chance to change direction each update
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 20; // Adjust for desired movement speed
-            this.velocity.x = Math.cos(angle) * speed;
-            this.velocity.y = Math.sin(angle) * speed;
-        }
     }
 }
 
@@ -84,12 +77,7 @@ export class InteractiveObjectManager {
 
     updateObjects(deltaTime, chunkKey) {
         const chunkObjects = this.getObjectsInChunk(chunkKey);
-        chunkObjects.forEach(obj => {
-            obj.update(deltaTime);
-            if (obj.type === OBJECT_TYPES.COW) {
-                obj.moveRandomly(deltaTime);
-            }
-        });
+        chunkObjects.forEach(obj => obj.update(deltaTime));
     }
 
     removeObject(object, chunkKey) {
