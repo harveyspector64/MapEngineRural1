@@ -8,6 +8,7 @@ import WorldManager from './src/core/WorldManager.js';
 import UFO from './src/entities/UFO.js';
 import VirtualJoystick from './src/controls/VirtualJoystick.js';
 import MobileUIController from './src/controls/MobileUIController.js';
+import { InteractiveObjectManager, createInteractiveObject, OBJECT_TYPES } from './src/entities/InteractiveObjects.js';
 
 // Get the canvas element and create a renderer
 const canvas = document.getElementById('mapCanvas');
@@ -32,19 +33,23 @@ let targetCameraX = 0;
 let targetCameraY = 0;
 let mousePosition = { x: 0, y: 0 };
 let isMouseDown = false;
+let interactiveObjectManager;
+let lastTimestamp = 0;
 
 // Set to store currently pressed keys
 const keys = new Set();
 
 // Initialize the game
 async function init() {
+    console.log("Initializing game...");
     // Set canvas dimensions
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     // Define available sprite types
     const availableSprites = [
-        'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water'
+        'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water',
+        'cow1', 'cow2', 'blackcow1', 'canoe1', 'man1', 'emptycanoe1'
     ];
 
     // Load sprites
@@ -56,6 +61,8 @@ async function init() {
     
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
     joystick = new VirtualJoystick(canvas);
+
+    interactiveObjectManager = new InteractiveObjectManager();
 
     // Set initial camera position
     cameraX = ufo.x - canvas.width / 2;
@@ -71,16 +78,66 @@ async function init() {
         mobileUIController.onZoomOut = zoomOut;
     }
 
+    // Initialize interactive objects
+    initializeInteractiveObjects();
+
+    console.log("Game initialized. Starting render loop and setting up controls.");
     // Start the render loop
-    render();
+    requestAnimationFrame(render);
     // Set up event listeners
     setupControls();
     // Set up debug information display
     setupDebugInfo();
 }
 
+// Initialize interactive objects in the visible chunks
+function initializeInteractiveObjects() {
+    console.log("Initializing interactive objects...");
+    const initialChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
+    initialChunks.forEach(({x, y}) => {
+        const chunkKey = `${x},${y}`;
+        const chunk = chunkManager.getChunk(x, y);
+        if (chunk) {
+            addObjectsToChunk(chunk, chunkKey);
+        }
+    });
+    console.log("Interactive objects initialized.");
+}
+
+// Add interactive objects to a chunk
+function addObjectsToChunk(chunk, chunkKey) {
+    const chunkSize = chunkManager.chunkSize;
+    const tileSize = renderer.tileSize;
+    const chunkPixelSize = chunkSize * tileSize;
+
+    // Add cows to grass tiles
+    for (let y = 0; y < chunkSize; y++) {
+        for (let x = 0; x < chunkSize; x++) {
+            if (chunk.terrain[y][x] === TILES.GRASS && Math.random() < 0.01) {
+                const worldX = chunk.x * chunkPixelSize + x * tileSize;
+                const worldY = chunk.y * chunkPixelSize + y * tileSize;
+                const cow = createInteractiveObject(OBJECT_TYPES.COW, worldX, worldY);
+                interactiveObjectManager.addObject(cow, chunkKey);
+            }
+        }
+    }
+
+    // Add fishermen to water tiles
+    for (let y = 0; y < chunkSize; y++) {
+        for (let x = 0; x < chunkSize; x++) {
+            if (chunk.terrain[y][x] === TILES.WATER && Math.random() < 0.05) {
+                const worldX = chunk.x * chunkPixelSize + x * tileSize;
+                const worldY = chunk.y * chunkPixelSize + y * tileSize;
+                const fisherman = createInteractiveObject(OBJECT_TYPES.FISHERMAN, worldX, worldY);
+                interactiveObjectManager.addObject(fisherman, chunkKey);
+            }
+        }
+    }
+}
+
 // Set up event listeners for user input
 function setupControls() {
+    console.log("Setting up controls...");
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('keydown', handleKeyboardZoom);
@@ -92,6 +149,7 @@ function setupControls() {
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+    console.log("Controls set up complete.");
 }
 
 // Handle key press events
@@ -136,6 +194,7 @@ function handleWheel(e) {
 // Handle mouse button press
 function handleMouseDown(e) {
     isMouseDown = true;
+    ufo.activateBeam();
     updateBeamFromMouse(e);
 }
 
@@ -171,12 +230,10 @@ function updateBeamFromMouse(e) {
         // Beam is outside the UFO
         ufo.setBeamDirection(dx / distance, dy / distance);
         ufo.setBeamLength(distance - ufoRadius);
-        ufo.activateBeam();
         console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
     } else {
         // Beam is inside or at the edge of the UFO
         ufo.setBeamLength(0);
-        ufo.deactivateBeam();
         console.log('Beam fully retracted');
     }
 }
@@ -316,13 +373,22 @@ function updateDebugInfo() {
         Zoom: ${zoomLevel.toFixed(2)}x<br>
         Current Chunk: (${currentChunkX}, ${currentChunkY})<br>
         Loaded Chunks: ${chunkManager.loadedChunks.size}<br>
-        Recently Unloaded: ${chunkManager.recentlyUnloaded.size}
+        Recently Unloaded: ${chunkManager.recentlyUnloaded.size}<br>
+        FPS: ${(1000 / (performance.now() - lastTimestamp)).toFixed(2)}<br>
+        Beam Active: ${ufo.beam.isActive}<br>
+        Captured Object: ${ufo.beam.capturedObject ? ufo.beam.capturedObject.type : 'None'}
     `;
 }
 
 // Main render loop
-function render() {
-    ufo.update();
+function render(timestamp) {
+    // Calculate delta time
+    if (!lastTimestamp) lastTimestamp = timestamp;
+    const deltaTime = (timestamp - lastTimestamp) / 1000; // Convert to seconds
+    lastTimestamp = timestamp;
+
+    // Update game state
+    ufo.update(deltaTime);
     updateUFOMovement();
 
     // Smoothly adjust zoom level
@@ -331,43 +397,100 @@ function render() {
 
     // Smoothly adjust camera position
     const cameraLerpFactor = 0.1;
-    cameraX += (targetCameraX - cameraX) * cameraLerpFactor;
-    cameraY += (targetCameraY - cameraY) * cameraLerpFactor;
-
-    // Update target camera position to follow UFO
     const ufoPos = ufo.getPosition();
     targetCameraX = ufoPos.x - canvas.width / (2 * zoomLevel);
     targetCameraY = ufoPos.y - canvas.height / (2 * zoomLevel);
+    cameraX += (targetCameraX - cameraX) * cameraLerpFactor;
+    cameraY += (targetCameraY - cameraY) * cameraLerpFactor;
 
+    // Clear the canvas and set camera and zoom
     renderer.clear();
     renderer.setCamera(cameraX, cameraY);
     renderer.setZoom(zoomLevel);
+
+    // Render visible chunks and their objects
     const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
     visibleChunks.forEach(({x, y}) => {
+        const chunkKey = `${x},${y}`;
         const chunk = chunkManager.getChunk(x, y);
         if (chunk) {
             renderer.renderChunk(chunk);
+            // Update and render interactive objects
+            interactiveObjectManager.updateObjects(deltaTime, chunkKey);
+            const objects = interactiveObjectManager.getObjectsInChunk(chunkKey);
+            objects.forEach(obj => renderer.renderInteractiveObject(obj));
         } else {
             console.warn(`Missing chunk at (${x}, ${y})`);
         }
     });
     
+    // Render UFO and beam
     renderer.renderUFO(ufo);
     renderer.drawBeam(ufo);
     
+    // Render mobile-specific UI elements
     if (isMobile) {
         joystick.draw();
         mobileUIController.draw();
     }
 
+    // Draw chunk boundaries (for debugging)
     renderer.drawChunkBoundaries(Array.from(chunkManager.loadedChunks.values()));
 
+    // Update chunk manager
     chunkManager.updateViewport(cameraX, cameraY);
+
+    // Check for beam interactions
+    checkBeamInteractions();
+
+    // Update debug info
     updateDebugInfo();
 
+    // Request next frame
     requestAnimationFrame(render);
 }
 
+// Check for interactions between the beam and interactive objects
+function checkBeamInteractions() {
+    if (ufo.beam.isActive && !ufo.beam.capturedObject) {
+        const beamEnd = ufo.beam.getEndPoint();
+        const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
+        
+        for (const {x, y} of visibleChunks) {
+            const chunkKey = `${x},${y}`;
+            const objects = interactiveObjectManager.getObjectsInChunk(chunkKey);
+            
+            for (const obj of objects) {
+                const objPos = obj.getPosition();
+                const distance = Math.sqrt(
+                    Math.pow(objPos.x - beamEnd.x, 2) + Math.pow(objPos.y - beamEnd.y, 2)
+                );
+                
+                if (distance < renderer.tileSize / 2) {  // If object is within capture range
+                    ufo.captureObject(obj);
+                    if (obj.type === OBJECT_TYPES.FISHERMAN) {
+                        // Replace fisherman with empty canoe
+                        const emptyCanoe = createInteractiveObject(OBJECT_TYPES.EMPTY_CANOE, objPos.x, objPos.y);
+                        interactiveObjectManager.removeObject(obj, chunkKey);
+                        interactiveObjectManager.addObject(emptyCanoe, chunkKey);
+                    }
+                    console.log(`Captured object: ${obj.type}`);
+                    break;
+                }
+            }
+            
+            if (ufo.beam.capturedObject) break;
+        }
+    }
+}
+
+// Initialize the game
+init();
+
 // Event listeners for game initialization and window resizing
 window.addEventListener('load', init);
-window.addEventListener('resize', init);
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    renderer.setCanvasSize(canvas.width, canvas.height);
+});
