@@ -45,12 +45,11 @@ async function init() {
     // Set canvas dimensions
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    setupBeamHandlers();
 
     // Define available sprite types
     const availableSprites = [
         'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water',
-        'cow1', 'cow2', 'blackcow1', 'canoe1', 'man1', 'emptycanoe1'
+        'cow1', 'cow2', 'blackcow1', 'canoe1', 'man1', 'emptycanoe1', 'ufo'
     ];
 
     // Load sprites
@@ -82,6 +81,9 @@ async function init() {
     // Initialize interactive objects
     initializeInteractiveObjects();
 
+    // Setup beam handlers
+    setupBeamHandlers();
+
     console.log("Game initialized. Starting render loop and setting up controls.");
     // Start the render loop
     requestAnimationFrame(render);
@@ -105,6 +107,7 @@ function initializeInteractiveObjects() {
     console.log("Interactive objects initialized.");
 }
 
+// Add interactive objects to a chunk
 function addObjectsToChunk(chunk, chunkKey) {
     const chunkSize = chunkManager.chunkSize;
     const tileSize = renderer.tileSize;
@@ -135,7 +138,7 @@ function addObjectsToChunk(chunk, chunkKey) {
         }
     }
 
-    // Add canoes (unchanged)
+    // Add canoes
     let canoeAdded = false;
     for (let y = 0; y < chunkSize && !canoeAdded; y++) {
         for (let x = 0; x < chunkSize && !canoeAdded; x++) {
@@ -163,8 +166,8 @@ function setupControls() {
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     console.log("Controls set up complete.");
 }
 
@@ -355,30 +358,6 @@ function zoomOut() {
     console.log(`Zooming out. Target zoom level: ${targetZoomLevel.toFixed(2)}`);
 }
 
-function setupBeamHandlers() {
-    ufo.beam.onObjectAbducted = handleObjectAbducted;
-    ufo.beam.onObjectThrown = handleObjectThrown;
-}
-
-function handleObjectAbducted() {
-    console.log("Object abducted by UFO");
-    // You can add more logic here, like increasing a score or updating UI
-}
-
-function handleObjectThrown(object) {
-    console.log("Object thrown:", object);
-    // Ensure the object remains in the game world
-    const chunkKey = getChunkKeyForPosition(object.x, object.y);
-    interactiveObjectManager.addObject(object, chunkKey);
-}
-
-function getChunkKeyForPosition(x, y) {
-    const chunkSize = chunkManager.chunkSize * renderer.tileSize;
-    const chunkX = Math.floor(x / chunkSize);
-    const chunkY = Math.floor(y / chunkSize);
-    return `${chunkX},${chunkY}`;
-}
-
 // Set up debug information display
 function setupDebugInfo() {
     if (!isMobile) {
@@ -392,6 +371,9 @@ function setupDebugInfo() {
             debugDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
             debugDiv.style.color = 'white';
             debugDiv.style.padding = '10px';
+            debugDiv.style.fontFamily = 'monospace';
+            debugDiv.style.fontSize = '12px';
+            debugDiv.style.zIndex = '1000';
             document.body.appendChild(debugDiv);
         }
     }
@@ -528,6 +510,35 @@ function checkBeamInteractions() {
     }
 }
 
+// Setup beam handlers
+function setupBeamHandlers() {
+    if (ufo && ufo.beam) {
+        ufo.beam.onObjectAbducted = handleObjectAbducted;
+        ufo.beam.onObjectThrown = handleObjectThrown;
+    } else {
+        console.error("UFO or UFO beam not initialized properly");
+    }
+}
+
+function handleObjectAbducted() {
+    console.log("Object abducted by UFO");
+    // You can add more logic here, like increasing a score or updating UI
+}
+
+function handleObjectThrown(object) {
+    console.log("Object thrown:", object);
+    // Ensure the object remains in the game world
+    const chunkKey = getChunkKeyForPosition(object.x, object.y);
+    interactiveObjectManager.addObject(object, chunkKey);
+}
+
+function getChunkKeyForPosition(x, y) {
+    const chunkSize = chunkManager.chunkSize * renderer.tileSize;
+    const chunkX = Math.floor(x / chunkSize);
+    const chunkY = Math.floor(y / chunkSize);
+    return `${chunkX},${chunkY}`;
+}
+
 // Initialize the game
 init();
 
@@ -538,3 +549,4 @@ window.addEventListener('resize', () => {
     canvas.height = window.innerHeight;
     renderer.setCanvasSize(canvas.width, canvas.height);
 });
+                
