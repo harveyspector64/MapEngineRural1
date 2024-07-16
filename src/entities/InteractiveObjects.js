@@ -1,7 +1,5 @@
 // src/entities/InteractiveObjects.js
 
-import { TILES } from '../features/TerrainGenerator.js';
-
 export const OBJECT_TYPES = {
     COW: 'cow',
     CANOE: 'canoe',
@@ -17,28 +15,28 @@ export class InteractiveObject {
         this.sprite = sprite;
         this.isBeingAbducted = false;
         this.velocity = { x: 0, y: 0 };
+        this.rotation = 0;
+        this.angularVelocity = 0;
     }
 
     update(deltaTime) {
         if (!this.isBeingAbducted) {
-            this.updateAI(deltaTime);
-        }
-        // Apply velocity (for throwing physics)
-        this.x += this.velocity.x * deltaTime;
-        this.y += this.velocity.y * deltaTime;
-        // Apply friction
-        this.velocity.x *= 0.99;
-        this.velocity.y *= 0.99;
-    }
+            // Apply velocity
+            this.x += this.velocity.x * deltaTime;
+            this.y += this.velocity.y * deltaTime;
 
-    updateAI(deltaTime) {
-        // Implement basic AI here (e.g., cow grazing)
-        if (this.type === OBJECT_TYPES.COW) {
-            // Simple random movement for cows
-            if (Math.random() < 0.01) {
-                this.velocity.x = (Math.random() - 0.5) * 0.5;
-                this.velocity.y = (Math.random() - 0.5) * 0.5;
-            }
+            // Apply rotation
+            this.rotation += this.angularVelocity * deltaTime;
+
+            // Apply friction
+            const friction = 0.98;
+            this.velocity.x *= friction;
+            this.velocity.y *= friction;
+            this.angularVelocity *= friction;
+
+            // Apply gravity
+            const gravity = 500; // Adjust this value to change gravity strength
+            this.velocity.y += gravity * deltaTime;
         }
     }
 
