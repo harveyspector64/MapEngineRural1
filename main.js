@@ -122,14 +122,16 @@ function addObjectsToChunk(chunk, chunkKey) {
         }
     }
 
-    // Add fishermen to water tiles
-    for (let y = 0; y < chunkSize; y++) {
-        for (let x = 0; x < chunkSize; x++) {
+    // Add canoes (with fishermen) to some water tiles
+    let canoeAdded = false;
+    for (let y = 0; y < chunkSize && !canoeAdded; y++) {
+        for (let x = 0; x < chunkSize && !canoeAdded; x++) {
             if (chunk.terrain[y][x] === TILES.WATER && Math.random() < 0.05) {
                 const worldX = chunk.x * chunkPixelSize + x * tileSize;
                 const worldY = chunk.y * chunkPixelSize + y * tileSize;
-                const fisherman = createInteractiveObject(OBJECT_TYPES.FISHERMAN, worldX, worldY);
-                interactiveObjectManager.addObject(fisherman, chunkKey);
+                const canoe = createInteractiveObject(OBJECT_TYPES.CANOE, worldX, worldY);
+                interactiveObjectManager.addObject(canoe, chunkKey);
+                canoeAdded = true;
             }
         }
     }
@@ -467,12 +469,15 @@ function checkBeamInteractions() {
                 );
                 
                 if (distance < renderer.tileSize / 2) {  // If object is within capture range
-                    ufo.captureObject(obj);
-                    if (obj.type === OBJECT_TYPES.FISHERMAN) {
-                        // Replace fisherman with empty canoe
+                    if (obj.type === OBJECT_TYPES.CANOE) {
+                        // Replace canoe with empty canoe and create fisherman
                         const emptyCanoe = createInteractiveObject(OBJECT_TYPES.EMPTY_CANOE, objPos.x, objPos.y);
+                        const fisherman = createInteractiveObject(OBJECT_TYPES.FISHERMAN, objPos.x, objPos.y);
                         interactiveObjectManager.removeObject(obj, chunkKey);
                         interactiveObjectManager.addObject(emptyCanoe, chunkKey);
+                        ufo.captureObject(fisherman);
+                    } else {
+                        ufo.captureObject(obj);
                     }
                     console.log(`Captured object: ${obj.type}`);
                     break;
