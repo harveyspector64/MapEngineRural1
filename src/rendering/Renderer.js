@@ -63,7 +63,15 @@ async loadSprites(tileTypes) {
                         this.tileSize * this.zoomLevel
                     );
                 } else {
-                    console.warn(`Missing sprite for tile type: ${tile}`);
+                    console.warn(`Missing sprite for tile type: ${tile} at (${x}, ${y}) in chunk (${chunkX}, ${chunkY})`);
+                    // Draw a placeholder color for missing sprites
+                    this.ctx.fillStyle = 'magenta';
+                    this.ctx.fillRect(
+                        offsetX + x * this.tileSize * this.zoomLevel, 
+                        offsetY + y * this.tileSize * this.zoomLevel, 
+                        this.tileSize * this.zoomLevel, 
+                        this.tileSize * this.zoomLevel
+                    );
                 }
             }
         }
