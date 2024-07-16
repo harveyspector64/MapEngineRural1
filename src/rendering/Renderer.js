@@ -11,22 +11,23 @@ export default class Renderer {
         this.zoomLevel = 1;
     }
 
-    async loadSprites(tileTypes) {
-        console.log("Loading sprites...");
-        const loadPromises = tileTypes.map(type => 
-            new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    this.sprites[type] = img;
-                    resolve();
-                };
-                img.onerror = reject;
-                img.src = `assets/sprites/${type}.png`;
-            })
-        );
-        await Promise.all(loadPromises);
-        console.log("All sprites loaded successfully");
-    }
+async loadSprites(tileTypes) {
+    console.log("Loading sprites...");
+    const allTypes = [...tileTypes, 'ufo']; // Ensure 'ufo' is included
+    const loadPromises = allTypes.map(type => 
+        new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                this.sprites[type] = img;
+                resolve();
+            };
+            img.onerror = reject;
+            img.src = `assets/sprites/${type}.png`;
+        })
+    );
+    await Promise.all(loadPromises);
+    console.log("All sprites loaded successfully");
+}
 
     clear() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
