@@ -9,6 +9,8 @@ export default class UFO {
         this.rotation = 0;
         this.vx = 0;
         this.vy = 0;
+        this.actualVx = 0;
+        this.actualVy = 0;
         this.acceleration = 0.99;
         this.maxSpeed = 35;
         this.friction = 0.82;
@@ -34,11 +36,6 @@ export default class UFO {
         this.beam.update(deltaTime);
     }
 
-    getVelocity() {
-        return { x: this.actualVx, y: this.actualVy };
-    }
-}
-
     move(dx, dy) {
         this.vx += dx * this.acceleration;
         this.vy += dy * this.acceleration;
@@ -59,6 +56,10 @@ export default class UFO {
         this.y = y;
     }
 
+    getVelocity() {
+        return { x: this.actualVx, y: this.actualVy };
+    }
+
     activateBeam() {
         this.beam.activate();
     }
@@ -73,13 +74,5 @@ export default class UFO {
 
     setBeamLength(length) {
         this.beam.setLength(length);
-    }
-
-    captureObject(object) {
-        this.beam.captureObject(object);
-    }
-
-    releaseObject() {
-        this.beam.releaseObject();
     }
 }
