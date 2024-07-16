@@ -17,31 +17,33 @@ export class InteractiveObject {
         this.velocity = { x: 0, y: 0 };
         this.rotation = 0;
         this.angularVelocity = 0;
+        this.isMoving = false;
+        this.moveDirection = Math.random() * Math.PI * 2;
+        this.moveSpeed = 5 + Math.random() * 5; // 5-10 pixels per second
     }
 
     update(deltaTime) {
         if (!this.isBeingAbducted) {
-            // Apply velocity
+            if (this.type === OBJECT_TYPES.CANOE && this.isMoving) {
+                this.x += Math.cos(this.moveDirection) * this.moveSpeed * deltaTime;
+                this.y += Math.sin(this.moveDirection) * this.moveSpeed * deltaTime;
+
+                // Randomly change direction occasionally
+                if (Math.random() < 0.01) {
+                    this.moveDirection = Math.random() * Math.PI * 2;
+                }
+            }
+
+            // Apply velocity (for throwing physics)
             this.x += this.velocity.x * deltaTime;
             this.y += this.velocity.y * deltaTime;
-
-            // Apply rotation
-            this.rotation += this.angularVelocity * deltaTime;
-
-            // Apply friction (slows down movement over time)
-            const friction = 0.95;
+            
+            // Apply friction
+            const friction = 0.98;
             this.velocity.x *= friction;
             this.velocity.y *= friction;
-            this.angularVelocity *= friction;
-
-            // Limit maximum speed
-            const maxSpeed = 200; // Adjust as needed
-            const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2);
-            if (speed > maxSpeed) {
-                this.velocity.x = (this.velocity.x / speed) * maxSpeed;
-                this.velocity.y = (this.velocity.y / speed) * maxSpeed;
-            }
         }
+    }
     }
 
     setPosition(x, y) {
