@@ -16,8 +16,8 @@ export default class UFO {
     }
 
     update(deltaTime) {
-        this.x += this.vx * deltaTime;
-        this.y += this.vy * deltaTime;
+        this.x += this.vx;
+        this.y += this.vy;
         this.vx *= this.friction;
         this.vy *= this.friction;
         if (this.vx !== 0 || this.vy !== 0) {
