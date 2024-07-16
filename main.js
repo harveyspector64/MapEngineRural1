@@ -474,9 +474,10 @@ function checkBeamInteractions() {
                         const fisherman = createInteractiveObject(OBJECT_TYPES.FISHERMAN, objPos.x, objPos.y);
                         interactiveObjectManager.removeObject(obj, chunkKey);
                         interactiveObjectManager.addObject(emptyCanoe, chunkKey);
-                        ufo.captureObject(fisherman);
+                        ufo.beam.captureObject(fisherman);
+                        interactiveObjectManager.addObject(fisherman, chunkKey);
                     } else {
-                        ufo.captureObject(obj);
+                        ufo.beam.captureObject(obj);
                     }
                     console.log(`Captured object: ${obj.type}`);
                     break;
