@@ -126,13 +126,28 @@ drawBeam(ufo) {
     const beamStartX = startPoint.x + ufo.beam.direction.x * ufoRadius;
     const beamStartY = startPoint.y + ufo.beam.direction.y * ufoRadius;
 
+    // Create a cone-like shape for the beam
+    const beamEndWidth = 20 * this.zoomLevel; // Adjust this value to change the end width of the beam
+    const beamStartWidth = 5 * this.zoomLevel; // Adjust this value to change the start width of the beam
+
+    const perpX = -ufo.beam.direction.y;
+    const perpY = ufo.beam.direction.x;
+
     this.ctx.moveTo(
-        (beamStartX - this.cameraX) * this.zoomLevel,
-        (beamStartY - this.cameraY) * this.zoomLevel
+        (beamStartX - perpX * beamStartWidth - this.cameraX) * this.zoomLevel,
+        (beamStartY - perpY * beamStartWidth - this.cameraY) * this.zoomLevel
     );
     this.ctx.lineTo(
-        (endPoint.x - this.cameraX) * this.zoomLevel,
-        (endPoint.y - this.cameraY) * this.zoomLevel
+        (endPoint.x - perpX * beamEndWidth - this.cameraX) * this.zoomLevel,
+        (endPoint.y - perpY * beamEndWidth - this.cameraY) * this.zoomLevel
+    );
+    this.ctx.lineTo(
+        (endPoint.x + perpX * beamEndWidth - this.cameraX) * this.zoomLevel,
+        (endPoint.y + perpY * beamEndWidth - this.cameraY) * this.zoomLevel
+    );
+    this.ctx.lineTo(
+        (beamStartX + perpX * beamStartWidth - this.cameraX) * this.zoomLevel,
+        (beamStartY + perpY * beamStartWidth - this.cameraY) * this.zoomLevel
     );
 
     const gradient = this.ctx.createLinearGradient(
@@ -142,21 +157,14 @@ drawBeam(ufo) {
         (endPoint.y - this.cameraY) * this.zoomLevel
     );
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
 
-    this.ctx.strokeStyle = gradient;
-    this.ctx.lineWidth = 8 * this.zoomLevel;
-    this.ctx.stroke();
-
-    this.ctx.shadowBlur = 15;
-    this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    this.ctx.lineWidth = 4 * this.zoomLevel;
-    this.ctx.stroke();
+    this.ctx.fillStyle = gradient;
+    this.ctx.fill();
 
     this.ctx.restore();
 }
-
+    
     setCamera(x, y) {
         this.cameraX = x;
         this.cameraY = y;
