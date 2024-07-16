@@ -138,16 +138,27 @@ function addObjectsToChunk(chunk, chunkKey) {
         }
     }
 
-    // Add canoes
-    let canoeAdded = false;
-    for (let y = 0; y < chunkSize && !canoeAdded; y++) {
-        for (let x = 0; x < chunkSize && !canoeAdded; x++) {
-            if (chunk.terrain[y][x] === TILES.WATER && Math.random() < 0.1) {
+    // Add canoes to water tiles
+    let waterTiles = [];
+    for (let y = 0; y < chunkSize; y++) {
+        for (let x = 0; x < chunkSize; x++) {
+            if (chunk.terrain[y][x] === TILES.WATER) {
+                waterTiles.push({x, y});
+            }
+        }
+    }
+
+    if (waterTiles.length > 0) {
+        const canoeCount = Math.floor(Math.random() * 3) + 1; // 1-3 canoes per lake
+        for (let i = 0; i < canoeCount; i++) {
+            if (Math.random() < 0.7) { // 70% chance to place a canoe
+                const tileIndex = Math.floor(Math.random() * waterTiles.length);
+                const {x, y} = waterTiles[tileIndex];
                 const worldX = chunk.x * chunkPixelSize + x * tileSize;
                 const worldY = chunk.y * chunkPixelSize + y * tileSize;
                 const canoe = createInteractiveObject(OBJECT_TYPES.CANOE, worldX, worldY);
+                canoe.isMoving = Math.random() < 0.5; // 50% chance for a canoe to be moving
                 interactiveObjectManager.addObject(canoe, chunkKey);
-                canoeAdded = true;
             }
         }
     }
@@ -520,9 +531,11 @@ function setupBeamHandlers() {
     }
 }
 
-function handleObjectAbducted() {
-    console.log("Object abducted by UFO");
-    // You can add more logic here, like increasing a score or updating UI
+function handleObjectAbducted(object) {
+    console.log("Object abducted:", object);
+    // Remove the object from the game world
+    const chunkKey = getChunkKeyForPosition(object.x, object.y);
+    interactiveObjectManager.removeObject(object, chunkKey);
 }
 
 function handleObjectThrown(object) {
