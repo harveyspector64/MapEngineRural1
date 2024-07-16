@@ -112,52 +112,50 @@ async loadSprites(tileTypes) {
         }
     }
 
-    drawBeam(ufo) {
-        if (!ufo.beam.isActive) return;
+drawBeam(ufo) {
+    if (!ufo.beam.isActive) return;
 
-        const ufoPos = ufo.getPosition();
-        const startPoint = { x: ufoPos.x, y: ufoPos.y };
-        const endPoint = ufo.beam.getEndPoint();
+    const ufoPos = ufo.getPosition();
+    const startPoint = { x: ufoPos.x, y: ufoPos.y };
+    const endPoint = ufo.beam.getEndPoint();
 
-        this.ctx.save();
-        this.ctx.beginPath();
+    this.ctx.save();
+    this.ctx.beginPath();
 
-        const ufoRadius = 16; // Assuming UFO sprite is 32x32 pixels
-        const beamStartX = startPoint.x + ufo.beam.direction.x * ufoRadius;
-        const beamStartY = startPoint.y + ufo.beam.direction.y * ufoRadius;
+    const ufoRadius = 16; // Assuming UFO sprite is 32x32 pixels
+    const beamStartX = startPoint.x + ufo.beam.direction.x * ufoRadius;
+    const beamStartY = startPoint.y + ufo.beam.direction.y * ufoRadius;
 
-        this.ctx.moveTo(
-            (beamStartX - this.cameraX) * this.zoomLevel,
-            (beamStartY - this.cameraY) * this.zoomLevel
-        );
-        this.ctx.lineTo(
-            (endPoint.x - this.cameraX) * this.zoomLevel,
-            (endPoint.y - this.cameraY) * this.zoomLevel
-        );
+    this.ctx.moveTo(
+        (beamStartX - this.cameraX) * this.zoomLevel,
+        (beamStartY - this.cameraY) * this.zoomLevel
+    );
+    this.ctx.lineTo(
+        (endPoint.x - this.cameraX) * this.zoomLevel,
+        (endPoint.y - this.cameraY) * this.zoomLevel
+    );
 
-        // Create gradient for beam effect
-        const gradient = this.ctx.createLinearGradient(
-            (beamStartX - this.cameraX) * this.zoomLevel,
-            (beamStartY - this.cameraY) * this.zoomLevel,
-            (endPoint.x - this.cameraX) * this.zoomLevel,
-            (endPoint.y - this.cameraY) * this.zoomLevel
-        );
-        gradient.addColorStop(0, 'rgba(0, 255, 0, 0.8)'); // Green color for tractor beam
-        gradient.addColorStop(1, 'rgba(0, 255, 0, 0)');
+    const gradient = this.ctx.createLinearGradient(
+        (beamStartX - this.cameraX) * this.zoomLevel,
+        (beamStartY - this.cameraY) * this.zoomLevel,
+        (endPoint.x - this.cameraX) * this.zoomLevel,
+        (endPoint.y - this.cameraY) * this.zoomLevel
+    );
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
-        this.ctx.strokeStyle = gradient;
-        this.ctx.lineWidth = 8 * this.zoomLevel;
-        this.ctx.stroke();
+    this.ctx.strokeStyle = gradient;
+    this.ctx.lineWidth = 8 * this.zoomLevel;
+    this.ctx.stroke();
 
-        // Add glow effect
-        this.ctx.shadowBlur = 15;
-        this.ctx.shadowColor = 'rgba(0, 255, 0, 0.5)'; // Green glow
-        this.ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
-        this.ctx.lineWidth = 4 * this.zoomLevel;
-        this.ctx.stroke();
+    this.ctx.shadowBlur = 15;
+    this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    this.ctx.lineWidth = 4 * this.zoomLevel;
+    this.ctx.stroke();
 
-        this.ctx.restore();
-    }
+    this.ctx.restore();
+}
 
     setCamera(x, y) {
         this.cameraX = x;
