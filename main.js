@@ -109,32 +109,36 @@ function addObjectsToChunk(chunk, chunkKey) {
     const tileSize = renderer.tileSize;
     const chunkPixelSize = chunkSize * tileSize;
 
-    // Add cow groups sparingly
-    if (Math.random() < 0.3) {  // 30% chance for a chunk to have cows
-        const groupSize = Math.floor(Math.random() * 3) + 2; // 2-4 cows per group
-        const groupX = Math.floor(Math.random() * chunkSize);
-        const groupY = Math.floor(Math.random() * chunkSize);
-        
-        for (let i = 0; i < groupSize; i++) {
-            const offsetX = Math.floor(Math.random() * 3) - 1;
-            const offsetY = Math.floor(Math.random() * 3) - 1;
-            const x = (groupX + offsetX + chunkSize) % chunkSize;
-            const y = (groupY + offsetY + chunkSize) % chunkSize;
+    // Add cow groups
+    const cowGroupChance = 0.4; // 40% chance for a chunk to have cows
+    if (Math.random() < cowGroupChance) {
+        const groupCount = Math.floor(Math.random() * 2) + 1; // 1-2 groups per chunk
+        for (let g = 0; g < groupCount; g++) {
+            const groupSize = Math.floor(Math.random() * 3) + 2; // 2-4 cows per group
+            const groupX = Math.floor(Math.random() * chunkSize);
+            const groupY = Math.floor(Math.random() * chunkSize);
             
-            if (chunk.terrain[y][x] === TILES.GRASS) {
-                const worldX = chunk.x * chunkPixelSize + x * tileSize;
-                const worldY = chunk.y * chunkPixelSize + y * tileSize;
-                const cow = createInteractiveObject(OBJECT_TYPES.COW, worldX, worldY);
-                interactiveObjectManager.addObject(cow, chunkKey);
+            for (let i = 0; i < groupSize; i++) {
+                const offsetX = Math.floor(Math.random() * 5) - 2; // -2 to 2
+                const offsetY = Math.floor(Math.random() * 5) - 2; // -2 to 2
+                const x = (groupX + offsetX + chunkSize) % chunkSize;
+                const y = (groupY + offsetY + chunkSize) % chunkSize;
+                
+                if (chunk.terrain[y][x] === TILES.GRASS) {
+                    const worldX = chunk.x * chunkPixelSize + x * tileSize;
+                    const worldY = chunk.y * chunkPixelSize + y * tileSize;
+                    const cow = createInteractiveObject(OBJECT_TYPES.COW, worldX, worldY);
+                    interactiveObjectManager.addObject(cow, chunkKey);
+                }
             }
         }
     }
 
-    // Add at most one canoe to a water body
+    // Add canoes (unchanged)
     let canoeAdded = false;
     for (let y = 0; y < chunkSize && !canoeAdded; y++) {
         for (let x = 0; x < chunkSize && !canoeAdded; x++) {
-            if (chunk.terrain[y][x] === TILES.WATER && Math.random() < 0.1) {  // 10% chance for a water tile to have a canoe
+            if (chunk.terrain[y][x] === TILES.WATER && Math.random() < 0.1) {
                 const worldX = chunk.x * chunkPixelSize + x * tileSize;
                 const worldY = chunk.y * chunkPixelSize + y * tileSize;
                 const canoe = createInteractiveObject(OBJECT_TYPES.CANOE, worldX, worldY);
