@@ -4,12 +4,13 @@ export default class Beam {
     constructor(ufo) {
         this.ufo = ufo;
         this.isActive = false;
-        this.direction = { x: 0, y: 1 }; // Default direction is down
-        this.minLength = 64; // Minimum beam length in pixels
-        this.maxLength = 320; // Maximum beam length in pixels
-        this.length = this.minLength; // Current beam length
+        this.direction = { x: 0, y: 1 };
+        this.minLength = 64;
+        this.maxLength = 320;
+        this.length = this.minLength;
         this.capturedObject = null;
-        this.capturePoint = { x: 0, y: 0 }; // Point where object is captured in beam
+        this.capturePoint = { x: 0, y: 0 };
+        this.captureStrength = 0.1; // Adjust this value to change how "sticky" the beam is
     }
 
     activate() {
@@ -26,12 +27,10 @@ export default class Beam {
         if (length !== 0) {
             this.direction = { x: dx / length, y: dy / length };
         }
-        this.updateCapturedObjectPosition();
     }
 
     setLength(length) {
         this.length = Math.max(this.minLength, Math.min(length, this.maxLength));
-        this.updateCapturedObjectPosition();
     }
 
     getEndPoint() {
@@ -58,34 +57,37 @@ export default class Beam {
 
     releaseObject() {
         if (this.capturedObject) {
-            this.capturedObject.isBeingAbducted = false;
-            // Apply throwing velocity
-            const throwSpeed = 10; // Adjust as needed
+            const throwSpeed = 500; // Adjust this value to change throw speed
             this.capturedObject.velocity = {
                 x: this.direction.x * throwSpeed,
                 y: this.direction.y * throwSpeed
             };
-            this.capturedObject = null;
-        }
-    }
-
-    updateCapturedObjectPosition() {
-        if (this.capturedObject) {
-            const ufoPos = this.ufo.getPosition();
-            const newPos = {
-                x: ufoPos.x + this.direction.x * this.length * this.capturePoint.x,
-                y: ufoPos.y + this.direction.y * this.length * this.capturePoint.y
-            };
-            this.capturedObject.setPosition(newPos.x, newPos.y);
-        }
-    }
-
-    update() {
-        this.updateCapturedObjectPosition();
-        if (this.capturedObject && this.length <= this.minLength) {
-            console.log("Object fully retracted into UFO");
             this.capturedObject.isBeingAbducted = false;
             this.capturedObject = null;
+        }
+    }
+
+    update(deltaTime) {
+        if (this.capturedObject) {
+            const ufoPos = this.ufo.getPosition();
+            const targetX = ufoPos.x + this.direction.x * this.length * this.capturePoint.x;
+            const targetY = ufoPos.y + this.direction.y * this.length * this.capturePoint.y;
+
+            // Smoothly move the object towards the target position
+            this.capturedObject.x += (targetX - this.capturedObject.x) * this.captureStrength;
+            this.capturedObject.y += (targetY - this.capturedObject.y) * this.captureStrength;
+
+            // Check if object is fully retracted
+            const distToUfo = Math.sqrt(
+                Math.pow(this.capturedObject.x - ufoPos.x, 2) +
+                Math.pow(this.capturedObject.y - ufoPos.y, 2)
+            );
+
+            if (distToUfo <= this.minLength) {
+                console.log("Object fully retracted into UFO");
+                this.capturedObject.isBeingAbducted = false;
+                this.capturedObject = null;
+            }
         }
     }
 
