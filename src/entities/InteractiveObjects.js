@@ -4,8 +4,9 @@ import { TILES } from '../features/TerrainGenerator.js';
 
 export const OBJECT_TYPES = {
     COW: 'cow',
-    FISHERMAN: 'fisherman',
-    EMPTY_CANOE: 'emptyCanoe'
+    CANOE: 'canoe',
+    EMPTY_CANOE: 'emptyCanoe',
+    FISHERMAN: 'fisherman'
 };
 
 export class InteractiveObject {
@@ -87,11 +88,14 @@ export function createInteractiveObject(type, x, y) {
         case OBJECT_TYPES.COW:
             sprite = Math.random() < 0.2 ? 'blackcow1' : (Math.random() < 0.5 ? 'cow1' : 'cow2');
             break;
-        case OBJECT_TYPES.FISHERMAN:
+        case OBJECT_TYPES.CANOE:
             sprite = 'canoe1';
             break;
         case OBJECT_TYPES.EMPTY_CANOE:
             sprite = 'emptycanoe1';
+            break;
+        case OBJECT_TYPES.FISHERMAN:
+            sprite = 'man1';
             break;
         default:
             throw new Error(`Unknown object type: ${type}`);
