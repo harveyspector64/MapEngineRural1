@@ -4,7 +4,7 @@ export default class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.tileSize = 16;
+        this.tileSize = 32; // Updated to 32x32 as per your specification
         this.sprites = {};
         this.cameraX = 0;
         this.cameraY = 0;
@@ -12,7 +12,8 @@ export default class Renderer {
     }
 
     async loadSprites(tileTypes) {
-        const loadPromises = [...tileTypes, 'ufo'].map(type => 
+        console.log("Loading sprites...");
+        const loadPromises = tileTypes.map(type => 
             new Promise((resolve, reject) => {
                 const img = new Image();
                 img.onload = () => {
@@ -76,56 +77,86 @@ export default class Renderer {
             this.ctx.rotate(ufo.rotation);
             this.ctx.drawImage(sprite, -16 * this.zoomLevel, -16 * this.zoomLevel, 32 * this.zoomLevel, 32 * this.zoomLevel);
             this.ctx.restore();
+        } else {
+            console.warn("Missing UFO sprite");
         }
     }
 
-drawBeam(ufo) {
-    if (!ufo.beam.isActive || ufo.beam.length === 0) return;
+    renderInteractiveObject(obj) {
+        const sprite = this.sprites[obj.sprite];
+        if (sprite) {
+            const screenX = (obj.x - this.cameraX) * this.zoomLevel;
+            const screenY = (obj.y - this.cameraY) * this.zoomLevel;
+            
+            this.ctx.save();
+            this.ctx.translate(screenX, screenY);
+            
+            // If object is being abducted, apply a scaling effect
+            if (obj.isBeingAbducted) {
+                const scaleY = 1 + Math.sin(Date.now() / 200) * 0.1; // Pulsating effect
+                this.ctx.scale(1, scaleY);
+            }
+            
+            this.ctx.drawImage(
+                sprite,
+                -this.tileSize / 2 * this.zoomLevel,
+                -this.tileSize / 2 * this.zoomLevel,
+                this.tileSize * this.zoomLevel,
+                this.tileSize * this.zoomLevel
+            );
+            
+            this.ctx.restore();
+        } else {
+            console.warn(`Missing sprite for object type: ${obj.type}`);
+        }
+    }
 
-    const ufoPos = ufo.getPosition();
-    const startPoint = { x: ufoPos.x, y: ufoPos.y };
-    const endPoint = ufo.beam.getEndPoint();
+    drawBeam(ufo) {
+        if (!ufo.beam.isActive) return;
 
-    this.ctx.save();
-    this.ctx.beginPath();
+        const ufoPos = ufo.getPosition();
+        const startPoint = { x: ufoPos.x, y: ufoPos.y };
+        const endPoint = ufo.beam.getEndPoint();
 
-    // Calculate the beam start point to be just outside the UFO sprite
-    const ufoRadius = 16; // Assuming UFO sprite is 32x32 pixels
-    const beamStartX = startPoint.x + ufo.beam.direction.x * ufoRadius;
-    const beamStartY = startPoint.y + ufo.beam.direction.y * ufoRadius;
+        this.ctx.save();
+        this.ctx.beginPath();
 
-    this.ctx.moveTo(
-        (beamStartX - this.cameraX) * this.zoomLevel,
-        (beamStartY - this.cameraY) * this.zoomLevel
-    );
-    this.ctx.lineTo(
-        (endPoint.x - this.cameraX) * this.zoomLevel,
-        (endPoint.y - this.cameraY) * this.zoomLevel
-    );
+        const ufoRadius = 16; // Assuming UFO sprite is 32x32 pixels
+        const beamStartX = startPoint.x + ufo.beam.direction.x * ufoRadius;
+        const beamStartY = startPoint.y + ufo.beam.direction.y * ufoRadius;
 
-    // Create gradient for beam effect
-    const gradient = this.ctx.createLinearGradient(
-        (beamStartX - this.cameraX) * this.zoomLevel,
-        (beamStartY - this.cameraY) * this.zoomLevel,
-        (endPoint.x - this.cameraX) * this.zoomLevel,
-        (endPoint.y - this.cameraY) * this.zoomLevel
-    );
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        this.ctx.moveTo(
+            (beamStartX - this.cameraX) * this.zoomLevel,
+            (beamStartY - this.cameraY) * this.zoomLevel
+        );
+        this.ctx.lineTo(
+            (endPoint.x - this.cameraX) * this.zoomLevel,
+            (endPoint.y - this.cameraY) * this.zoomLevel
+        );
 
-    this.ctx.strokeStyle = gradient;
-    this.ctx.lineWidth = 8 * this.zoomLevel;
-    this.ctx.stroke();
+        // Create gradient for beam effect
+        const gradient = this.ctx.createLinearGradient(
+            (beamStartX - this.cameraX) * this.zoomLevel,
+            (beamStartY - this.cameraY) * this.zoomLevel,
+            (endPoint.x - this.cameraX) * this.zoomLevel,
+            (endPoint.y - this.cameraY) * this.zoomLevel
+        );
+        gradient.addColorStop(0, 'rgba(0, 255, 0, 0.8)'); // Green color for tractor beam
+        gradient.addColorStop(1, 'rgba(0, 255, 0, 0)');
 
-    // Add glow effect
-    this.ctx.shadowBlur = 15;
-    this.ctx.shadowColor = 'white';
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    this.ctx.lineWidth = 4 * this.zoomLevel;
-    this.ctx.stroke();
+        this.ctx.strokeStyle = gradient;
+        this.ctx.lineWidth = 8 * this.zoomLevel;
+        this.ctx.stroke();
 
-    this.ctx.restore();
-}
+        // Add glow effect
+        this.ctx.shadowBlur = 15;
+        this.ctx.shadowColor = 'rgba(0, 255, 0, 0.5)'; // Green glow
+        this.ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+        this.ctx.lineWidth = 4 * this.zoomLevel;
+        this.ctx.stroke();
+
+        this.ctx.restore();
+    }
 
     setCamera(x, y) {
         this.cameraX = x;
@@ -151,5 +182,10 @@ drawBeam(ufo) {
                 chunkSize * this.zoomLevel
             );
         });
+    }
+
+    setCanvasSize(width, height) {
+        this.canvas.width = width;
+        this.canvas.height = height;
     }
 }
