@@ -150,6 +150,7 @@ function setupControls() {
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
     console.log("Controls set up complete.");
 }
