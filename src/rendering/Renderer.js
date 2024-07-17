@@ -33,49 +33,49 @@ async loadSprites(tileTypes) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    renderChunk(chunk) {
-        if (!chunk || !chunk.terrain) {
-            console.error("Attempted to render invalid chunk:", chunk);
-            return;
-        }
+renderChunk(chunk) {
+    if (!chunk || !chunk.terrain) {
+        console.error("Attempted to render invalid chunk:", chunk);
+        return;
+    }
 
-        const { x: chunkX, y: chunkY, terrain } = chunk;
-        const chunkPixelSize = terrain.length * this.tileSize;
-        const offsetX = (chunkX * chunkPixelSize - this.cameraX) * this.zoomLevel;
-        const offsetY = (chunkY * chunkPixelSize - this.cameraY) * this.zoomLevel;
+    const { x: chunkX, y: chunkY, terrain } = chunk;
+    const chunkPixelSize = terrain.length * this.tileSize;
+    const offsetX = (chunkX * chunkPixelSize - this.cameraX) * this.zoomLevel;
+    const offsetY = (chunkY * chunkPixelSize - this.cameraY) * this.zoomLevel;
 
-        // Only render if the chunk is visible
-        if (offsetX + chunkPixelSize * this.zoomLevel < 0 || offsetX > this.canvas.width ||
-            offsetY + chunkPixelSize * this.zoomLevel < 0 || offsetY > this.canvas.height) {
-            return;
-        }
+    // Only render if the chunk is visible
+    if (offsetX + chunkPixelSize * this.zoomLevel < 0 || offsetX > this.canvas.width ||
+        offsetY + chunkPixelSize * this.zoomLevel < 0 || offsetY > this.canvas.height) {
+        return;
+    }
 
-        for (let y = 0; y < terrain.length; y++) {
-            for (let x = 0; x < terrain[y].length; x++) {
-                const tile = terrain[y][x];
-                const sprite = this.sprites[tile];
-                if (sprite) {
-                    this.ctx.drawImage(
-                        sprite, 
-                        offsetX + x * this.tileSize * this.zoomLevel, 
-                        offsetY + y * this.tileSize * this.zoomLevel, 
-                        this.tileSize * this.zoomLevel, 
-                        this.tileSize * this.zoomLevel
-                    );
-                } else {
-                    console.warn(`Missing sprite for tile type: ${tile} at (${x}, ${y}) in chunk (${chunkX}, ${chunkY})`);
-                    // Draw a placeholder color for missing sprites
-                    this.ctx.fillStyle = 'magenta';
-                    this.ctx.fillRect(
-                        offsetX + x * this.tileSize * this.zoomLevel, 
-                        offsetY + y * this.tileSize * this.zoomLevel, 
-                        this.tileSize * this.zoomLevel, 
-                        this.tileSize * this.zoomLevel
-                    );
-                }
+    for (let y = 0; y < terrain.length; y++) {
+        for (let x = 0; x < terrain[y].length; x++) {
+            const tile = terrain[y][x];
+            const sprite = this.sprites[tile];
+            if (sprite) {
+                this.ctx.drawImage(
+                    sprite, 
+                    offsetX + x * this.tileSize * this.zoomLevel, 
+                    offsetY + y * this.tileSize * this.zoomLevel, 
+                    this.tileSize * this.zoomLevel, 
+                    this.tileSize * this.zoomLevel
+                );
+            } else {
+                console.warn(`Missing sprite for tile type: ${tile} at (${x}, ${y}) in chunk (${chunkX}, ${chunkY})`);
+                // Draw a placeholder color for missing sprites
+                this.ctx.fillStyle = 'magenta';
+                this.ctx.fillRect(
+                    offsetX + x * this.tileSize * this.zoomLevel, 
+                    offsetY + y * this.tileSize * this.zoomLevel, 
+                    this.tileSize * this.zoomLevel, 
+                    this.tileSize * this.zoomLevel
+                );
             }
         }
     }
+}
 
     renderUFO(ufo) {
         const sprite = this.sprites['ufo'];
