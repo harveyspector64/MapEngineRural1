@@ -44,13 +44,13 @@ async function init() {
     canvas.height = window.innerHeight;
 
     // Define available sprite types
-    const availableSprites = [
-        'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water',
-        'man1', 'canoe1', 'emptycanoe1', 'cow1', 'cow2', 'blackcow1'
-    ];
+const availableSprites = [
+    'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water',
+    'man1', 'canoe1', 'emptycanoe1', 'cow1', 'cow2', 'blackcow1'
+];
 
-    // Load sprites
-    await renderer.loadSprites(availableSprites);
+// Load sprites
+await renderer.loadSprites(availableSprites);
 
     // Initialize game components
     worldManager = new WorldManager(Math.random());
