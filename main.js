@@ -95,6 +95,9 @@ function setupControls() {
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+    canvas.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+});
 }
 
 // Handle key press events
@@ -175,13 +178,9 @@ function updateBeamFromMouse(e) {
     const dy = mouseY - ufoPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
-
     ufo.setBeamDirection(dx / distance, dy / distance);
-    ufo.setBeamLength(distance - ufoRadius);
+    ufo.setBeamLength(Math.min(distance, ufo.beam.maxLength));
     ufo.activateBeam();
-
-    console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
 }
 
 // Handle touch start events
@@ -387,25 +386,30 @@ function gameLoop(timestamp) {
 
     chunkManager.updateViewport(cameraX, cameraY);
 
-    // Check for UFO beam interactions
-    if (ufo.beam.isActive && !ufo.capturedNPC) {
-        const interactionRadius = 10; // Adjust as needed
-        visibleChunks.forEach(({x, y}) => {
-            const chunk = chunkManager.getChunk(x, y);
-            if (chunk && chunk.npcs) {
-                chunk.npcs.forEach(npc => {
-                    const beamEnd = ufo.beam.getEndPoint();
-                    const dx = (chunk.x * chunkManager.chunkSize + npc.x) - beamEnd.x;
-                    const dy = (chunk.y * chunkManager.chunkSize + npc.y) - beamEnd.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < interactionRadius) {
+// Check for UFO beam interactions
+if (ufo.beam.isActive) {
+    const beamEnd = ufo.beam.getEndPoint();
+    visibleChunks.forEach(({x, y}) => {
+        const chunk = chunkManager.getChunk(x, y);
+        if (chunk && chunk.npcs) {
+            chunk.npcs.forEach((npc, index) => {
+                const npcGlobalX = chunk.x * chunkManager.chunkSize * renderer.tileSize + npc.x * renderer.tileSize;
+                const npcGlobalY = chunk.y * chunkManager.chunkSize * renderer.tileSize + npc.y * renderer.tileSize;
+                const dx = npcGlobalX - beamEnd.x;
+                const dy = npcGlobalY - beamEnd.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < renderer.tileSize / 2) {  // Interaction radius is half a tile
+                    if (!ufo.capturedNPC) {
                         ufo.captureNPC(npc);
-                        chunk.npcs = chunk.npcs.filter(n => n !== npc);
+                        chunk.npcs.splice(index, 1);
+                        console.log(`Captured ${npc.type} at (${npcGlobalX}, ${npcGlobalY})`);
                     }
-                });
-            }
-        });
-    }
+                }
+            });
+        }
+    });
+}
 
     updateDebugInfo();
 
