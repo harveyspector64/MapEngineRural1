@@ -13,15 +13,23 @@ export default class UFO {
         this.maxSpeed = 35;
         this.friction = 0.82;
         this.beam = new Beam(this);
+        this.capturedNPC = null;
     }
 
-    update() {
+    update(deltaTime) {
         this.x += this.vx;
         this.y += this.vy;
         this.vx *= this.friction;
         this.vy *= this.friction;
         if (this.vx !== 0 || this.vy !== 0) {
             this.rotation = Math.atan2(this.vy, this.vx);
+        }
+
+        this.beam.update(deltaTime);
+
+        if (this.capturedNPC) {
+            this.capturedNPC.x = this.x + this.beam.direction.x * this.beam.length;
+            this.capturedNPC.y = this.y + this.beam.direction.y * this.beam.length;
         }
     }
 
@@ -59,5 +67,24 @@ export default class UFO {
 
     setBeamLength(length) {
         this.beam.setLength(length);
+    }
+
+    captureNPC(npc) {
+        this.capturedNPC = npc;
+        if (npc.type === 'canoe') {
+            npc.sprite = 'man1';
+        }
+    }
+
+    releaseNPC() {
+        if (this.capturedNPC) {
+            // Apply momentum when releasing
+            const momentum = 5; // Adjust as needed
+            this.capturedNPC.direction = {
+                x: this.beam.direction.x * momentum,
+                y: this.beam.direction.y * momentum
+            };
+            this.capturedNPC = null;
+        }
     }
 }
