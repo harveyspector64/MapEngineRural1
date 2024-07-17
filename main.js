@@ -32,6 +32,7 @@ let targetCameraX = 0;
 let targetCameraY = 0;
 let mousePosition = { x: 0, y: 0 };
 let isMouseDown = false;
+let lastTimestamp = 0;
 
 // Set to store currently pressed keys
 const keys = new Set();
@@ -44,7 +45,8 @@ async function init() {
 
     // Define available sprite types
     const availableSprites = [
-        'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water'
+        'barn', 'bush', 'crop', 'dirt', 'grass', 'road', 'silo', 'tree', 'water',
+        'man1', 'canoe1', 'emptycanoe1', 'cow1', 'cow2', 'blackcow1'
     ];
 
     // Load sprites
@@ -71,8 +73,9 @@ async function init() {
         mobileUIController.onZoomOut = zoomOut;
     }
 
-    // Start the render loop
-    render();
+    // Start the game loop
+    requestAnimationFrame(gameLoop);
+
     // Set up event listeners
     setupControls();
     // Set up debug information display
@@ -104,6 +107,12 @@ function handleKeyDown(e) {
 function handleKeyUp(e) {
     keys.delete(e.key.toLowerCase());
     updateUFOMovement();
+
+    // Handle beam deactivation and NPC release
+    if (e.key === ' ') { // Space key
+        ufo.deactivateBeam();
+        ufo.releaseNPC();
+    }
 }
 
 // Update UFO movement based on pressed keys
@@ -316,13 +325,19 @@ function updateDebugInfo() {
         Zoom: ${zoomLevel.toFixed(2)}x<br>
         Current Chunk: (${currentChunkX}, ${currentChunkY})<br>
         Loaded Chunks: ${chunkManager.loadedChunks.size}<br>
-        Recently Unloaded: ${chunkManager.recentlyUnloaded.size}
+        Recently Unloaded: ${chunkManager.recentlyUnloaded.size}<br>
+        Beam Active: ${ufo.beam.isActive}<br>
+        Beam Length: ${ufo.beam.length.toFixed(2)}<br>
+        Captured NPC: ${ufo.capturedNPC ? ufo.capturedNPC.type : 'None'}
     `;
 }
 
-// Main render loop
-function render() {
-    ufo.update();
+// Main game loop
+function gameLoop(timestamp) {
+    const deltaTime = timestamp - lastTimestamp;
+    lastTimestamp = timestamp;
+
+    ufo.update(deltaTime);
     updateUFOMovement();
 
     // Smoothly adjust zoom level
@@ -339,7 +354,7 @@ function render() {
     targetCameraX = ufoPos.x - canvas.width / (2 * zoomLevel);
     targetCameraY = ufoPos.y - canvas.height / (2 * zoomLevel);
 
-    renderer.clear();
+renderer.clear();
     renderer.setCamera(cameraX, cameraY);
     renderer.setZoom(zoomLevel);
     const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
@@ -347,6 +362,10 @@ function render() {
         const chunk = chunkManager.getChunk(x, y);
         if (chunk) {
             renderer.renderChunk(chunk);
+            // Update NPCs in the chunk
+            if (chunk.npcs) {
+                chunk.npcs.forEach(npc => npc.update(deltaTime));
+            }
         } else {
             console.warn(`Missing chunk at (${x}, ${y})`);
         }
@@ -363,9 +382,35 @@ function render() {
     renderer.drawChunkBoundaries(Array.from(chunkManager.loadedChunks.values()));
 
     chunkManager.updateViewport(cameraX, cameraY);
+
+    // Check for UFO beam interactions
+    if (ufo.beam.isActive && !ufo.capturedNPC) {
+        const interactionRadius = 10; // Adjust as needed
+        visibleChunks.forEach(({x, y}) => {
+            const chunk = chunkManager.getChunk(x, y);
+            if (chunk && chunk.npcs) {
+                chunk.npcs.forEach(npc => {
+                    const dx = (chunk.x * chunkManager.chunkSize + npc.x) - ufo.beam.getEndPoint().x;
+                    const dy = (chunk.y * chunkManager.chunkSize + npc.y) - ufo.beam.getEndPoint().y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < interactionRadius) {
+                        ufo.captureNPC(npc);
+                        if (npc.type === 'canoe') {
+                            npc.sprite = 'emptycanoe1';
+                            const man = new NPC('man', npc.x, npc.y);
+                            man.sprite = 'man1';
+                            chunk.npcs.push(man);
+                            ufo.captureNPC(man);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
     updateDebugInfo();
 
-    requestAnimationFrame(render);
+    requestAnimationFrame(gameLoop);
 }
 
 // Event listeners for game initialization and window resizing
