@@ -66,6 +66,14 @@ renderChunk(chunk) {
                 );
             } else {
                 console.warn(`Missing sprite for tile type: ${tile}`);
+                // Draw a colored rectangle for debugging
+                this.ctx.fillStyle = this.getDebugColorForTile(tile);
+                this.ctx.fillRect(
+                    offsetX + x * this.tileSize * this.zoomLevel, 
+                    offsetY + y * this.tileSize * this.zoomLevel, 
+                    this.tileSize * this.zoomLevel, 
+                    this.tileSize * this.zoomLevel
+                );
             }
         }
     }
@@ -100,6 +108,17 @@ renderChunk(chunk) {
             this.ctx.restore();
         }
     }
+
+    getDebugColorForTile(tileType) {
+    const colorMap = {
+        grass: 'green',
+        water: 'blue',
+        dirt: 'brown',
+        road: 'gray',
+        // Add more tile types and colors as needed
+    };
+    return colorMap[tileType] || 'pink';  // Use pink for unknown tile types
+}
 
 drawBeam(ufo) {
     if (!ufo.beam.isActive || ufo.beam.length === 0) return;
