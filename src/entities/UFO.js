@@ -1,6 +1,3 @@
-// src/entities/UFO.js
-import Beam from './Beam.js';
-
 export default class UFO {
     constructor(x, y, speed = 5) {
         this.x = x;
@@ -28,8 +25,15 @@ export default class UFO {
         this.beam.update(deltaTime);
 
         if (this.capturedNPC) {
-            this.capturedNPC.x = this.x + this.beam.direction.x * this.beam.length;
-            this.capturedNPC.y = this.y + this.beam.direction.y * this.beam.length;
+            const beamEnd = this.beam.getEndPoint();
+            this.capturedNPC.x = beamEnd.x;
+            this.capturedNPC.y = beamEnd.y;
+
+            // Check if NPC is close enough to be "eaten"
+            const distToUFO = Math.sqrt((this.x - beamEnd.x) ** 2 + (this.y - beamEnd.y) ** 2);
+            if (distToUFO < 16) { // 16 is half the UFO's width
+                this.eatNPC();
+            }
         }
     }
 
@@ -59,6 +63,9 @@ export default class UFO {
 
     deactivateBeam() {
         this.beam.deactivate();
+        if (this.capturedNPC) {
+            this.releaseNPC();
+        }
     }
 
     setBeamDirection(dx, dy) {
@@ -79,12 +86,16 @@ export default class UFO {
     releaseNPC() {
         if (this.capturedNPC) {
             // Apply momentum when releasing
-            const momentum = 5; // Adjust as needed
-            this.capturedNPC.direction = {
-                x: this.beam.direction.x * momentum,
-                y: this.beam.direction.y * momentum
-            };
+            const throwForce = 10; // Adjust as needed
+            this.capturedNPC.vx = this.beam.direction.x * throwForce + this.vx;
+            this.capturedNPC.vy = this.beam.direction.y * throwForce + this.vy;
             this.capturedNPC = null;
         }
+    }
+
+    eatNPC() {
+        console.log(`NPC ${this.capturedNPC.type} has been captured by the UFO!`);
+        // Here you might want to add some score or trigger some event
+        this.capturedNPC = null;
     }
 }
