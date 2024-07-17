@@ -1,5 +1,3 @@
-// src/entities/Beam.js
-
 export default class Beam {
     constructor(ufo) {
         this.ufo = ufo;
@@ -45,42 +43,42 @@ export default class Beam {
         if (!this.capturedObject) {
             this.capturedObject = object;
             this.capturedObject.isBeingAbducted = true;
+            console.log("Object captured:", object);
         }
     }
 
-releaseObject() {
-    if (this.capturedObject) {
-        const ufoPos = this.ufo.getPosition();
-        const objPos = this.capturedObject.getPosition();
-        const distToUfo = Math.sqrt(
-            Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
-        );
+    releaseObject() {
+        if (this.capturedObject) {
+            const ufoPos = this.ufo.getPosition();
+            const objPos = this.capturedObject.getPosition();
+            const distToUfo = Math.sqrt(
+                Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
+            );
 
-        if (distToUfo <= this.ufoRadius) {
-            // Object is under the UFO, make it disappear
-            console.log("Object abducted into UFO");
-            if (typeof this.onObjectAbducted === 'function') {
-                this.onObjectAbducted(this.capturedObject);
+            if (distToUfo <= this.ufoRadius && this.length <= this.minLength) {
+                console.log("Object abducted into UFO");
+                if (typeof this.onObjectAbducted === 'function') {
+                    this.onObjectAbducted(this.capturedObject);
+                }
+            } else {
+                console.log("Object released or thrown");
+                const throwSpeed = 500;
+                const ufoVelocity = this.ufo.getVelocity();
+                
+                this.capturedObject.velocity = {
+                    x: this.direction.x * throwSpeed + ufoVelocity.x,
+                    y: this.direction.y * throwSpeed + ufoVelocity.y
+                };
+                
+                if (typeof this.onObjectThrown === 'function') {
+                    this.onObjectThrown(this.capturedObject);
+                }
             }
-        } else {
-            // Throw the object
-            const throwSpeed = 500;
-            const ufoVelocity = this.ufo.getVelocity();
             
-            this.capturedObject.velocity = {
-                x: this.direction.x * throwSpeed + ufoVelocity.x,
-                y: this.direction.y * throwSpeed + ufoVelocity.y
-            };
-            
-            if (typeof this.onObjectThrown === 'function') {
-                this.onObjectThrown(this.capturedObject);
-            }
+            this.capturedObject.isBeingAbducted = false;
+            this.capturedObject = null;
         }
-        
-        this.capturedObject.isBeingAbducted = false;
-        this.capturedObject = null;
     }
-}
 
     update(deltaTime) {
         if (this.capturedObject) {
@@ -97,13 +95,11 @@ releaseObject() {
                 Math.pow(this.capturedObject.y - ufoPos.y, 2)
             );
 
-            // Check if the object is inside the UFO
-            if (distToUfo <= this.ufoRadius) {
+            // Check if object is fully retracted
+            if (distToUfo <= this.ufoRadius && this.length <= this.minLength) {
                 console.log("Object fully retracted into UFO");
-                this.capturedObject.isBeingAbducted = false;
-                // Notify the game that an object has been abducted
                 if (typeof this.onObjectAbducted === 'function') {
-                    this.onObjectAbducted();
+                    this.onObjectAbducted(this.capturedObject);
                 }
                 this.capturedObject = null;
             }
