@@ -12,19 +12,23 @@ export default class Renderer {
     }
 
     async loadSprites(tileTypes) {
-        const loadPromises = [...tileTypes, 'ufo'].map(type => 
+        const loadPromises = tileTypes.map(type => 
             new Promise((resolve, reject) => {
                 const img = new Image();
                 img.onload = () => {
                     this.sprites[type] = img;
+                    console.log(`Loaded sprite: ${type}`);
                     resolve();
                 };
-                img.onerror = reject;
+                img.onerror = () => {
+                    console.error(`Failed to load sprite: ${type}`);
+                    reject();
+                };
                 img.src = `assets/sprites/${type}.png`;
             })
         );
         await Promise.all(loadPromises);
-        console.log("All sprites loaded successfully");
+        console.log("All sprites loaded. Sprite keys:", Object.keys(this.sprites));
     }
 
     clear() {
