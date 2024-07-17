@@ -112,37 +112,62 @@ drawBeam(ufo) {
     const beamStartX = startPoint.x + ufo.beam.direction.x * ufoRadius;
     const beamStartY = startPoint.y + ufo.beam.direction.y * ufoRadius;
 
+    // Create a spotlight-shaped beam
+    const beamWidth = ufo.beam.length * 0.3; // Adjust for desired width at the end
+    const perpX = -ufo.beam.direction.y;
+    const perpY = ufo.beam.direction.x;
+
     this.ctx.moveTo(
         (beamStartX - this.cameraX) * this.zoomLevel,
         (beamStartY - this.cameraY) * this.zoomLevel
     );
     this.ctx.lineTo(
-        (endPoint.x - this.cameraX) * this.zoomLevel,
-        (endPoint.y - this.cameraY) * this.zoomLevel
+        (endPoint.x + perpX * beamWidth - this.cameraX) * this.zoomLevel,
+        (endPoint.y + perpY * beamWidth - this.cameraY) * this.zoomLevel
     );
+    this.ctx.lineTo(
+        (endPoint.x - perpX * beamWidth - this.cameraX) * this.zoomLevel,
+        (endPoint.y - perpY * beamWidth - this.cameraY) * this.zoomLevel
+    );
+    this.ctx.closePath();
 
     // Create gradient for beam effect
-    const gradient = this.ctx.createLinearGradient(
+    const gradient = this.ctx.createRadialGradient(
         (beamStartX - this.cameraX) * this.zoomLevel,
         (beamStartY - this.cameraY) * this.zoomLevel,
-        (endPoint.x - this.cameraX) * this.zoomLevel,
-        (endPoint.y - this.cameraY) * this.zoomLevel
+        0,
+        (beamStartX - this.cameraX) * this.zoomLevel,
+        (beamStartY - this.cameraY) * this.zoomLevel,
+        ufo.beam.length * this.zoomLevel
     );
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
     gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
-    this.ctx.strokeStyle = gradient;
-    this.ctx.lineWidth = 8 * this.zoomLevel;
-    this.ctx.stroke();
+    this.ctx.fillStyle = gradient;
+    this.ctx.fill();
 
     // Add glow effect
-    this.ctx.shadowBlur = 15;
-    this.ctx.shadowColor = 'white';
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    this.ctx.lineWidth = 4 * this.zoomLevel;
+    this.ctx.shadowBlur = 20;
+    this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    this.ctx.lineWidth = 2 * this.zoomLevel;
     this.ctx.stroke();
 
     this.ctx.restore();
+
+    // Render captured NPC if any
+    if (ufo.capturedNPC) {
+        const sprite = this.sprites[ufo.capturedNPC.sprite || ufo.capturedNPC.type];
+        if (sprite) {
+            this.ctx.drawImage(
+                sprite,
+                (endPoint.x - this.cameraX) * this.zoomLevel - (this.tileSize * this.zoomLevel) / 2,
+                (endPoint.y - this.cameraY) * this.zoomLevel - (this.tileSize * this.zoomLevel) / 2,
+                this.tileSize * this.zoomLevel,
+                this.tileSize * this.zoomLevel
+            );
+        }
+    }
 }
 
     setCamera(x, y) {
