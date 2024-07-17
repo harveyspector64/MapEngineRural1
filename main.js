@@ -350,7 +350,7 @@ function gameLoop(timestamp) {
     targetCameraX = ufoPos.x - canvas.width / (2 * zoomLevel);
     targetCameraY = ufoPos.y - canvas.height / (2 * zoomLevel);
 
-renderer.clear();
+    renderer.clear();
     renderer.setCamera(cameraX, cameraY);
     renderer.setZoom(zoomLevel);
     const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
@@ -360,7 +360,17 @@ renderer.clear();
             renderer.renderChunk(chunk);
             // Update NPCs in the chunk
             if (chunk.npcs) {
-                chunk.npcs.forEach(npc => npc.update(deltaTime));
+                chunk.npcs.forEach(npc => {
+                    npc.update(deltaTime);
+                    
+                    // Apply physics to thrown NPCs
+                    if (npc.vx !== undefined && npc.vy !== undefined) {
+                        npc.x += npc.vx * deltaTime / 1000;
+                        npc.y += npc.vy * deltaTime / 1000;
+                        npc.vx *= 0.98; // Apply air resistance
+                        npc.vy *= 0.98;
+                    }
+                });
             }
         } else {
             console.warn(`Missing chunk at (${x}, ${y})`);
@@ -386,18 +396,13 @@ renderer.clear();
             const chunk = chunkManager.getChunk(x, y);
             if (chunk && chunk.npcs) {
                 chunk.npcs.forEach(npc => {
-                    const dx = (chunk.x * chunkManager.chunkSize + npc.x) - ufo.beam.getEndPoint().x;
-                    const dy = (chunk.y * chunkManager.chunkSize + npc.y) - ufo.beam.getEndPoint().y;
+                    const beamEnd = ufo.beam.getEndPoint();
+                    const dx = (chunk.x * chunkManager.chunkSize + npc.x) - beamEnd.x;
+                    const dy = (chunk.y * chunkManager.chunkSize + npc.y) - beamEnd.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     if (distance < interactionRadius) {
                         ufo.captureNPC(npc);
-                        if (npc.type === 'canoe') {
-                            npc.sprite = 'emptycanoe1';
-                            const man = new NPC('man', npc.x, npc.y);
-                            man.sprite = 'man1';
-                            chunk.npcs.push(man);
-                            ufo.captureNPC(man);
-                        }
+                        chunk.npcs = chunk.npcs.filter(n => n !== npc);
                     }
                 });
             }
