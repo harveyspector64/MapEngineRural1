@@ -519,14 +519,9 @@ function checkBeamInteractions() {
     }
 }
 
-// Setup beam handlers
 function setupBeamHandlers() {
-    if (ufo && ufo.beam) {
-        ufo.beam.onObjectAbducted = handleObjectAbducted;
-        ufo.beam.onObjectThrown = handleObjectThrown;
-    } else {
-        console.error("UFO or UFO beam not initialized properly");
-    }
+    ufo.beam.onObjectEaten = handleObjectEaten;
+    ufo.beam.onObjectReleased = handleObjectReleased;
 }
 
 function handleObjectAbducted(object) {
@@ -538,6 +533,18 @@ function handleObjectAbducted(object) {
     } else {
         console.error("Invalid object abducted:", object);
     }
+}
+
+function handleObjectEaten(object) {
+    console.log("Object eaten by UFO:", object);
+    const chunkKey = getChunkKeyForPosition(object.x, object.y);
+    interactiveObjectManager.removeObject(object, chunkKey);
+}
+
+function handleObjectReleased(object) {
+    console.log("Object released:", object);
+    const chunkKey = getChunkKeyForPosition(object.x, object.y);
+    interactiveObjectManager.addObject(object, chunkKey);
 }
 
 function handleObjectThrown(object) {
