@@ -16,25 +16,30 @@ export default class ChunkManager {
         console.log(`ChunkManager initialized with viewport: ${viewportWidth}x${viewportHeight}, chunkSize: ${chunkSize}`);
     }
 
-    updateViewport(centerX, centerY) {
-        console.log(`Updating viewport. Center: (${centerX}, ${centerY}), Zoom: ${this.zoomLevel}`);
-        const visibleChunks = this.getVisibleChunkCoordinates(centerX, centerY);
-        
-        // Load new chunks
-        visibleChunks.forEach(({x, y}) => {
-            const key = `${x},${y}`;
-            if (!this.loadedChunks.has(key)) {
-                if (this.recentlyUnloaded.has(key)) {
-                    console.log(`Reloading cached chunk at (${x}, ${y})`);
-                    this.loadedChunks.set(key, this.recentlyUnloaded.get(key));
-                    this.recentlyUnloaded.delete(key);
-                } else {
-                    console.log(`Generating new chunk at (${x}, ${y})`);
-                    const chunk = this.generateChunk(x, y);
-                    this.loadedChunks.set(key, chunk);
-                }
+ updateViewport(centerX, centerY) {
+    console.log(`Updating viewport. Center: (${centerX}, ${centerY}), Zoom: ${this.zoomLevel}`);
+    const visibleChunks = this.getVisibleChunkCoordinates(centerX, centerY);
+    
+    visibleChunks.forEach(({x, y}) => {
+        const key = `${x},${y}`;
+        if (!this.loadedChunks.has(key)) {
+            if (this.recentlyUnloaded.has(key)) {
+                console.log(`Reloading cached chunk at (${x}, ${y})`);
+                this.loadedChunks.set(key, this.recentlyUnloaded.get(key));
+                this.recentlyUnloaded.delete(key);
+            } else {
+                console.log(`Generating new chunk at (${x}, ${y})`);
+                const chunk = this.generateChunk(x, y);
+                this.loadedChunks.set(key, chunk);
             }
-        });
+        }
+    });
+
+    // Log all currently loaded chunks
+    console.log("Currently loaded chunks:");
+    this.loadedChunks.forEach((chunk, key) => {
+        console.log(`Chunk ${key}: ${JSON.stringify(chunk)}`);
+    });
 
         // Unload chunks that are no longer visible
         this.loadedChunks.forEach((chunk, key) => {
