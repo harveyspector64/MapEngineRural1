@@ -4,12 +4,12 @@ export default class Beam {
     constructor(ufo) {
         this.ufo = ufo;
         this.isActive = false;
-        this.direction = { x: 0, y: 1 }; // Default direction is down
-        this.minLength = 64; // Minimum beam length in pixels
-        this.maxLength = 320; // Maximum beam length in pixels
-        this.length = this.minLength; // Current beam length
-        this.retractionSpeed = 100; // pixels per second
-        this.expansionSpeed = 200; // pixels per second
+        this.direction = { x: 0, y: 1 };
+        this.minLength = 64;
+        this.maxLength = 320;
+        this.length = this.minLength;
+        this.retractionSpeed = 100;
+        this.expansionSpeed = 200;
         this.targetLength = 0;
     }
 
