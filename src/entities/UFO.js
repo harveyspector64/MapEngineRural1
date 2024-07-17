@@ -79,12 +79,13 @@ export default class UFO {
         this.beam.setLength(length);
     }
 
-    captureNPC(npc) {
-        this.capturedNPC = npc;
-        if (npc.type === 'canoe') {
-            npc.sprite = 'man1';
-        }
+captureNPC(npc) {
+    this.capturedNPC = npc;
+    if (npc.type === 'canoe') {
+        npc.sprite = 'man1';
     }
+    console.log(`Captured ${npc.type}`);
+}
 
     releaseNPC() {
         if (this.capturedNPC) {
