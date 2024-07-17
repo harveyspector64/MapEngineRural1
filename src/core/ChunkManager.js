@@ -2,6 +2,7 @@
 
 import MapGenerator from './MapGenerator.js';
 import WorldManager from './WorldManager.js';
+import { Cow, Canoe } from '../entities/NPC.js';
 
 export default class ChunkManager {
     constructor(viewportWidth, viewportHeight, chunkSize = 64) {
@@ -80,8 +81,53 @@ updateViewport(centerX, centerY) {
     generateChunk(x, y) {
         const chunkSeed = this.worldManager.getChunkSeed(x, y);
         const regionType = this.worldManager.getRegionType(x, y);
-        console.log(`Generating chunk (${x}, ${y}) with seed: ${chunkSeed}, region: ${regionType}`);
-        return this.mapGenerator.generateChunk(x, y, chunkSeed, regionType);
+        const chunk = this.mapGenerator.generateChunk(x, y, chunkSeed, regionType);
+        
+        // Add NPCs to the chunk
+        chunk.npcs = this.generateNPCs(chunk);
+        
+        return chunk;
+    }
+
+        generateNPCs(chunk) {
+        const npcs = [];
+        const { terrain } = chunk;
+
+        // Generate cows
+        const grassTiles = this.findTiles(terrain, 'grass');
+        const cowCount = Math.floor(Math.random() * 4) + 2; // 2-5 cows
+        for (let i = 0; i < cowCount; i++) {
+            if (grassTiles.length > 0) {
+                const index = Math.floor(Math.random() * grassTiles.length);
+                const [x, y] = grassTiles.splice(index, 1)[0];
+                npcs.push(new Cow(x, y));
+            }
+        }
+
+        // Generate canoes
+        const waterTiles = this.findTiles(terrain, 'water');
+        const canoeCount = Math.floor(Math.random() * 3) + 1; // 1-3 canoes
+        for (let i = 0; i < canoeCount; i++) {
+            if (waterTiles.length > 0) {
+                const index = Math.floor(Math.random() * waterTiles.length);
+                const [x, y] = waterTiles.splice(index, 1)[0];
+                npcs.push(new Canoe(x, y));
+            }
+        }
+
+        return npcs;
+    }
+
+    findTiles(terrain, tileType) {
+        const tiles = [];
+        for (let y = 0; y < terrain.length; y++) {
+            for (let x = 0; x < terrain[y].length; x++) {
+                if (terrain[y][x] === tileType) {
+                    tiles.push([x, y]);
+                }
+            }
+        }
+        return tiles;
     }
 
     setZoom(zoom) {
