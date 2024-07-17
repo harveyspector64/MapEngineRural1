@@ -16,9 +16,9 @@ export default class ChunkManager {
         console.log(`ChunkManager initialized with viewport: ${viewportWidth}x${viewportHeight}, chunkSize: ${chunkSize}`);
     }
 
-updateViewport(centerX, centerY) {
-    console.log(`Updating viewport. Center: (${centerX}, ${centerY}), Zoom: ${this.zoomLevel}`);
-    const visibleChunks = this.getVisibleChunkCoordinates(centerX, centerY);
+    updateViewport(centerX, centerY) {
+        console.log(`Updating viewport. Center: (${centerX}, ${centerY}), Zoom: ${this.zoomLevel}`);
+        const visibleChunks = this.getVisibleChunkCoordinates(centerX, centerY);
         
         // Load new chunks
         visibleChunks.forEach(({x, y}) => {
@@ -47,7 +47,7 @@ updateViewport(centerX, centerY) {
         });
 
         // Limit the size of recentlyUnloaded cache
-        if (this.recentlyUnloaded.size > 20) {
+        while (this.recentlyUnloaded.size > 20) {
             const oldestKey = this.recentlyUnloaded.keys().next().value;
             this.recentlyUnloaded.delete(oldestKey);
         }
