@@ -168,26 +168,22 @@ function handleMouseUp(e) {
 
 // Update beam position and length based on mouse position
 function updateBeamFromMouse(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) / zoomLevel + cameraX;
+    const mouseY = (e.clientY - rect.top) / zoomLevel + cameraY;
+    
     const ufoPos = ufo.getPosition();
-    const dx = mousePosition.x - ufoPos.x;
-    const dy = mousePosition.y - ufoPos.y;
+    const dx = mouseX - ufoPos.x;
+    const dy = mouseY - ufoPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // Define the UFO's radius (adjust this value as needed)
     const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
 
-    if (distance > ufoRadius) {
-        // Beam is outside the UFO
-        ufo.setBeamDirection(dx / distance, dy / distance);
-        ufo.setBeamLength(distance - ufoRadius);
-        ufo.activateBeam();
-        console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
-    } else {
-        // Beam is inside or at the edge of the UFO
-        ufo.setBeamLength(0);
-        ufo.deactivateBeam();
-        console.log('Beam fully retracted');
-    }
+    ufo.setBeamDirection(dx / distance, dy / distance);
+    ufo.setBeamLength(distance - ufoRadius);
+    ufo.activateBeam();
+
+    console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
 }
 
 // Handle touch start events
