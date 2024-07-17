@@ -532,22 +532,22 @@ function setupBeamHandlers() {
 }
 
 function handleObjectAbducted(object) {
-    console.log("Object abducted:", object);
+    console.log("Handling abducted object:", object);
     if (object && typeof object.x === 'number' && typeof object.y === 'number') {
-        // Remove the object from the game world
         const chunkKey = getChunkKeyForPosition(object.x, object.y);
         interactiveObjectManager.removeObject(object, chunkKey);
+        console.log("Object removed from game world");
     } else {
         console.error("Invalid object abducted:", object);
     }
 }
 
 function handleObjectThrown(object) {
-    console.log("Object thrown:", object);
-    // Ensure the object remains in the game world
+    console.log("Handling thrown object:", object);
     if (object && typeof object.x === 'number' && typeof object.y === 'number') {
         const chunkKey = getChunkKeyForPosition(object.x, object.y);
         interactiveObjectManager.addObject(object, chunkKey);
+        console.log("Object added/kept in game world");
     } else {
         console.error("Invalid object thrown:", object);
     }
