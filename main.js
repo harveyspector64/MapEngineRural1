@@ -178,7 +178,9 @@ function setupControls() {
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd);
     document.body.addEventListener('touchmove', preventDefaultTouch, { passive: false });
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    canvas.addEventListener('contextmenu', (e) => {
+    // Allow right-click to work normally
+});
     console.log("Controls set up complete.");
 }
 
@@ -222,10 +224,14 @@ function handleWheel(e) {
 }
 
 // Handle mouse button press
+// Modify the mousedown event listener
 function handleMouseDown(e) {
-    isMouseDown = true;
-    ufo.activateBeam();
-    updateBeamFromMouse(e);
+    if (e.button === 0) { // Left click
+        e.preventDefault();
+        isMouseDown = true;
+        ufo.activateBeam();
+        updateBeamFromMouse(e);
+    }
 }
 
 // Handle mouse movement
