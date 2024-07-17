@@ -245,9 +245,10 @@ function handleMouseMove(e) {
     }
 }
 
-// Handle mouse button release
+// Call this function when the beam is deactivated (e.g., in handleMouseUp)
 function handleMouseUp(e) {
     isMouseDown = false;
+    handleBeamRelease();
     ufo.deactivateBeam();
     console.log('Beam deactivated');
 }
@@ -491,30 +492,37 @@ function render(timestamp) {
 
 // Check for interactions between the beam and interactive objects
 function checkBeamInteractions() {
-    if (ufo.beam.isActive) {
+    if (ufo.beam.isActive && !ufo.beam.capturedObject) {
         const beamEnd = ufo.beam.getEndPoint();
         const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
         
-        if (!ufo.beam.capturedObject) {
-            for (const {x, y} of visibleChunks) {
-                const chunkKey = `${x},${y}`;
-                const objects = interactiveObjectManager.getObjectsInChunk(chunkKey);
+        for (const {x, y} of visibleChunks) {
+            const chunkKey = `${x},${y}`;
+            const objects = interactiveObjectManager.getObjectsInChunk(chunkKey);
+            
+            for (const obj of objects) {
+                const objPos = obj.getPosition();
+                const distance = Math.sqrt(
+                    Math.pow(objPos.x - beamEnd.x, 2) + Math.pow(objPos.y - beamEnd.y, 2)
+                );
                 
-                for (const obj of objects) {
-                    const objPos = obj.getPosition();
-                    const distance = Math.sqrt(
-                        Math.pow(objPos.x - beamEnd.x, 2) + Math.pow(objPos.y - beamEnd.y, 2)
-                    );
-                    
-                    if (distance < renderer.tileSize / 2) {  // If object is within capture range
+                if (distance < renderer.tileSize / 2) {  // If object is within capture range
+                    if (obj.type === OBJECT_TYPES.CANOE) {
+                        // Replace canoe with empty canoe and create fisherman
+                        const emptyCanoe = createInteractiveObject(OBJECT_TYPES.EMPTY_CANOE, objPos.x, objPos.y);
+                        const fisherman = createInteractiveObject(OBJECT_TYPES.FISHERMAN, objPos.x, objPos.y);
+                        interactiveObjectManager.removeObject(obj, chunkKey);
+                        interactiveObjectManager.addObject(emptyCanoe, chunkKey);
+                        ufo.beam.captureObject(fisherman);
+                    } else {
                         ufo.beam.captureObject(obj);
-                        console.log(`Captured object: ${obj.type}`);
-                        break;
                     }
+                    console.log(`Captured object: ${obj.type}`);
+                    break;
                 }
-                
-                if (ufo.beam.capturedObject) break;
             }
+            
+            if (ufo.beam.capturedObject) break;
         }
     }
 }
@@ -545,6 +553,15 @@ function handleObjectReleased(object) {
     console.log("Object released:", object);
     const chunkKey = getChunkKeyForPosition(object.x, object.y);
     interactiveObjectManager.addObject(object, chunkKey);
+}
+
+function handleBeamRelease() {
+    if (ufo.beam.capturedObject) {
+        const object = ufo.beam.capturedObject;
+        const chunkKey = getChunkKeyForPosition(object.x, object.y);
+        interactiveObjectManager.addObject(object, chunkKey);
+        ufo.beam.releaseObject();
+    }
 }
 
 function handleObjectThrown(object) {
