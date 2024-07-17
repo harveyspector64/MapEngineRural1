@@ -68,7 +68,12 @@ export class InteractiveObjectManager {
         if (!this.objects.has(chunkKey)) {
             this.objects.set(chunkKey, []);
         }
-        this.objects.get(chunkKey).push(object);
+        if (!this.objects.get(chunkKey).includes(object)) {
+            this.objects.get(chunkKey).push(object);
+            console.log(`Object added to chunk ${chunkKey}:`, object);
+        } else {
+            console.log(`Object already in chunk ${chunkKey}:`, object);
+        }
     }
 
     getObjectsInChunk(chunkKey) {
@@ -85,6 +90,9 @@ export class InteractiveObjectManager {
         const index = chunkObjects.indexOf(object);
         if (index !== -1) {
             chunkObjects.splice(index, 1);
+            console.log(`Object removed from chunk ${chunkKey}:`, object);
+        } else {
+            console.log(`Object not found in chunk ${chunkKey}:`, object);
         }
     }
 }
