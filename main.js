@@ -351,28 +351,45 @@ function gameLoop(timestamp) {
     renderer.setCamera(cameraX, cameraY);
     renderer.setZoom(zoomLevel);
     const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
-    visibleChunks.forEach(({x, y}) => {
-        const chunk = chunkManager.getChunk(x, y);
-        if (chunk) {
-            renderer.renderChunk(chunk);
-            // Update NPCs in the chunk
-            if (chunk.npcs) {
-                chunk.npcs.forEach(npc => {
-                    npc.update(deltaTime);
-                    
-                    // Apply physics to thrown NPCs
-                    if (npc.vx !== undefined && npc.vy !== undefined) {
-                        npc.x += npc.vx * deltaTime / 1000;
-                        npc.y += npc.vy * deltaTime / 1000;
-                        npc.vx *= 0.98; // Apply air resistance
-                        npc.vy *= 0.98;
+// Update NPCs in visible chunks
+visibleChunks.forEach(({x, y}) => {
+    const chunk = chunkManager.getChunk(x, y);
+    if (chunk && chunk.npcs) {
+        chunk.npcs.forEach(npc => {
+            // Update NPC position based on velocity
+            if (npc.vx !== undefined && npc.vy !== undefined) {
+                npc.x += npc.vx * deltaTime / 1000;
+                npc.y += npc.vy * deltaTime / 1000;
+                
+                // Apply drag to slow down the NPC
+                npc.vx *= 0.98;
+                npc.vy *= 0.98;
+                
+                // Stop the NPC if it's moving very slowly
+                if (Math.abs(npc.vx) < 0.1 && Math.abs(npc.vy) < 0.1) {
+                    npc.vx = 0;
+                    npc.vy = 0;
+                }
+                
+                // Check if NPC has moved to a different chunk
+                const newChunkX = Math.floor(npc.x / (chunkManager.chunkSize * renderer.tileSize));
+                const newChunkY = Math.floor(npc.y / (chunkManager.chunkSize * renderer.tileSize));
+                if (newChunkX !== x || newChunkY !== y) {
+                    // Remove NPC from current chunk
+                    chunk.npcs = chunk.npcs.filter(n => n !== npc);
+                    // Add NPC to new chunk
+                    const newChunk = chunkManager.getChunk(newChunkX, newChunkY);
+                    if (newChunk) {
+                        if (!newChunk.npcs) {
+                            newChunk.npcs = [];
+                        }
+                        newChunk.npcs.push(npc);
                     }
-                });
+                }
             }
-        } else {
-            console.warn(`Missing chunk at (${x}, ${y})`);
-        }
-    });
+        });
+    }
+});
     
     renderer.renderUFO(ufo);
     renderer.drawBeam(ufo);
@@ -399,7 +416,7 @@ if (ufo.beam.isActive) {
                 const dy = npcGlobalY - beamEnd.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 
-                if (distance < renderer.tileSize / 2) {  // Interaction radius is half a tile
+                if (distance < renderer.tileSize * 0.8) {  // Increased interaction radius
                     if (!ufo.capturedNPC) {
                         ufo.captureNPC(npc);
                         chunk.npcs.splice(index, 1);
