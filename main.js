@@ -108,10 +108,8 @@ function handleKeyUp(e) {
     keys.delete(e.key.toLowerCase());
     updateUFOMovement();
 
-    // Handle beam deactivation and NPC release
     if (e.key === ' ') { // Space key
         ufo.deactivateBeam();
-        ufo.releaseNPC();
     }
 }
 
