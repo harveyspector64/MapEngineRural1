@@ -1,3 +1,6 @@
+// src/entities/UFO.js
+import Beam from './Beam.js';
+
 export default class UFO {
     constructor(x, y, speed = 5) {
         this.x = x;
