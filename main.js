@@ -37,6 +37,7 @@ let interactiveObjectManager;
 let lastTimestamp = 0;
 let lastMousePosition = { x: 0, y: 0 };
 let lastMouseMoveTime = 0;
+let mouseVelocity = { x: 0, y: 0 };
 
 // Set to store currently pressed keys
 const keys = new Set();
@@ -275,7 +276,6 @@ function handleMouseUp(e) {
 
         if (distToUfo <= ufo.radius && ufo.beam.length <= ufo.beam.minLength) {
             ufo.eatObject(ufo.beam.capturedObject);
-            ufo.beam.releaseObject();
         } else {
             const throwVelocity = {
                 x: mouseVelocity.x * 0.5,
@@ -293,22 +293,19 @@ function handleMouseUp(e) {
 }
 
 // Update beam position and length based on mouse position
-function updateBeamFromMouse(e) {
+function updateBeamFromMouse(mousePosition) {
     const ufoPos = ufo.getPosition();
     const dx = mousePosition.x - ufoPos.x;
     const dy = mousePosition.y - ufoPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // Define the UFO's radius (adjust this value as needed)
     const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
 
     if (distance > ufoRadius) {
-        // Beam is outside the UFO
         ufo.setBeamDirection(dx / distance, dy / distance);
         ufo.setBeamLength(distance - ufoRadius);
-        console.log(`Beam activated and directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
+        console.log(`Beam directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
     } else {
-        // Beam is inside or at the edge of the UFO
         ufo.setBeamLength(0);
         console.log('Beam fully retracted');
     }
