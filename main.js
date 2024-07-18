@@ -227,7 +227,6 @@ function handleWheel(e) {
 }
 
 // Handle mouse button press
-// Modify the mousedown event listener
 function handleMouseDown(e) {
     if (e.button === 0) { // Left click
         e.preventDefault();
@@ -306,13 +305,21 @@ function handleObjectEaten(object) {
 }
 
 // Update beam position and length based on mouse position
-function updateBeamFromMouse(mousePosition) {
+function updateBeamFromMouse(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) / zoomLevel + cameraX;
+    const mouseY = (e.clientY - rect.top) / zoomLevel + cameraY;
+    
     const ufoPos = ufo.getPosition();
-    const dx = mousePosition.x - ufoPos.x;
-    const dy = mousePosition.y - ufoPos.y;
+    const dx = mouseX - ufoPos.x;
+    const dy = mouseY - ufoPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
     const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
+
+    console.log(`Mouse position: (${mouseX.toFixed(2)}, ${mouseY.toFixed(2)})`);
+    console.log(`UFO position: (${ufoPos.x.toFixed(2)}, ${ufoPos.y.toFixed(2)})`);
+    console.log(`Beam direction: (${dx.toFixed(2)}, ${dy.toFixed(2)})`);
 
     if (distance > ufoRadius) {
         ufo.setBeamDirection(dx / distance, dy / distance);
