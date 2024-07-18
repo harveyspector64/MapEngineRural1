@@ -87,7 +87,6 @@ export default class UFO {
         }
         return false;
     }
-}
 
     flashEffect() {
         this.isFlashing = true;
