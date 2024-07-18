@@ -66,6 +66,7 @@ export default class UFO {
 
         eatObject(object) {
         console.log("UFO ate object:", object);
+        this.flashEffect();
         // Add any effects or scoring here
         // For now, we'll just make the object disappear
         const chunkKey = getChunkKeyForPosition(object.x, object.y);
@@ -80,6 +81,14 @@ export default class UFO {
     setBeamDirection(dx, dy) {
         this.beam.setDirection(dx, dy);
     }
+
+    flashEffect() {
+        this.isFlashing = true;
+        setTimeout(() => {
+            this.isFlashing = false;
+        }, 200); // Flash for 200ms
+    }
+
 
     setBeamLength(length) {
         this.beam.setLength(length);
