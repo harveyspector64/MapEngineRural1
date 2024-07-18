@@ -20,6 +20,8 @@ export class InteractiveObject {
         this.isMoving = false;
         this.moveDirection = Math.random() * Math.PI * 2;
         this.moveSpeed = 5 + Math.random() * 5; // 5-10 pixels per second
+        this.rotation = 0;
+        this.angularVelocity = 0;
     }
 
     update(deltaTime) {
@@ -27,6 +29,8 @@ export class InteractiveObject {
             if (this.type === OBJECT_TYPES.CANOE && this.isMoving) {
                 this.x += Math.cos(this.moveDirection) * this.moveSpeed * deltaTime;
                 this.y += Math.sin(this.moveDirection) * this.moveSpeed * deltaTime;
+                this.rotation += this.angularVelocity * deltaTime;
+                this.angularVelocity *= 0.98; // Angular friction
 
                 // Randomly change direction occasionally
                 if (Math.random() < 0.01) {
@@ -56,6 +60,15 @@ export class InteractiveObject {
 
     getPosition() {
         return { x: this.x, y: this.y };
+    }
+
+        checkGroundCollision(groundY) {
+        if (this.y > groundY) {
+            this.y = groundY;
+            this.velocity.y *= -0.6; // Bounce factor
+            this.angularVelocity += this.velocity.x * 0.1; // Add spin based on horizontal velocity
+            this.velocity.x *= 0.8; // Friction with ground
+        }
     }
 }
 
