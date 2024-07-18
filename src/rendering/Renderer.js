@@ -35,18 +35,15 @@ async loadSprites(tileTypes) {
 
 renderChunk(chunk) {
     if (!chunk || !chunk.terrain) {
-        console.error("Attempted to render invalid chunk:", chunk);
-        return;
-    }
-
-    const { x: chunkX, y: chunkY, terrain } = chunk;
-    const chunkPixelSize = terrain.length * this.tileSize;
-    const offsetX = (chunkX * chunkPixelSize - this.cameraX) * this.zoomLevel;
-    const offsetY = (chunkY * chunkPixelSize - this.cameraY) * this.zoomLevel;
-
-    // Only render if the chunk is visible
-    if (offsetX + chunkPixelSize * this.zoomLevel < 0 || offsetX > this.canvas.width ||
-        offsetY + chunkPixelSize * this.zoomLevel < 0 || offsetY > this.canvas.height) {
+        // Render a placeholder for missing chunks
+        const chunkSize = this.chunkManager.chunkSize * this.tileSize;
+        this.ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';  // Light gray, semi-transparent
+        this.ctx.fillRect(
+            (chunk.x * chunkSize - this.cameraX) * this.zoomLevel,
+            (chunk.y * chunkSize - this.cameraY) * this.zoomLevel,
+            chunkSize * this.zoomLevel,
+            chunkSize * this.zoomLevel
+        );
         return;
     }
 
