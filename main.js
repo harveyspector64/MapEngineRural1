@@ -35,6 +35,8 @@ let mousePosition = { x: 0, y: 0 };
 let isMouseDown = false;
 let interactiveObjectManager;
 let lastTimestamp = 0;
+let lastMousePosition = { x: 0, y: 0 };
+let lastMouseMoveTime = 0;
 
 // Set to store currently pressed keys
 const keys = new Set();
@@ -237,18 +239,42 @@ function handleMouseDown(e) {
 // Handle mouse movement
 function handleMouseMove(e) {
     const rect = canvas.getBoundingClientRect();
-    mousePosition.x = (e.clientX - rect.left) / zoomLevel + cameraX;
-    mousePosition.y = (e.clientY - rect.top) / zoomLevel + cameraY;
+    const currentMousePosition = {
+        x: (e.clientX - rect.left) / zoomLevel + cameraX,
+        y: (e.clientY - rect.top) / zoomLevel + cameraY
+    };
 
     if (isMouseDown) {
-        updateBeamFromMouse(e);
+        updateBeamFromMouse(currentMousePosition);
     }
+
+    const currentTime = performance.now();
+    const timeDelta = currentTime - lastMouseMoveTime;
+
+    if (timeDelta > 0) {
+        mouseVelocity = {
+            x: (currentMousePosition.x - lastMousePosition.x) / timeDelta * 1000,
+            y: (currentMousePosition.y - lastMousePosition.y) / timeDelta * 1000
+        };
+    }
+
+    lastMousePosition = currentMousePosition;
+    lastMouseMoveTime = currentTime;
 }
+
 
 // Call this function when the beam is deactivated (e.g., in handleMouseUp)
 function handleMouseUp(e) {
     isMouseDown = false;
-    handleBeamRelease();
+    const throwVelocity = {
+        x: mouseVelocity.x * 0.5, // Adjust this multiplier to change throw strength
+        y: mouseVelocity.y * 0.5
+    };
+    const releasedObject = ufo.beam.releaseObject(throwVelocity);
+    if (releasedObject) {
+        const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
+        interactiveObjectManager.addObject(releasedObject, chunkKey);
+    }
     ufo.deactivateBeam();
     console.log('Beam deactivated');
 }
