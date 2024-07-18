@@ -57,7 +57,7 @@ export default class Beam {
                 Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
             );
 
-            if (distToUfo <= this.ufo.radius && this.length <= this.minLength) {
+            if (distToUfo <= this.ufoRadius && this.length <= this.minLength) {
                 if (this.ufo.eatObject(this.capturedObject)) {
                     console.log("Object eaten by UFO");
                     this.capturedObject = null;
@@ -65,15 +65,21 @@ export default class Beam {
                 }
             }
 
+            console.log("Object released:", this.capturedObject);
+            this.capturedObject.isBeingAbducted = false;
+            
+            // Apply throw velocity
+            this.capturedObject.velocity = {
+                x: throwVelocity.x,
+                y: throwVelocity.y
+            };
+            
             const releasedObject = this.capturedObject;
-            releasedObject.velocity = throwVelocity;
-            releasedObject.isBeingAbducted = false;
             this.capturedObject = null;
             return releasedObject;
         }
         return null;
     }
-}
 
     update(deltaTime) {
         if (this.capturedObject) {
