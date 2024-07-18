@@ -228,12 +228,29 @@ function handleWheel(e) {
 
 // Handle mouse button press
 function handleMouseDown(e) {
-    if (e.button === 0) { // Left click
-        e.preventDefault();
-        isMouseDown = true;
-        ufo.activateBeam();
-        updateBeamFromMouse(e);
-    }
+  if (e.button === 0) { // Left click
+    e.preventDefault();
+    isMouseDown = true;
+    ufo.activateBeam();
+    updateBeamFromMouse(e);
+    
+    // Add these lines
+    document.addEventListener('mousemove', handleMouseMoveWhileDown);
+    document.addEventListener('mouseup', handleMouseUpWhileDown);
+  }
+}
+
+function handleMouseMoveWhileDown(e) {
+  if (isMouseDown) {
+    updateBeamFromMouse(e);
+  }
+}
+
+function handleMouseUpWhileDown(e) {
+  isMouseDown = false;
+  ufo.deactivateBeam();
+  document.removeEventListener('mousemove', handleMouseMoveWhileDown);
+  document.removeEventListener('mouseup', handleMouseUpWhileDown);
 }
 
 // Handle mouse movement
@@ -306,20 +323,17 @@ function handleObjectEaten(object) {
 
 // Update beam position and length based on mouse position
 function updateBeamFromMouse(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) / zoomLevel + cameraX;
-    const mouseY = (e.clientY - rect.top) / zoomLevel + cameraY;
-    
-    const ufoPos = ufo.getPosition();
-    const dx = mouseX - ufoPos.x;
-    const dy = mouseY - ufoPos.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
-
-    console.log(`Mouse position: (${mouseX.toFixed(2)}, ${mouseY.toFixed(2)})`);
-    console.log(`UFO position: (${ufoPos.x.toFixed(2)}, ${ufoPos.y.toFixed(2)})`);
-    console.log(`Beam direction: (${dx.toFixed(2)}, ${dy.toFixed(2)})`);
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = (e.clientX - rect.left) / zoomLevel + cameraX;
+  const mouseY = (e.clientY - rect.top) / zoomLevel + cameraY;
+  
+  const ufoPos = ufo.getPosition();
+  const dx = mouseX - ufoPos.x;
+  const dy = mouseY - ufoPos.y;
+  
+  console.log(`Mouse world pos: (${mouseX.toFixed(2)}, ${mouseY.toFixed(2)})`);
+  console.log(`UFO world pos: (${ufoPos.x.toFixed(2)}, ${ufoPos.y.toFixed(2)})`);
+  console.log(`Raw direction: (${dx.toFixed(2)}, ${dy.toFixed(2)})`);
 
     if (distance > ufoRadius) {
         ufo.setBeamDirection(dx / distance, dy / distance);
