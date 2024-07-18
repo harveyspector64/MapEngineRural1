@@ -16,49 +16,46 @@ export default class ChunkManager {
         console.log(`ChunkManager initialized with viewport: ${viewportWidth}x${viewportHeight}, chunkSize: ${chunkSize}`);
     }
 
- updateViewport(centerX, centerY) {
-    console.log(`Updating viewport. Center: (${centerX}, ${centerY}), Zoom: ${this.zoomLevel}`);
+updateViewport(centerX, centerY) {
     const visibleChunks = this.getVisibleChunkCoordinates(centerX, centerY);
+    let newChunks = 0;
+    let reloadedChunks = 0;
     
     visibleChunks.forEach(({x, y}) => {
         const key = `${x},${y}`;
         if (!this.loadedChunks.has(key)) {
             if (this.recentlyUnloaded.has(key)) {
-                console.log(`Reloading cached chunk at (${x}, ${y})`);
                 this.loadedChunks.set(key, this.recentlyUnloaded.get(key));
                 this.recentlyUnloaded.delete(key);
+                reloadedChunks++;
             } else {
-                console.log(`Generating new chunk at (${x}, ${y})`);
                 const chunk = this.generateChunk(x, y);
                 this.loadedChunks.set(key, chunk);
+                newChunks++;
             }
         }
     });
 
-    // Log all currently loaded chunks
-    console.log("Currently loaded chunks:");
+    let unloadedChunks = 0;
     this.loadedChunks.forEach((chunk, key) => {
-        console.log(`Chunk ${key}: ${JSON.stringify(chunk)}`);
+        const [x, y] = key.split(',').map(Number);
+        if (!visibleChunks.some(vc => vc.x === x && vc.y === y)) {
+            this.recentlyUnloaded.set(key, chunk);
+            this.loadedChunks.delete(key);
+            unloadedChunks++;
+        }
     });
 
-        // Unload chunks that are no longer visible
-        this.loadedChunks.forEach((chunk, key) => {
-            const [x, y] = key.split(',').map(Number);
-            if (!visibleChunks.some(vc => vc.x === x && vc.y === y)) {
-                console.log(`Unloading chunk at (${x}, ${y})`);
-                this.recentlyUnloaded.set(key, chunk);
-                this.loadedChunks.delete(key);
-            }
-        });
-
-        // Limit the size of recentlyUnloaded cache
-        while (this.recentlyUnloaded.size > 20) {
-            const oldestKey = this.recentlyUnloaded.keys().next().value;
-            this.recentlyUnloaded.delete(oldestKey);
-        }
-
-        console.log(`Total loaded chunks: ${this.loadedChunks.size}, Recently unloaded: ${this.recentlyUnloaded.size}`);
+    // Limit the size of recentlyUnloaded cache
+    while (this.recentlyUnloaded.size > 20) {
+        const oldestKey = this.recentlyUnloaded.keys().next().value;
+        this.recentlyUnloaded.delete(oldestKey);
     }
+
+    if (newChunks > 0 || reloadedChunks > 0 || unloadedChunks > 0) {
+        console.log(`Chunks updated: ${newChunks} new, ${reloadedChunks} reloaded, ${unloadedChunks} unloaded. Total: ${this.loadedChunks.size}`);
+    }
+}
 
     getVisibleChunkCoordinates(centerX, centerY) {
         const chunkCenterX = Math.floor(centerX / (this.chunkSize * 16));
