@@ -22,12 +22,15 @@ export default class Beam {
         this.releaseObject();
     }
 
-    setDirection(dx, dy) {
-        const length = Math.sqrt(dx * dx + dy * dy);
-        if (length !== 0) {
-            this.direction = { x: dx / length, y: dy / length };
-        }
+setDirection(dx, dy) {
+    const length = Math.sqrt(dx * dx + dy * dy);
+    if (length !== 0) {
+        this.direction = { x: dx / length, y: dy / length };
+        console.log(`Beam direction set to: (${this.direction.x.toFixed(2)}, ${this.direction.y.toFixed(2)})`);
+    } else {
+        console.warn('Attempted to set beam direction with zero length vector');
     }
+}
 
     setLength(length) {
         this.length = Math.max(this.minLength, Math.min(length, this.maxLength));
