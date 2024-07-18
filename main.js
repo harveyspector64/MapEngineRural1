@@ -64,6 +64,7 @@ async function init() {
     ufo.onObjectEaten = handleObjectEaten;
     
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
+    setupBeamHandlers(); // Added to fix beam issues
     joystick = new VirtualJoystick(canvas);
 
     interactiveObjectManager = new InteractiveObjectManager();
@@ -296,9 +297,14 @@ function handleMouseUp(e) {
 
 // Add this function to handle object eating
 function handleObjectEaten(object) {
-    console.log("Handling eaten object:", object);
-    const chunkKey = getChunkKeyForPosition(object.x, object.y);
-    interactiveObjectManager.removeObject(object, chunkKey);
+    console.log("Object eaten by UFO:", object);
+    if (object && typeof object.x === 'number' && typeof object.y === 'number') {
+        const chunkKey = getChunkKeyForPosition(object.x, object.y);
+        interactiveObjectManager.removeObject(object, chunkKey);
+        console.log("Object removed from game world");
+    } else {
+        console.error("Invalid object eaten:", object);
+    }
 }
 
 // Update beam position and length based on mouse position
@@ -588,24 +594,14 @@ function handleObjectAbducted(object) {
     }
 }
 
-function handleObjectEaten(object) {
-    console.log("Object eaten by UFO:", object);
-    const chunkKey = getChunkKeyForPosition(object.x, object.y);
-    interactiveObjectManager.removeObject(object, chunkKey);
-}
-
 function handleObjectReleased(object) {
     console.log("Object released:", object);
-    const chunkKey = getChunkKeyForPosition(object.x, object.y);
-    interactiveObjectManager.addObject(object, chunkKey);
-}
-
-function handleBeamRelease() {
-    if (ufo.beam.capturedObject) {
-        const object = ufo.beam.capturedObject;
+    if (object && typeof object.x === 'number' && typeof object.y === 'number') {
         const chunkKey = getChunkKeyForPosition(object.x, object.y);
         interactiveObjectManager.addObject(object, chunkKey);
-        ufo.beam.releaseObject();
+        console.log("Object added/kept in game world");
+    } else {
+        console.error("Invalid object released:", object);
     }
 }
 
