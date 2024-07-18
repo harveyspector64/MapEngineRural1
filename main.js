@@ -61,13 +61,14 @@ async function init() {
     // Initialize game components
     worldManager = new WorldManager(Math.random());
     chunkManager = new ChunkManager(canvas.width, canvas.height);
-    ufo.onObjectEaten = handleObjectEaten;
     
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
-    setupBeamHandlers(); // Added to fix beam issues
     joystick = new VirtualJoystick(canvas);
 
     interactiveObjectManager = new InteractiveObjectManager();
+
+    // Set up beam handlers after UFO is initialized
+    setupBeamHandlers();
 
     // Set initial camera position
     cameraX = ufo.x - canvas.width / 2;
@@ -85,9 +86,6 @@ async function init() {
 
     // Initialize interactive objects
     initializeInteractiveObjects();
-
-    // Setup beam handlers
-    setupBeamHandlers();
 
     console.log("Game initialized. Starting render loop and setting up controls.");
     // Start the render loop
