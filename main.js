@@ -507,15 +507,18 @@ function checkBeamInteractions() {
                 );
                 
                 if (distance < renderer.tileSize / 2) {  // If object is within capture range
-                    if (obj.type === OBJECT_TYPES.CANOE) {
-                        // Replace canoe with empty canoe and create fisherman
-                        const emptyCanoe = createInteractiveObject(OBJECT_TYPES.EMPTY_CANOE, objPos.x, objPos.y);
-                        const fisherman = createInteractiveObject(OBJECT_TYPES.FISHERMAN, objPos.x, objPos.y);
-                        interactiveObjectManager.removeObject(obj, chunkKey);
-                        interactiveObjectManager.addObject(emptyCanoe, chunkKey);
-                        ufo.beam.captureObject(fisherman);
-                    } else {
-                        ufo.beam.captureObject(obj);
+if (obj.type === OBJECT_TYPES.CANOE) {
+    // Replace canoe with empty canoe and create fisherman
+    const emptyCanoe = createInteractiveObject(OBJECT_TYPES.EMPTY_CANOE, objPos.x, objPos.y);
+    const fisherman = createInteractiveObject(OBJECT_TYPES.FISHERMAN, objPos.x, objPos.y);
+    interactiveObjectManager.removeObject(obj, chunkKey);
+    interactiveObjectManager.addObject(emptyCanoe, chunkKey);
+    ufo.beam.captureObject(fisherman);
+    interactiveObjectManager.addObject(fisherman, chunkKey); // Add this line
+    console.log("Fisherman captured:", fisherman);
+} else {
+    ufo.beam.captureObject(obj);
+}
                     }
                     console.log(`Captured object: ${obj.type}`);
                     break;
