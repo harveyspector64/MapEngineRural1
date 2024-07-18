@@ -15,6 +15,8 @@ export default class UFO {
         this.maxSpeed = 35;
         this.friction = 0.82;
         this.beam = new Beam(this);
+        this.radius = 16; // Assuming UFO sprite is 32x32 pixels
+        this.isFlashing = false;
     }
 
     update(deltaTime) {
@@ -64,16 +66,6 @@ export default class UFO {
         this.beam.activate();
     }
 
-        eatObject(object) {
-        console.log("UFO ate object:", object);
-        this.flashEffect();
-        // Add any effects or scoring here
-        // For now, we'll just make the object disappear
-        const chunkKey = getChunkKeyForPosition(object.x, object.y);
-        interactiveObjectManager.removeObject(object, chunkKey);
-    }
-}
-
     deactivateBeam() {
         this.beam.deactivate();
     }
@@ -82,15 +74,21 @@ export default class UFO {
         this.beam.setDirection(dx, dy);
     }
 
+    setBeamLength(length) {
+        this.beam.setLength(length);
+    }
+
+    eatObject(object) {
+        console.log("UFO ate object:", object);
+        this.flashEffect();
+        // Add any effects or scoring here
+        // The actual removal of the object should be handled in the game loop
+    }
+
     flashEffect() {
         this.isFlashing = true;
         setTimeout(() => {
             this.isFlashing = false;
         }, 200); // Flash for 200ms
-    }
-
-
-    setBeamLength(length) {
-        this.beam.setLength(length);
     }
 }
