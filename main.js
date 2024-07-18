@@ -61,6 +61,7 @@ async function init() {
     // Initialize game components
     worldManager = new WorldManager(Math.random());
     chunkManager = new ChunkManager(canvas.width, canvas.height);
+    ufo.onObjectEaten = handleObjectEaten;
     
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
     joystick = new VirtualJoystick(canvas);
@@ -276,6 +277,7 @@ function handleMouseUp(e) {
 
         if (distToUfo <= ufo.radius && ufo.beam.length <= ufo.beam.minLength) {
             ufo.eatObject(ufo.beam.capturedObject);
+            ufo.beam.releaseObject(); // Release the object after eating
         } else {
             const throwVelocity = {
                 x: mouseVelocity.x * 0.5,
@@ -290,6 +292,13 @@ function handleMouseUp(e) {
     }
     ufo.deactivateBeam();
     console.log('Beam deactivated');
+}
+
+// Add this function to handle object eating
+function handleObjectEaten(object) {
+    console.log("Handling eaten object:", object);
+    const chunkKey = getChunkKeyForPosition(object.x, object.y);
+    interactiveObjectManager.removeObject(object, chunkKey);
 }
 
 // Update beam position and length based on mouse position
