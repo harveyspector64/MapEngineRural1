@@ -77,19 +77,24 @@ renderChunk(chunk) {
     }
 }
 
-    renderUFO(ufo) {
-        const sprite = this.sprites['ufo'];
-        if (sprite) {
-            const { x, y } = ufo.getPosition();
-            this.ctx.save();
-            this.ctx.translate((x - this.cameraX) * this.zoomLevel, (y - this.cameraY) * this.zoomLevel);
-            this.ctx.rotate(ufo.rotation);
-            this.ctx.drawImage(sprite, -16 * this.zoomLevel, -16 * this.zoomLevel, 32 * this.zoomLevel, 32 * this.zoomLevel);
-            this.ctx.restore();
-        } else {
-            console.warn("Missing UFO sprite");
+renderUFO(ufo) {
+    const sprite = this.sprites['ufo'];
+    if (sprite) {
+        const { x, y } = ufo.getPosition();
+        this.ctx.save();
+        this.ctx.translate((x - this.cameraX) * this.zoomLevel, (y - this.cameraY) * this.zoomLevel);
+        this.ctx.rotate(ufo.rotation);
+        
+        if (ufo.isFlashing) {
+            this.ctx.globalAlpha = 0.7;
+            this.ctx.drawImage(sprite, -20 * this.zoomLevel, -20 * this.zoomLevel, 40 * this.zoomLevel, 40 * this.zoomLevel);
+            this.ctx.globalAlpha = 1.0;
         }
+        
+        this.ctx.drawImage(sprite, -16 * this.zoomLevel, -16 * this.zoomLevel, 32 * this.zoomLevel, 32 * this.zoomLevel);
+        this.ctx.restore();
     }
+}
 
     renderInteractiveObject(obj) {
         const sprite = this.sprites[obj.sprite];
