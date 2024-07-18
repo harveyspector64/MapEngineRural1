@@ -78,11 +78,12 @@ export default class UFO {
         this.beam.setLength(length);
     }
 
-    eatObject(object) {
+     eatObject(object) {
         console.log("UFO ate object:", object);
         this.flashEffect();
-        // Add any effects or scoring here
-        // The actual removal of the object should be handled in the game loop
+        if (typeof this.onObjectEaten === 'function') {
+            this.onObjectEaten(object);
+        }
     }
 
     flashEffect() {
