@@ -64,6 +64,15 @@ export default class UFO {
         this.beam.activate();
     }
 
+        eatObject(object) {
+        console.log("UFO ate object:", object);
+        // Add any effects or scoring here
+        // For now, we'll just make the object disappear
+        const chunkKey = getChunkKeyForPosition(object.x, object.y);
+        interactiveObjectManager.removeObject(object, chunkKey);
+    }
+}
+
     deactivateBeam() {
         this.beam.deactivate();
     }
