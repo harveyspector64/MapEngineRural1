@@ -266,14 +266,27 @@ function handleMouseMove(e) {
 // Call this function when the beam is deactivated (e.g., in handleMouseUp)
 function handleMouseUp(e) {
     isMouseDown = false;
-    const throwVelocity = {
-        x: mouseVelocity.x * 0.5, // Adjust this multiplier to change throw strength
-        y: mouseVelocity.y * 0.5
-    };
-    const releasedObject = ufo.beam.releaseObject(throwVelocity);
-    if (releasedObject) {
-        const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
-        interactiveObjectManager.addObject(releasedObject, chunkKey);
+    if (ufo.beam.capturedObject) {
+        const ufoPos = ufo.getPosition();
+        const objPos = ufo.beam.capturedObject.getPosition();
+        const distToUfo = Math.sqrt(
+            Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
+        );
+
+        if (distToUfo <= ufo.radius && ufo.beam.length <= ufo.beam.minLength) {
+            ufo.eatObject(ufo.beam.capturedObject);
+            ufo.beam.releaseObject();
+        } else {
+            const throwVelocity = {
+                x: mouseVelocity.x * 0.5,
+                y: mouseVelocity.y * 0.5
+            };
+            const releasedObject = ufo.beam.releaseObject(throwVelocity);
+            if (releasedObject) {
+                const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
+                interactiveObjectManager.addObject(releasedObject, chunkKey);
+            }
+        }
     }
     ufo.deactivateBeam();
     console.log('Beam deactivated');
