@@ -78,13 +78,16 @@ export default class UFO {
         this.beam.setLength(length);
     }
 
-     eatObject(object) {
-        console.log("UFO ate object:", object);
-        this.flashEffect();
-        if (typeof this.onObjectEaten === 'function') {
+    eatObject(object) {
+        console.log("UFO attempting to eat object:", object);
+        if (this.onObjectEaten) {
             this.onObjectEaten(object);
+            this.flashEffect();
+            return true;
         }
+        return false;
     }
+}
 
     flashEffect() {
         this.isFlashing = true;
