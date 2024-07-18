@@ -83,10 +83,16 @@ updateViewport(centerX, centerY) {
         return visibleChunks;
     }
 
-    getChunk(x, y) {
-        const key = `${x},${y}`;
-        return this.loadedChunks.get(key) || this.recentlyUnloaded.get(key);
+getChunk(x, y) {
+    const key = `${x},${y}`;
+    const chunk = this.loadedChunks.get(key) || this.recentlyUnloaded.get(key);
+    if (!chunk) {
+        console.warn(`Chunk not found: (${x}, ${y})`);
+    } else if (!chunk.terrain) {
+        console.error(`Chunk found but has no terrain: (${x}, ${y})`, chunk);
     }
+    return chunk;
+}
 
     generateChunk(x, y) {
         const chunkSeed = this.worldManager.getChunkSeed(x, y);
