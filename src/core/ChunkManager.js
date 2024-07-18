@@ -16,46 +16,56 @@ export default class ChunkManager {
         console.log(`ChunkManager initialized with viewport: ${viewportWidth}x${viewportHeight}, chunkSize: ${chunkSize}`);
     }
 
-    updateViewport(centerX, centerY) {
-        const visibleChunks = this.getVisibleChunkCoordinates(centerX, centerY);
-        let newChunks = 0;
-        let reloadedChunks = 0;
-        
-        visibleChunks.forEach(({x, y}) => {
-            const key = `${x},${y}`;
-            if (!this.loadedChunks.has(key)) {
-                if (this.recentlyUnloaded.has(key)) {
-                    this.loadedChunks.set(key, this.recentlyUnloaded.get(key));
-                    this.recentlyUnloaded.delete(key);
-                    reloadedChunks++;
-                } else {
-                    const chunk = this.generateChunk(x, y);
-                    this.loadedChunks.set(key, chunk);
-                    newChunks++;
+updateViewport(centerX, centerY) {
+    const visibleChunks = this.getVisibleChunkCoordinates(centerX, centerY);
+    const bufferSize = 2; // Load 2 extra chunks in each direction
+    let newChunks = 0;
+    let reloadedChunks = 0;
+    
+    for (let dy = -bufferSize; dy <= bufferSize; dy++) {
+        for (let dx = -bufferSize; dx <= bufferSize; dx++) {
+            visibleChunks.forEach(({x, y}) => {
+                const bufferX = x + dx;
+                const bufferY = y + dy;
+                const key = `${bufferX},${bufferY}`;
+                
+                if (!this.loadedChunks.has(key)) {
+                    if (this.recentlyUnloaded.has(key)) {
+                        this.loadedChunks.set(key, this.recentlyUnloaded.get(key));
+                        this.recentlyUnloaded.delete(key);
+                        reloadedChunks++;
+                    } else {
+                        const chunk = this.generateChunk(bufferX, bufferY);
+                        this.loadedChunks.set(key, chunk);
+                        newChunks++;
+                    }
                 }
-            }
-        });
-
-        let unloadedChunks = 0;
-        this.loadedChunks.forEach((chunk, key) => {
-            const [x, y] = key.split(',').map(Number);
-            if (!visibleChunks.some(vc => vc.x === x && vc.y === y)) {
-                this.recentlyUnloaded.set(key, chunk);
-                this.loadedChunks.delete(key);
-                unloadedChunks++;
-            }
-        });
-
-        // Limit the size of recentlyUnloaded cache
-        while (this.recentlyUnloaded.size > 20) {
-            const oldestKey = this.recentlyUnloaded.keys().next().value;
-            this.recentlyUnloaded.delete(oldestKey);
-        }
-
-        if (newChunks > 0 || reloadedChunks > 0 || unloadedChunks > 0) {
-            console.log(`Chunks updated: ${newChunks} new, ${reloadedChunks} reloaded, ${unloadedChunks} unloaded. Total: ${this.loadedChunks.size}`);
+            });
         }
     }
+
+    // Unload chunks that are far from the visible area
+    this.loadedChunks.forEach((chunk, key) => {
+        const [x, y] = key.split(',').map(Number);
+        const isVisible = visibleChunks.some(vc => 
+            Math.abs(vc.x - x) <= bufferSize && Math.abs(vc.y - y) <= bufferSize
+        );
+        if (!isVisible) {
+            this.recentlyUnloaded.set(key, chunk);
+            this.loadedChunks.delete(key);
+        }
+    });
+
+    // Limit the size of recentlyUnloaded cache
+    while (this.recentlyUnloaded.size > 100) {
+        const oldestKey = this.recentlyUnloaded.keys().next().value;
+        this.recentlyUnloaded.delete(oldestKey);
+    }
+
+    if (newChunks > 0 || reloadedChunks > 0) {
+        console.log(`Chunks updated: ${newChunks} new, ${reloadedChunks} reloaded. Total: ${this.loadedChunks.size}`);
+    }
+}
 
     getVisibleChunkCoordinates(centerX, centerY) {
         const chunkCenterX = Math.floor(centerX / (this.chunkSize * 16));
