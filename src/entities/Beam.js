@@ -1,3 +1,5 @@
+// src/entities/Beam.js
+
 export default class Beam {
     constructor(ufo) {
         this.ufo = ufo;
@@ -62,7 +64,6 @@ export default class Beam {
         }
         return null;
     }
-}
 
     update(deltaTime) {
         if (this.capturedObject) {
