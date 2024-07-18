@@ -70,9 +70,10 @@ export default class UFO {
         this.beam.deactivate();
     }
 
-    setBeamDirection(dx, dy) {
-        this.beam.setDirection(dx, dy);
-    }
+setBeamDirection(dx, dy) {
+    console.log(`Setting beam direction: (${dx.toFixed(2)}, ${dy.toFixed(2)})`);
+    this.beam.setDirection(dx, dy);
+}
 
     setBeamLength(length) {
         this.beam.setLength(length);
