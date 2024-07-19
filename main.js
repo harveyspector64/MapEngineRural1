@@ -255,12 +255,12 @@ function handleMouseMove(e) {
 
     if (timeDelta > 0) {
         mouseVelocity = {
-            x: (currentMousePosition.x - lastMousePosition.x) / timeDelta * 1000,
-            y: (currentMousePosition.y - lastMousePosition.y) / timeDelta * 1000
+            x: (mousePosition.x - lastMousePosition.x) / timeDelta * 1000,
+            y: (mousePosition.y - lastMousePosition.y) / timeDelta * 1000
         };
     }
 
-    lastMousePosition = currentMousePosition;
+    lastMousePosition = { x: mousePosition.x, y: mousePosition.y };
     lastMouseMoveTime = currentTime;
 }
 
@@ -300,7 +300,7 @@ function updateBeamFromMouse(mousePosition) {
     const dy = mousePosition.y - ufoPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    const ufoRadius = UFO_RADIUS;  // Use the constant we defined earlier
+    const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
 
     if (distance > ufoRadius) {
         ufo.setBeamDirection(dx / distance, dy / distance);
