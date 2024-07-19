@@ -39,7 +39,6 @@ export class InteractiveObject {
             Physics.checkTerrainCollision(this, getTerrain, tileSize);
         }
     }
-}
 
     setPosition(x, y) {
         this.x = x;
@@ -72,9 +71,9 @@ export class InteractiveObjectManager {
         return this.objects.get(chunkKey) || [];
     }
 
-    updateObjects(deltaTime, chunkKey) {
+    updateObjects(deltaTime, chunkKey, getTerrain, tileSize) {
         const chunkObjects = this.getObjectsInChunk(chunkKey);
-        chunkObjects.forEach(obj => obj.update(deltaTime));
+        chunkObjects.forEach(obj => obj.update(deltaTime, getTerrain, tileSize));
     }
 
     removeObject(object, chunkKey) {
