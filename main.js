@@ -268,26 +268,18 @@ function handleMouseMove(e) {
 function handleMouseUp(e) {
     isMouseDown = false;
     if (ufo.beam.capturedObject) {
-        const ufoPos = ufo.getPosition();
-        const objPos = ufo.beam.capturedObject.getPosition();
-        const distToUfo = Math.sqrt(
-            Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
-        );
-
-        if (distToUfo <= ufo.radius && ufo.beam.length <= ufo.beam.minLength) {
-            ufo.eatObject(ufo.beam.capturedObject);
-        } else {
-            const THROW_STRENGTH = 1000;
-            const throwVelocity = {
-                x: mouseVelocity.x * THROW_STRENGTH,
-                y: mouseVelocity.y * THROW_STRENGTH
-            };
-            const releasedObject = ufo.beam.releaseObject(throwVelocity);
-            if (releasedObject) {
-                const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
-                interactiveObjectManager.addObject(releasedObject, chunkKey);
-                console.log("Object added back to chunk:", chunkKey, releasedObject);
-            }
+        const THROW_STRENGTH = 1000;
+        const throwVelocity = {
+            x: mouseVelocity.x * THROW_STRENGTH,
+            y: mouseVelocity.y * THROW_STRENGTH
+        };
+        console.log("Throw velocity:", throwVelocity);
+        
+        const releasedObject = ufo.beam.releaseObject(throwVelocity);
+        if (releasedObject) {
+            const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
+            interactiveObjectManager.addObject(releasedObject, chunkKey);
+            console.log("Object added back to chunk:", chunkKey, releasedObject);
         }
     }
     ufo.deactivateBeam();
@@ -506,8 +498,8 @@ function render(timestamp) {
         const chunk = chunkManager.getChunk(x, y);
         if (chunk) {
             renderer.renderChunk(chunk);
-            // Update and render interactive objects
             const objects = interactiveObjectManager.getObjectsInChunk(chunkKey);
+            console.log(`Rendering ${objects.length} objects in chunk ${chunkKey}`);
             objects.forEach(obj => {
                 obj.update(deltaTime);
                 renderer.renderInteractiveObject(obj);
@@ -516,6 +508,7 @@ function render(timestamp) {
             console.warn(`Missing chunk at (${x}, ${y})`);
         }
     });
+
     
     // Render UFO and beam
     renderer.renderUFO(ufo);
