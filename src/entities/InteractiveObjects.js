@@ -33,8 +33,10 @@ update(deltaTime) {
         this.velocity.x *= friction;
         this.velocity.y *= friction;
         
-        console.log(`Object ${this.type} moved from (${oldX.toFixed(2)}, ${oldY.toFixed(2)}) to (${this.x.toFixed(2)}, ${this.y.toFixed(2)})`);
-        console.log(`Current velocity: (${this.velocity.x.toFixed(2)}, ${this.velocity.y.toFixed(2)})`);
+        if (Math.abs(this.x - oldX) > 0.01 || Math.abs(this.y - oldY) > 0.01) {
+            console.log(`Object ${this.type} moved from (${oldX.toFixed(2)}, ${oldY.toFixed(2)}) to (${this.x.toFixed(2)}, ${this.y.toFixed(2)})`);
+            console.log(`Current velocity: (${this.velocity.x.toFixed(2)}, ${this.velocity.y.toFixed(2)})`);
+        }
     }
 }
 
