@@ -42,6 +42,10 @@ let mouseVelocity = { x: 0, y: 0 };
 // Set to store currently pressed keys
 const keys = new Set();
 
+// Constants
+const UFO_RADIUS = 16; // Assuming UFO sprite is 32x32 pixels
+const THROW_VELOCITY_MULTIPLIER = 0.5;
+
 // Initialize the game
 async function init() {
     console.log("Initializing game...");
