@@ -17,39 +17,39 @@ export class InteractiveObject {
         this.velocity = { x: 0, y: 0 };
         this.rotation = 0;
         this.angularVelocity = 0;
-        this.isMoving = false;
-        this.moveDirection = Math.random() * Math.PI * 2;
-        this.moveSpeed = 5 + Math.random() * 5; // 5-10 pixels per second
-        this.rotation = 0;
-        this.angularVelocity = 0;
     }
 
     update(deltaTime) {
         if (!this.isBeingAbducted) {
-            if (this.type === OBJECT_TYPES.CANOE && this.isMoving) {
-                this.x += Math.cos(this.moveDirection) * this.moveSpeed * deltaTime;
-                this.y += Math.sin(this.moveDirection) * this.moveSpeed * deltaTime;
-                this.rotation += this.angularVelocity * deltaTime;
-                this.angularVelocity *= 0.98; // Angular friction
-
-                // Randomly change direction occasionally
-                if (Math.random() < 0.01) {
-                    this.moveDirection = Math.random() * Math.PI * 2;
-                }
-            }
-
-            // Apply velocity (for throwing physics)
+            // Apply velocity
             this.x += this.velocity.x * deltaTime;
             this.y += this.velocity.y * deltaTime;
             
-            // Apply friction
-            const friction = 0.98;
+            // Apply friction (air resistance)
+            const friction = 0.99; // Increased from 0.98 to 0.99 for less drag
             this.velocity.x *= friction;
             this.velocity.y *= friction;
 
             // Apply rotation
             this.rotation += this.angularVelocity * deltaTime;
             this.angularVelocity *= friction;
+
+            // Optional: Add a "bounce" effect when hitting world boundaries
+            this.handleWorldBoundaries();
+        }
+    }
+
+    handleWorldBoundaries() {
+        const worldBoundary = 10000; // Adjust based on your world size
+        const bounceFactor = 0.8; // How much velocity is retained after bouncing
+
+        if (Math.abs(this.x) > worldBoundary) {
+            this.x = Math.sign(this.x) * worldBoundary;
+            this.velocity.x *= -bounceFactor;
+        }
+        if (Math.abs(this.y) > worldBoundary) {
+            this.y = Math.sign(this.y) * worldBoundary;
+            this.velocity.y *= -bounceFactor;
         }
     }
 
