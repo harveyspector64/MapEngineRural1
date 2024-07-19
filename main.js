@@ -276,11 +276,10 @@ function handleMouseUp(e) {
 
         if (distToUfo <= ufo.radius && ufo.beam.length <= ufo.beam.minLength) {
             ufo.eatObject(ufo.beam.capturedObject);
-            ufo.beam.releaseObject(); // Release the object after eating
         } else {
             const throwVelocity = {
-                x: mouseVelocity.x * 0.5,
-                y: mouseVelocity.y * 0.5
+                x: mouseVelocity.x * THROW_VELOCITY_MULTIPLIER,
+                y: mouseVelocity.y * THROW_VELOCITY_MULTIPLIER
             };
             const releasedObject = ufo.beam.releaseObject(throwVelocity);
             if (releasedObject) {
