@@ -66,20 +66,14 @@ setDirection(dx, dy) {
                     this.capturedObject = null;
                     return null;
                 }
+            } else {
+                console.log("Object released:", this.capturedObject);
+                this.capturedObject.isBeingAbducted = false;
+                this.capturedObject.velocity = throwVelocity;
+                const releasedObject = this.capturedObject;
+                this.capturedObject = null;
+                return releasedObject;
             }
-
-            console.log("Object released:", this.capturedObject);
-            this.capturedObject.isBeingAbducted = false;
-            
-            // Apply throw velocity
-            this.capturedObject.velocity = {
-                x: throwVelocity.x,
-                y: throwVelocity.y
-            };
-            
-            const releasedObject = this.capturedObject;
-            this.capturedObject = null;
-            return releasedObject;
         }
         return null;
     }
