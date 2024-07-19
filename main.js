@@ -498,7 +498,8 @@ function render(timestamp) {
             renderer.renderChunk(chunk);
             const objects = interactiveObjectManager.getObjectsInChunk(chunkKey);
             objects.forEach(obj => {
-                obj.update(deltaTime, chunk.terrain, renderer.tileSize);
+                const getTerrain = (x, y) => chunkManager.getTerrainAt(x * renderer.tileSize, y * renderer.tileSize);
+                obj.update(deltaTime, getTerrain, renderer.tileSize);
                 renderer.renderInteractiveObject(obj);
             });
         } else {
