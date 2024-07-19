@@ -22,6 +22,11 @@ export default class Physics {
     }
 
     static checkTerrainCollision(object, getTerrain, tileSize) {
+        if (!object || typeof object.x !== 'number' || typeof object.y !== 'number') {
+            console.warn('Invalid object passed to checkTerrainCollision:', object);
+            return false;
+        }
+
         const tileX = Math.floor(object.x / tileSize);
         const tileY = Math.floor(object.y / tileSize);
 
@@ -54,24 +59,24 @@ export default class Physics {
     }
 
     static updateNPCMovement(npc, deltaTime, getTerrain, tileSize) {
-        if (npc.isMoving) {
-            const speed = npc.moveSpeed * deltaTime;
-            const newX = npc.x + Math.cos(npc.moveDirection) * speed;
-            const newY = npc.y + Math.sin(npc.moveDirection) * speed;
+        if (!npc || !npc.isMoving) return;
 
-            // Check if the new position is valid (not colliding with obstacles)
-            if (!this.checkTerrainCollision({ x: newX, y: newY }, getTerrain, tileSize)) {
-                npc.x = newX;
-                npc.y = newY;
-            } else {
-                // If collision occurred, change direction
-                npc.moveDirection = Math.random() * Math.PI * 2;
-            }
+        const speed = npc.moveSpeed * deltaTime;
+        const newX = npc.x + Math.cos(npc.moveDirection) * speed;
+        const newY = npc.y + Math.sin(npc.moveDirection) * speed;
 
-            // Randomly change direction occasionally
-            if (Math.random() < 0.02) {
-                npc.moveDirection = Math.random() * Math.PI * 2;
-            }
+        // Check if the new position is valid (not colliding with obstacles)
+        if (!this.checkTerrainCollision({ x: newX, y: newY, velocity: npc.velocity }, getTerrain, tileSize)) {
+            npc.x = newX;
+            npc.y = newY;
+        } else {
+            // If collision occurred, change direction
+            npc.moveDirection = Math.random() * Math.PI * 2;
+        }
+
+        // Randomly change direction occasionally
+        if (Math.random() < 0.02) {
+            npc.moveDirection = Math.random() * Math.PI * 2;
         }
     }
 }
