@@ -236,7 +236,6 @@ function handleMouseDown(e) {
     }
 }
 
-}
 
 // Handle mouse movement
 function handleMouseMove(e) {
