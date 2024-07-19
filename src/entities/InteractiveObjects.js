@@ -19,25 +19,24 @@ export class InteractiveObject {
         this.angularVelocity = 0;
     }
 
-    update(deltaTime) {
-        if (!this.isBeingAbducted) {
-            // Apply velocity
-            this.x += this.velocity.x * deltaTime;
-            this.y += this.velocity.y * deltaTime;
-            
-            // Apply friction (air resistance)
-            const friction = 0.99; // Increased from 0.98 to 0.99 for less drag
-            this.velocity.x *= friction;
-            this.velocity.y *= friction;
-
-            // Apply rotation
-            this.rotation += this.angularVelocity * deltaTime;
-            this.angularVelocity *= friction;
-
-            // Optional: Add a "bounce" effect when hitting world boundaries
-            this.handleWorldBoundaries();
-        }
+update(deltaTime) {
+    if (!this.isBeingAbducted) {
+        const oldX = this.x;
+        const oldY = this.y;
+        
+        // Apply velocity
+        this.x += this.velocity.x * deltaTime;
+        this.y += this.velocity.y * deltaTime;
+        
+        // Apply friction (air resistance)
+        const friction = 0.99;
+        this.velocity.x *= friction;
+        this.velocity.y *= friction;
+        
+        console.log(`Object ${this.type} moved from (${oldX.toFixed(2)}, ${oldY.toFixed(2)}) to (${this.x.toFixed(2)}, ${this.y.toFixed(2)})`);
+        console.log(`Current velocity: (${this.velocity.x.toFixed(2)}, ${this.velocity.y.toFixed(2)})`);
     }
+}
 
     handleWorldBoundaries() {
         const worldBoundary = 10000; // Adjust based on your world size
