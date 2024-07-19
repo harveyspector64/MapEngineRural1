@@ -236,17 +236,17 @@ function handleMouseDown(e) {
     }
 }
 
-
 // Handle mouse movement
 function handleMouseMove(e) {
     const rect = canvas.getBoundingClientRect();
-    mousePosition.x = (e.clientX - rect.left) / zoomLevel + cameraX;
-    mousePosition.y = (e.clientY - rect.top) / zoomLevel + cameraY;
+    const currentMousePosition = {
+        x: (e.clientX - rect.left) / zoomLevel + cameraX,
+        y: (e.clientY - rect.top) / zoomLevel + cameraY
+    };
 
     if (isMouseDown) {
         updateBeamFromMouse(e);
     }
-}
 
     const currentTime = performance.now();
     const timeDelta = currentTime - lastMouseMoveTime;
@@ -262,8 +262,7 @@ function handleMouseMove(e) {
     lastMouseMoveTime = currentTime;
 }
 
-
-// Call this function when the beam is deactivated (e.g., in handleMouseUp)
+// Handle mouse button release
 function handleMouseUp(e) {
     isMouseDown = false;
     if (ufo.beam.capturedObject) {
@@ -292,6 +291,28 @@ function handleMouseUp(e) {
     console.log('Beam deactivated');
 }
 
+// Update beam position and length based on mouse position
+function updateBeamFromMouse(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) / zoomLevel + cameraX;
+    const mouseY = (e.clientY - rect.top) / zoomLevel + cameraY;
+    
+    const ufoPos = ufo.getPosition();
+    const dx = mouseX - ufoPos.x;
+    const dy = mouseY - ufoPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
+
+    if (distance > ufoRadius) {
+        ufo.setBeamDirection(dx / distance, dy / distance);
+        ufo.setBeamLength(distance - ufoRadius);
+        console.log(`Beam directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
+    } else {
+        ufo.setBeamLength(0);
+        console.log('Beam fully retracted');
+    }
+}
 // Add this function to handle object eating
 function handleObjectEaten(object) {
     console.log("Object eaten by UFO:", object);
