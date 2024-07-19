@@ -21,7 +21,7 @@ export default class Physics {
         return { x: object.x, y: object.y, rotation: object.rotation };
     }
 
-    static checkTerrainCollision(object, terrain, tileSize) {
+    static checkTerrainCollision(object, getTerrain, tileSize) {
         const tileX = Math.floor(object.x / tileSize);
         const tileY = Math.floor(object.y / tileSize);
 
@@ -31,8 +31,8 @@ export default class Physics {
                 const checkX = tileX + dx;
                 const checkY = tileY + dy;
 
-                if (terrain[checkY] && terrain[checkY][checkX]) {
-                    const tile = terrain[checkY][checkX];
+                const tile = getTerrain(checkX, checkY);
+                if (tile) {
                     if (tile === 'water') {
                         // Object lands on water
                         object.x = (tileX + 0.5) * tileSize;
@@ -53,14 +53,14 @@ export default class Physics {
         return false;
     }
 
-    static updateNPCMovement(npc, deltaTime, terrain, tileSize) {
+    static updateNPCMovement(npc, deltaTime, getTerrain, tileSize) {
         if (npc.isMoving) {
             const speed = npc.moveSpeed * deltaTime;
             const newX = npc.x + Math.cos(npc.moveDirection) * speed;
             const newY = npc.y + Math.sin(npc.moveDirection) * speed;
 
             // Check if the new position is valid (not colliding with obstacles)
-            if (!this.checkTerrainCollision({ x: newX, y: newY }, terrain, tileSize)) {
+            if (!this.checkTerrainCollision({ x: newX, y: newY }, getTerrain, tileSize)) {
                 npc.x = newX;
                 npc.y = newY;
             } else {
