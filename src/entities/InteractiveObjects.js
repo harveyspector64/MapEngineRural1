@@ -1,5 +1,7 @@
 // src/entities/InteractiveObjects.js
 
+import Physics from '../core/Physics.js';
+
 export const OBJECT_TYPES = {
     COW: 'cow',
     CANOE: 'canoe',
@@ -16,36 +18,25 @@ export class InteractiveObject {
         this.isBeingAbducted = false;
         this.velocity = { x: 0, y: 0 };
         this.rotation = 0;
-        this.angularVelocity = 0;
-        this.isMoving = false;
+        this.isMoving = type === OBJECT_TYPES.COW || type === OBJECT_TYPES.CANOE;
         this.moveDirection = Math.random() * Math.PI * 2;
         this.moveSpeed = 5 + Math.random() * 5; // 5-10 pixels per second
     }
 
-    update(deltaTime) {
+    update(deltaTime, terrain, tileSize) {
         if (!this.isBeingAbducted) {
-            if (this.type === OBJECT_TYPES.CANOE && this.isMoving) {
-                this.x += Math.cos(this.moveDirection) * this.moveSpeed * deltaTime;
-                this.y += Math.sin(this.moveDirection) * this.moveSpeed * deltaTime;
-
-                // Randomly change direction occasionally
-                if (Math.random() < 0.01) {
-                    this.moveDirection = Math.random() * Math.PI * 2;
-                }
+            if (this.type === OBJECT_TYPES.CANOE || this.type === OBJECT_TYPES.COW) {
+                Physics.updateNPCMovement(this, deltaTime, terrain, tileSize);
             }
 
-            // Apply velocity (for throwing physics)
-            this.x += this.velocity.x * deltaTime;
-            this.y += this.velocity.y * deltaTime;
-            
-            // Apply friction
-            const friction = 0.98;
-            this.velocity.x *= friction;
-            this.velocity.y *= friction;
+            // Apply throwing physics
+            const updatedPosition = Physics.applyThrow(this, this.velocity, deltaTime);
+            this.x = updatedPosition.x;
+            this.y = updatedPosition.y;
+            this.rotation = updatedPosition.rotation;
 
-            // Apply rotation
-            this.rotation += this.angularVelocity * deltaTime;
-            this.angularVelocity *= friction;
+            // Check for terrain collision
+            Physics.checkTerrainCollision(this, terrain, tileSize);
         }
     }
 
