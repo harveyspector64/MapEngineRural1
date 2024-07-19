@@ -17,6 +17,7 @@ export default class UFO {
         this.beam = new Beam(this);
         this.radius = 16; // Assuming UFO sprite is 32x32 pixels
         this.isFlashing = false;
+        this.eatenObjects = []; // New property to store eaten objects
     }
 
     update(deltaTime) {
@@ -80,9 +81,16 @@ export default class UFO {
 
     eatObject(object) {
         console.log("UFO ate object:", object);
+        this.eatenObjects.push(object);
         this.flashEffect();
-        // Add any effects or scoring here
-        // The actual removal of the object should be handled in the game loop
+        // You can add any additional effects or scoring here
+    }
+
+        canEatObject(object) {
+        const distance = Math.sqrt(
+            Math.pow(object.x - this.x, 2) + Math.pow(object.y - this.y, 2)
+        );
+        return distance <= this.radius;
     }
 
     flashEffect() {
