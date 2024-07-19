@@ -273,13 +273,13 @@ function handleMouseUp(e) {
             x: mouseVelocity.x * THROW_STRENGTH,
             y: mouseVelocity.y * THROW_STRENGTH
         };
-        console.log("Throw velocity:", throwVelocity);
+        console.log("Calculated throw velocity:", throwVelocity);
         
         const releasedObject = ufo.beam.releaseObject(throwVelocity);
         if (releasedObject) {
             const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
             interactiveObjectManager.addObject(releasedObject, chunkKey);
-            console.log("Object added back to chunk:", chunkKey, releasedObject);
+            console.log("Object released and added back to chunk:", chunkKey, releasedObject);
         }
     }
     ufo.deactivateBeam();
@@ -465,10 +465,11 @@ function updateDebugInfo() {
 
 // Main render loop
 function render(timestamp) {
-    // Calculate delta time
     if (!lastTimestamp) lastTimestamp = timestamp;
     const deltaTime = (timestamp - lastTimestamp) / 1000; // Convert to seconds
     lastTimestamp = timestamp;
+
+    console.log("Delta time:", deltaTime);
 
     // Update game state
     ufo.update(deltaTime);
