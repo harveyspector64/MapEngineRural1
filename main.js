@@ -236,20 +236,18 @@ function handleMouseDown(e) {
         e.preventDefault();
         isMouseDown = true;
         ufo.activateBeam();
-        updateBeamFromMouse(e);
+        updateBeamFromMouse(mousePosition);
     }
 }
 
 // Handle mouse movement
 function handleMouseMove(e) {
     const rect = canvas.getBoundingClientRect();
-    const currentMousePosition = {
-        x: (e.clientX - rect.left) / zoomLevel + cameraX,
-        y: (e.clientY - rect.top) / zoomLevel + cameraY
-    };
+    mousePosition.x = (e.clientX - rect.left) / zoomLevel + cameraX;
+    mousePosition.y = (e.clientY - rect.top) / zoomLevel + cameraY;
 
     if (isMouseDown) {
-        updateBeamFromMouse(e);
+        updateBeamFromMouse(mousePosition);
     }
 
     const currentTime = performance.now();
@@ -329,32 +327,6 @@ function handleObjectEaten(object) {
     }
 }
 
-// Update beam position and length based on mouse position
-function updateBeamFromMouse(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) / zoomLevel + cameraX;
-    const mouseY = (e.clientY - rect.top) / zoomLevel + cameraY;
-    
-    const ufoPos = ufo.getPosition();
-    const dx = mouseX - ufoPos.x;
-    const dy = mouseY - ufoPos.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
-
-    console.log(`Mouse world pos: (${mouseX.toFixed(2)}, ${mouseY.toFixed(2)})`);
-    console.log(`UFO world pos: (${ufoPos.x.toFixed(2)}, ${ufoPos.y.toFixed(2)})`);
-    console.log(`Raw direction: (${dx.toFixed(2)}, ${dy.toFixed(2)})`);
-
-    if (distance > ufoRadius) {
-        ufo.setBeamDirection(dx / distance, dy / distance);
-        ufo.setBeamLength(distance - ufoRadius);
-        console.log(`Beam directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
-    } else {
-        ufo.setBeamLength(0);
-        console.log('Beam fully retracted');
-    }
-}
 
 // Handle touch start events
 function handleTouchStart(e) {
