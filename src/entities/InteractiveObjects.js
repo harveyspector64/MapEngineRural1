@@ -23,10 +23,10 @@ export class InteractiveObject {
         this.moveSpeed = 5 + Math.random() * 5; // 5-10 pixels per second
     }
 
-    update(deltaTime, terrain, tileSize) {
+    update(deltaTime, getTerrain, tileSize) {
         if (!this.isBeingAbducted) {
             if (this.type === OBJECT_TYPES.CANOE || this.type === OBJECT_TYPES.COW) {
-                Physics.updateNPCMovement(this, deltaTime, terrain, tileSize);
+                Physics.updateNPCMovement(this, deltaTime, getTerrain, tileSize);
             }
 
             // Apply throwing physics
@@ -36,9 +36,10 @@ export class InteractiveObject {
             this.rotation = updatedPosition.rotation;
 
             // Check for terrain collision
-            Physics.checkTerrainCollision(this, terrain, tileSize);
+            Physics.checkTerrainCollision(this, getTerrain, tileSize);
         }
     }
+}
 
     setPosition(x, y) {
         this.x = x;
