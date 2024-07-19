@@ -73,6 +73,22 @@ export default class ChunkManager {
         return visibleChunks;
     }
 
+        getTerrainAt(worldX, worldY) {
+        const chunkSize = this.chunkSize * 16; // Assuming tileSize is 16
+        const chunkX = Math.floor(worldX / chunkSize);
+        const chunkY = Math.floor(worldY / chunkSize);
+        const chunk = this.getChunk(chunkX, chunkY);
+        
+        if (chunk && chunk.terrain) {
+            const localX = Math.floor((worldX % chunkSize) / 16);
+            const localY = Math.floor((worldY % chunkSize) / 16);
+            return chunk.terrain[localY] && chunk.terrain[localY][localX];
+        }
+        
+        return null; // Return null if chunk or terrain data doesn't exist
+    }
+}
+
     getChunk(x, y) {
         const key = `${x},${y}`;
         return this.loadedChunks.get(key) || this.recentlyUnloaded.get(key);
