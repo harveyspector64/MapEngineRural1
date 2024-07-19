@@ -9,6 +9,7 @@ import UFO from './src/entities/UFO.js';
 import VirtualJoystick from './src/controls/VirtualJoystick.js';
 import MobileUIController from './src/controls/MobileUIController.js';
 import { InteractiveObjectManager, createInteractiveObject, OBJECT_TYPES } from './src/entities/InteractiveObjects.js';
+import Physics from './src/core/Physics.js';
 
 // Get the canvas element and create a renderer
 const canvas = document.getElementById('mapCanvas');
@@ -274,8 +275,11 @@ function handleMouseUp(e) {
             Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
         );
 
-        if (distToUfo <= ufo.radius && ufo.beam.length <= ufo.beam.minLength) {
+        if (ufo.canEatObject(ufo.beam.capturedObject)) {
             ufo.eatObject(ufo.beam.capturedObject);
+            const chunkKey = getChunkKeyForPosition(objPos.x, objPos.y);
+            interactiveObjectManager.removeObject(ufo.beam.capturedObject, chunkKey);
+            ufo.beam.releaseObject();
         } else {
             const throwVelocity = {
                 x: mouseVelocity.x * 0.5,
@@ -486,15 +490,17 @@ function render(timestamp) {
 
     // Render visible chunks and their objects
     const visibleChunks = chunkManager.getVisibleChunkCoordinates(cameraX, cameraY);
+    // Update and render interactive objects
     visibleChunks.forEach(({x, y}) => {
         const chunkKey = `${x},${y}`;
         const chunk = chunkManager.getChunk(x, y);
         if (chunk) {
             renderer.renderChunk(chunk);
-            // Update and render interactive objects
-            interactiveObjectManager.updateObjects(deltaTime, chunkKey);
             const objects = interactiveObjectManager.getObjectsInChunk(chunkKey);
-            objects.forEach(obj => renderer.renderInteractiveObject(obj));
+            objects.forEach(obj => {
+                obj.update(deltaTime, chunk.terrain, renderer.tileSize);
+                renderer.renderInteractiveObject(obj);
+            });
         } else {
             console.warn(`Missing chunk at (${x}, ${y})`);
         }
