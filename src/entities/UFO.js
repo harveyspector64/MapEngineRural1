@@ -63,9 +63,7 @@ export default class UFO {
     }
 
 activateBeam() {
-  this.beam.activate();
-  // Set initial direction to straight down
-  this.setBeamDirection(0, 1);
+    this.beam.activate();
 }
 
     deactivateBeam() {
