@@ -54,18 +54,12 @@ setDirection(dx, dy) {
 
 releaseObject(throwVelocity = { x: 0, y: 0 }) {
     if (this.capturedObject) {
-        console.log("Before release - Object position:", this.capturedObject.getPosition());
-        console.log("Before release - Object velocity:", this.capturedObject.velocity);
-        
+        console.log("Releasing object with velocity:", throwVelocity);
         this.capturedObject.isBeingAbducted = false;
-        this.capturedObject.velocity = { ...throwVelocity };
-        
+        this.capturedObject.velocity.x = throwVelocity.x;
+        this.capturedObject.velocity.y = throwVelocity.y;
         const releasedObject = this.capturedObject;
         this.capturedObject = null;
-        
-        console.log("After release - Object position:", releasedObject.getPosition());
-        console.log("After release - Object velocity:", releasedObject.velocity);
-        
         return releasedObject;
     }
     return null;
