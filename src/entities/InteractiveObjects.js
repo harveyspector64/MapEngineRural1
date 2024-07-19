@@ -81,8 +81,9 @@ export class InteractiveObjectManager {
         if (!this.objects.has(chunkKey)) {
             this.objects.set(chunkKey, []);
         }
-        if (!this.objects.get(chunkKey).includes(object)) {
-            this.objects.get(chunkKey).push(object);
+        const chunkObjects = this.objects.get(chunkKey);
+        if (!chunkObjects.includes(object)) {
+            chunkObjects.push(object);
             console.log(`Object added to chunk ${chunkKey}:`, object);
         } else {
             console.log(`Object already in chunk ${chunkKey}:`, object);
