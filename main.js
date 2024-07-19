@@ -277,7 +277,7 @@ function handleMouseUp(e) {
         if (distToUfo <= ufo.radius && ufo.beam.length <= ufo.beam.minLength) {
             ufo.eatObject(ufo.beam.capturedObject);
         } else {
-            const THROW_STRENGTH = 1000; // Increased from 0.5 to 1000
+            const THROW_STRENGTH = 1000;
             const throwVelocity = {
                 x: mouseVelocity.x * THROW_STRENGTH,
                 y: mouseVelocity.y * THROW_STRENGTH
@@ -286,6 +286,7 @@ function handleMouseUp(e) {
             if (releasedObject) {
                 const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
                 interactiveObjectManager.addObject(releasedObject, chunkKey);
+                console.log("Object added back to chunk:", chunkKey, releasedObject);
             }
         }
     }
@@ -506,9 +507,11 @@ function render(timestamp) {
         if (chunk) {
             renderer.renderChunk(chunk);
             // Update and render interactive objects
-            interactiveObjectManager.updateObjects(deltaTime, chunkKey);
             const objects = interactiveObjectManager.getObjectsInChunk(chunkKey);
-            objects.forEach(obj => renderer.renderInteractiveObject(obj));
+            objects.forEach(obj => {
+                obj.update(deltaTime);
+                renderer.renderInteractiveObject(obj);
+            });
         } else {
             console.warn(`Missing chunk at (${x}, ${y})`);
         }
