@@ -294,17 +294,13 @@ function handleMouseUp(e) {
 }
 
 // Update beam position and length based on mouse position
-function updateBeamFromMouse(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) / zoomLevel + cameraX;
-    const mouseY = (e.clientY - rect.top) / zoomLevel + cameraY;
-    
+function updateBeamFromMouse(mousePosition) {
     const ufoPos = ufo.getPosition();
-    const dx = mouseX - ufoPos.x;
-    const dy = mouseY - ufoPos.y;
+    const dx = mousePosition.x - ufoPos.x;
+    const dy = mousePosition.y - ufoPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
+    const ufoRadius = UFO_RADIUS;  // Use the constant we defined earlier
 
     if (distance > ufoRadius) {
         ufo.setBeamDirection(dx / distance, dy / distance);
@@ -315,6 +311,7 @@ function updateBeamFromMouse(e) {
         console.log('Beam fully retracted');
     }
 }
+
 // Add this function to handle object eating
 function handleObjectEaten(object) {
     console.log("Object eaten by UFO:", object);
