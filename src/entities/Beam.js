@@ -52,32 +52,24 @@ setDirection(dx, dy) {
         }
     }
 
-    releaseObject(throwVelocity = { x: 0, y: 0 }) {
-        if (this.capturedObject) {
-            const ufoPos = this.ufo.getPosition();
-            const objPos = this.capturedObject.getPosition();
-            const distToUfo = Math.sqrt(
-                Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
-            );
-
-            if (distToUfo <= this.ufoRadius && this.length <= this.minLength) {
-                if (this.ufo.eatObject(this.capturedObject)) {
-                    console.log("Object eaten by UFO");
-                    this.capturedObject = null;
-                    return null;
-                }
-            }
-
-            console.log("Object released:", this.capturedObject);
-            this.capturedObject.isBeingAbducted = false;
-            this.capturedObject.velocity.x = throwVelocity.x;
-            this.capturedObject.velocity.y = throwVelocity.y;
-            const releasedObject = this.capturedObject;
-            this.capturedObject = null;
-            return releasedObject;
-        }
-        return null;
+releaseObject(throwVelocity = { x: 0, y: 0 }) {
+    if (this.capturedObject) {
+        console.log("Before release - Object position:", this.capturedObject.getPosition());
+        console.log("Before release - Object velocity:", this.capturedObject.velocity);
+        
+        this.capturedObject.isBeingAbducted = false;
+        this.capturedObject.velocity = { ...throwVelocity };
+        
+        const releasedObject = this.capturedObject;
+        this.capturedObject = null;
+        
+        console.log("After release - Object position:", releasedObject.getPosition());
+        console.log("After release - Object velocity:", releasedObject.velocity);
+        
+        return releasedObject;
     }
+    return null;
+}
 
     update(deltaTime) {
         if (this.capturedObject) {
