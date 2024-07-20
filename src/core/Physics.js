@@ -1,18 +1,31 @@
 // src/core/Physics.js
 
 export default class Physics {
-    static MAX_VELOCITY = 1000;
-    static FRICTION = 0.98;
-    static AIR_RESISTANCE = 0.995;
-    static WORLD_BOUNDS = {
-        minX: -10000,
-        maxX: 10000,
-        minY: -10000,
-        maxY: 10000
-    };
+    static MAX_VELOCITY = 2000; // Increased for more dramatic throws
+    static FRICTION = 0.995; // Reduced for longer travel distances
+    static AIR_RESISTANCE = 0.9975; // Adjusted for more realistic air resistance
+    static GRAVITY = 500; // Added gravity for more natural arcs
 
     static applyThrow(object, velocity, deltaTime) {
-        // Cap the velocity
+        // Apply throw velocity
+        object.x += velocity.x * deltaTime;
+        object.y += velocity.y * deltaTime;
+
+        // Apply gravity
+        velocity.y += this.GRAVITY * deltaTime;
+
+        // Apply air resistance
+        velocity.x *= Math.pow(this.AIR_RESISTANCE, deltaTime * 60);
+        velocity.y *= Math.pow(this.AIR_RESISTANCE, deltaTime * 60);
+
+        // Apply friction (ground resistance)
+        if (object.y >= 0) { // Assuming ground level is at y = 0
+            velocity.x *= Math.pow(this.FRICTION, deltaTime * 60);
+            object.y = 0; // Keep object on the ground
+            velocity.y = 0; // Stop vertical movement on ground
+        }
+
+        // Cap velocity
         const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
         if (speed > this.MAX_VELOCITY) {
             const scale = this.MAX_VELOCITY / speed;
@@ -20,37 +33,13 @@ export default class Physics {
             velocity.y *= scale;
         }
 
-        // Apply throw velocity
-        let newX = object.x + velocity.x * deltaTime;
-        let newY = object.y + velocity.y * deltaTime;
-
-        // Check world boundaries
-        newX = Math.max(this.WORLD_BOUNDS.minX, Math.min(newX, this.WORLD_BOUNDS.maxX));
-        newY = Math.max(this.WORLD_BOUNDS.minY, Math.min(newY, this.WORLD_BOUNDS.maxY));
-
-        // If object hit world boundary, reverse velocity
-        if (newX === this.WORLD_BOUNDS.minX || newX === this.WORLD_BOUNDS.maxX) {
-            velocity.x *= -0.5; // Reduce velocity on bounce
-        }
-        if (newY === this.WORLD_BOUNDS.minY || newY === this.WORLD_BOUNDS.maxY) {
-            velocity.y *= -0.5; // Reduce velocity on bounce
-        }
-
-        object.x = newX;
-        object.y = newY;
-
-        // Apply friction and air resistance
-        velocity.x *= Math.pow(this.FRICTION * this.AIR_RESISTANCE, deltaTime * 60);
-        velocity.y *= Math.pow(this.FRICTION * this.AIR_RESISTANCE, deltaTime * 60);
-
         // Apply rotation based on velocity
         object.rotation += (Math.abs(velocity.x) + Math.abs(velocity.y)) * 0.01;
-
-        // Ensure rotation stays within 0-360 degrees
-        object.rotation = object.rotation % (2 * Math.PI);
+        object.rotation %= 2 * Math.PI; // Keep rotation within 0-2π
 
         return { x: object.x, y: object.y, rotation: object.rotation, velocity: velocity };
     }
+
 
     static checkTerrainCollision(object, getTerrain, tileSize) {
         if (!object || typeof object.x !== 'number' || typeof object.y !== 'number') {
