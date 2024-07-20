@@ -60,8 +60,15 @@ export class InteractiveObject {
                 this.lastChunk = currentChunk;
                 // Here you would implement logic to update the object's chunk in your chunk management system
             } else {
-                console.warn(`Object ${this.type} moved to an invalid chunk position: ${JSON.stringify(currentChunk)}`);
-                // Handle the out-of-bounds object (e.g., remove it or place it back in a valid position)
+                console.warn(`Object ${this.type} at invalid position: (${this.x}, ${this.y}). Attempting to recover.`);
+                // Attempt to recover the object by placing it in a valid position
+                this.x = Math.max(Physics.WORLD_BOUNDS.minX, Math.min(this.x, Physics.WORLD_BOUNDS.maxX));
+                this.y = Math.max(Physics.WORLD_BOUNDS.minY, Math.min(this.y, Physics.WORLD_BOUNDS.maxY));
+                this.velocity = { x: 0, y: 0 }; // Reset velocity
+                this.lastChunk = {
+                    x: Math.floor(this.x / chunkSize),
+                    y: Math.floor(this.y / chunkSize)
+                };
             }
         }
     }
