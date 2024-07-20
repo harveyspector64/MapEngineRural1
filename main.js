@@ -278,6 +278,8 @@ function handleMouseMove(e) {
 
 
 // Call this function when the beam is deactivated (e.g., in handleMouseUp)
+// main.js
+
 function handleMouseUp(e) {
     isMouseDown = false;
     if (ufo.beam.capturedObject) {
@@ -302,6 +304,14 @@ function handleMouseUp(e) {
                 x: (mouseVelocity.x + ufoVelocity.x) * throwStrength,
                 y: (mouseVelocity.y + ufoVelocity.y) * throwStrength
             };
+            // Cap the throw velocity
+            const maxVelocity = 1000;
+            const velocityMagnitude = Math.sqrt(throwVelocity.x ** 2 + throwVelocity.y ** 2);
+            if (velocityMagnitude > maxVelocity) {
+                const scale = maxVelocity / velocityMagnitude;
+                throwVelocity.x *= scale;
+                throwVelocity.y *= scale;
+            }
             const releasedObject = ufo.beam.releaseObject(throwVelocity);
             if (releasedObject) {
                 const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
