@@ -10,6 +10,7 @@ import VirtualJoystick from './src/controls/VirtualJoystick.js';
 import MobileUIController from './src/controls/MobileUIController.js';
 import { InteractiveObjectManager, createInteractiveObject, OBJECT_TYPES } from './src/entities/InteractiveObjects.js';
 import Physics from './src/core/Physics.js';
+import { InteractiveObjectManager } from './src/entities/InteractiveObjects.js';
 
 // Get the canvas element and create a renderer
 const canvas = document.getElementById('mapCanvas');
@@ -43,6 +44,8 @@ let mouseVelocity = { x: 0, y: 0 };
 
 // Set to store currently pressed keys
 const keys = new Set();
+
+const interactiveObjectManager = new InteractiveObjectManager(chunkManager.chunkSize, renderer.tileSize);
 
 // Initialize the game
 async function init() {
