@@ -6,19 +6,20 @@ export default class Physics {
         object.x += velocity.x * deltaTime;
         object.y += velocity.y * deltaTime;
 
-        // Apply gravity (adjust this value to change the gravity strength)
-        const gravity = 9.8 * 50; // Increased for more visible effect
-        object.y += 0.5 * gravity * deltaTime * deltaTime;
-
-        // Apply air resistance
-        const airResistance = 0.99;
-        velocity.x *= Math.pow(airResistance, deltaTime * 60);
-        velocity.y *= Math.pow(airResistance, deltaTime * 60);
+        // Apply minimal "gravity" (more like friction) for top-down perspective
+        const friction = 0.5; // Adjust this value to change the slowdown rate
+        velocity.x *= Math.pow(1 - friction, deltaTime);
+        velocity.y *= Math.pow(1 - friction, deltaTime);
 
         // Apply rotation based on velocity
         object.rotation += (Math.abs(velocity.x) + Math.abs(velocity.y)) * 0.01;
 
-        return { x: object.x, y: object.y, rotation: object.rotation };
+        // Gradually slow down the object
+        const slowdown = 0.99;
+        velocity.x *= Math.pow(slowdown, deltaTime * 60);
+        velocity.y *= Math.pow(slowdown, deltaTime * 60);
+
+        return { x: object.x, y: object.y, rotation: object.rotation, velocity: velocity };
     }
 
     static checkTerrainCollision(object, getTerrain, tileSize) {
@@ -47,9 +48,12 @@ export default class Physics {
                         return true;
                     } else if (tile !== 'grass' && tile !== 'dirt' && tile !== 'crop') {
                         // Object collides with non-passable terrain
-                        const bounceReduction = 0.5;
+                        const bounceReduction = 0.7;
                         object.velocity.x *= -bounceReduction;
                         object.velocity.y *= -bounceReduction;
+                        // Adjust position to prevent sticking
+                        object.x += object.velocity.x * 0.1;
+                        object.y += object.velocity.y * 0.1;
                         return true;
                     }
                 }
@@ -66,7 +70,7 @@ export default class Physics {
         const newY = npc.y + Math.sin(npc.moveDirection) * speed;
 
         // Check if the new position is valid (not colliding with obstacles)
-        if (!this.checkTerrainCollision({ x: newX, y: newY, velocity: npc.velocity }, getTerrain, tileSize)) {
+        if (!this.checkTerrainCollision({ x: newX, y: newY, velocity: { x: 0, y: 0 } }, getTerrain, tileSize)) {
             npc.x = newX;
             npc.y = newY;
         } else {
