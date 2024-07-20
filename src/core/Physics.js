@@ -1,10 +1,16 @@
 // src/core/Physics.js
 
 export default class Physics {
-    static MAX_VELOCITY = 2000; // Increased for more dramatic throws
-    static FRICTION = 0.995; // Reduced for longer travel distances
-    static AIR_RESISTANCE = 0.9975; // Adjusted for more realistic air resistance
-    static GRAVITY = 500; // Added gravity for more natural arcs
+    static MAX_VELOCITY = 2000;
+    static FRICTION = 0.995;
+    static AIR_RESISTANCE = 0.9975;
+    static GRAVITY = 500;
+    static WORLD_BOUNDS = {
+        minX: -100000,
+        maxX: 100000,
+        minY: -100000,
+        maxY: 100000
+    };
 
     static applyThrow(object, velocity, deltaTime) {
         // Apply throw velocity
@@ -19,10 +25,10 @@ export default class Physics {
         velocity.y *= Math.pow(this.AIR_RESISTANCE, deltaTime * 60);
 
         // Apply friction (ground resistance)
-        if (object.y >= 0) { // Assuming ground level is at y = 0
+        if (object.y >= this.WORLD_BOUNDS.minY) {
             velocity.x *= Math.pow(this.FRICTION, deltaTime * 60);
-            object.y = 0; // Keep object on the ground
-            velocity.y = 0; // Stop vertical movement on ground
+            object.y = Math.max(object.y, this.WORLD_BOUNDS.minY);
+            velocity.y = Math.max(velocity.y, 0);
         }
 
         // Cap velocity
@@ -33,9 +39,13 @@ export default class Physics {
             velocity.y *= scale;
         }
 
+        // Keep object within world bounds
+        object.x = Math.max(this.WORLD_BOUNDS.minX, Math.min(object.x, this.WORLD_BOUNDS.maxX));
+        object.y = Math.max(this.WORLD_BOUNDS.minY, Math.min(object.y, this.WORLD_BOUNDS.maxY));
+
         // Apply rotation based on velocity
         object.rotation += (Math.abs(velocity.x) + Math.abs(velocity.y)) * 0.01;
-        object.rotation %= 2 * Math.PI; // Keep rotation within 0-2π
+        object.rotation %= 2 * Math.PI;
 
         return { x: object.x, y: object.y, rotation: object.rotation, velocity: velocity };
     }
