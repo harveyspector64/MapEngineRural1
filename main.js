@@ -126,23 +126,23 @@ function addObjectsToChunk(chunk, chunkKey) {
     const chunkPixelSize = chunkSize * tileSize;
 
     // Add cow groups
-    const cowGroupChance = 0.4; // 40% chance for a chunk to have cows
+    const cowGroupChance = 0.4;
     if (Math.random() < cowGroupChance) {
-        const groupCount = Math.floor(Math.random() * 2) + 1; // 1-2 groups per chunk
+        const groupCount = Math.floor(Math.random() * 2) + 1;
         for (let g = 0; g < groupCount; g++) {
-            const groupSize = Math.floor(Math.random() * 3) + 2; // 2-4 cows per group
-            const groupX = Math.floor(Math.random() * chunkSize);
-            const groupY = Math.floor(Math.random() * chunkSize);
+            const groupSize = Math.floor(Math.random() * 3) + 2;
+            const groupX = Math.floor(Math.random() * (chunkSize - 4)) + 2; // Avoid edges
+            const groupY = Math.floor(Math.random() * (chunkSize - 4)) + 2; // Avoid edges
             
             for (let i = 0; i < groupSize; i++) {
-                const offsetX = Math.floor(Math.random() * 5) - 2; // -2 to 2
-                const offsetY = Math.floor(Math.random() * 5) - 2; // -2 to 2
-                const x = (groupX + offsetX + chunkSize) % chunkSize;
-                const y = (groupY + offsetY + chunkSize) % chunkSize;
+                const offsetX = Math.floor(Math.random() * 3) - 1; // -1 to 1
+                const offsetY = Math.floor(Math.random() * 3) - 1; // -1 to 1
+                const x = groupX + offsetX;
+                const y = groupY + offsetY;
                 
                 if (chunk.terrain[y][x] === TILES.GRASS) {
-                    const worldX = chunk.x * chunkPixelSize + x * tileSize;
-                    const worldY = chunk.y * chunkPixelSize + y * tileSize;
+                    const worldX = chunk.x * chunkPixelSize + x * tileSize + tileSize / 2;
+                    const worldY = chunk.y * chunkPixelSize + y * tileSize + tileSize / 2;
                     const cow = createInteractiveObject(OBJECT_TYPES.COW, worldX, worldY);
                     interactiveObjectManager.addObject(cow, chunkKey);
                 }
