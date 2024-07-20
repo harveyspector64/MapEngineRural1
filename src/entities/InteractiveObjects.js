@@ -83,6 +83,8 @@ export class InteractiveObject {
     }
 }
 
+// src/entities/InteractiveObjects.js
+
 export class InteractiveObjectManager {
     constructor() {
         this.objects = new Map();
@@ -106,7 +108,16 @@ export class InteractiveObjectManager {
 
     updateObjects(deltaTime, chunkKey, getTerrain, tileSize) {
         const chunkObjects = this.getObjectsInChunk(chunkKey);
-        chunkObjects.forEach(obj => obj.update(deltaTime, getTerrain, tileSize));
+        chunkObjects.forEach(obj => {
+            obj.update(deltaTime, getTerrain, tileSize);
+            
+            // Check if object has moved to a new chunk
+            const newChunkKey = getChunkKeyForPosition(obj.x, obj.y);
+            if (newChunkKey !== chunkKey) {
+                this.removeObject(obj, chunkKey);
+                this.addObject(obj, newChunkKey);
+            }
+        });
     }
 
     removeObject(object, chunkKey) {
@@ -118,6 +129,10 @@ export class InteractiveObjectManager {
         } else {
             console.log(`Object not found in chunk ${chunkKey}:`, object);
         }
+    }
+
+    getAllObjects() {
+        return Array.from(this.objects.values()).flat();
     }
 }
 
