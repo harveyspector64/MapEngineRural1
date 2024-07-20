@@ -6,10 +6,10 @@ export default class Physics {
     static AIR_RESISTANCE = 0.995; // Air resistance coefficient
 
     static applyThrow(object, velocity, deltaTime) {
-        // Cap the throw velocity
+        // Cap the velocity
         const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        if (speed > this.MAX_THROW_VELOCITY) {
-            const scale = this.MAX_THROW_VELOCITY / speed;
+        if (speed > this.MAX_VELOCITY) {
+            const scale = this.MAX_VELOCITY / speed;
             velocity.x *= scale;
             velocity.y *= scale;
         }
