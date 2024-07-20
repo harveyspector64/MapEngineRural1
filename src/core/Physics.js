@@ -1,9 +1,15 @@
 // src/core/Physics.js
 
 export default class Physics {
-    static MAX_THROW_VELOCITY = 1000; // Maximum throw velocity
-    static FRICTION = 0.98; // Friction coefficient
-    static AIR_RESISTANCE = 0.995; // Air resistance coefficient
+    static MAX_VELOCITY = 1000;
+    static FRICTION = 0.98;
+    static AIR_RESISTANCE = 0.995;
+    static WORLD_BOUNDS = {
+        minX: -10000,
+        maxX: 10000,
+        minY: -10000,
+        maxY: 10000
+    };
 
     static applyThrow(object, velocity, deltaTime) {
         // Cap the velocity
@@ -15,8 +21,23 @@ export default class Physics {
         }
 
         // Apply throw velocity
-        object.x += velocity.x * deltaTime;
-        object.y += velocity.y * deltaTime;
+        let newX = object.x + velocity.x * deltaTime;
+        let newY = object.y + velocity.y * deltaTime;
+
+        // Check world boundaries
+        newX = Math.max(this.WORLD_BOUNDS.minX, Math.min(newX, this.WORLD_BOUNDS.maxX));
+        newY = Math.max(this.WORLD_BOUNDS.minY, Math.min(newY, this.WORLD_BOUNDS.maxY));
+
+        // If object hit world boundary, reverse velocity
+        if (newX === this.WORLD_BOUNDS.minX || newX === this.WORLD_BOUNDS.maxX) {
+            velocity.x *= -0.5; // Reduce velocity on bounce
+        }
+        if (newY === this.WORLD_BOUNDS.minY || newY === this.WORLD_BOUNDS.maxY) {
+            velocity.y *= -0.5; // Reduce velocity on bounce
+        }
+
+        object.x = newX;
+        object.y = newY;
 
         // Apply friction and air resistance
         velocity.x *= Math.pow(this.FRICTION * this.AIR_RESISTANCE, deltaTime * 60);
