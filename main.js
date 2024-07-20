@@ -496,12 +496,10 @@ function render(timestamp) {
         const chunk = chunkManager.getChunk(x, y);
         if (chunk) {
             renderer.renderChunk(chunk);
+            const getTerrain = (x, y) => chunkManager.getTerrainAt(x * renderer.tileSize, y * renderer.tileSize);
+            interactiveObjectManager.updateObjects(deltaTime, chunkKey, getTerrain, renderer.tileSize, chunkManager);
             const objects = interactiveObjectManager.getObjectsInChunk(chunkKey);
-            objects.forEach(obj => {
-                const getTerrain = (x, y) => chunkManager.getTerrainAt(x * renderer.tileSize, y * renderer.tileSize);
-                interactiveObjectManager.updateObjects(deltaTime, chunkKey, getTerrain, renderer.tileSize);
-                renderer.renderInteractiveObject(obj);
-            });
+            objects.forEach(obj => renderer.renderInteractiveObject(obj));
         } else {
             console.warn(`Missing chunk at (${x}, ${y})`);
         }
