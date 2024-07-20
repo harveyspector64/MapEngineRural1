@@ -32,6 +32,7 @@ let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.
 let targetZoomLevel = 1;
 let targetCameraX = 0;
 let targetCameraY = 0;
+let initialMousePosition = { x: 0, y: 0 };
 let mousePosition = { x: 0, y: 0 };
 let isMouseDown = false;
 let interactiveObjectManager;
@@ -228,13 +229,24 @@ function handleWheel(e) {
 }
 
 // Handle mouse button press
-// Modify the mousedown event listener
 function handleMouseDown(e) {
     if (e.button === 0) { // Left click
         e.preventDefault();
         isMouseDown = true;
+        
+        // Store the initial mouse position
+        const rect = canvas.getBoundingClientRect();
+        initialMousePosition = {
+            x: (e.clientX - rect.left) / zoomLevel + cameraX,
+            y: (e.clientY - rect.top) / zoomLevel + cameraY
+        };
+        
         ufo.activateBeam();
-        updateBeamFromMouse(e);
+        
+        // Use the initial mouse position to set the beam direction
+        updateBeamFromMouse(initialMousePosition);
+        
+        console.log("Beam activated at initial position:", initialMousePosition);
     }
 }
 
@@ -275,11 +287,14 @@ function handleMouseUp(e) {
             Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
         );
 
+        console.log(`Object release: distToUfo = ${distToUfo.toFixed(2)}, object type = ${ufo.beam.capturedObject.type}`);
+
         if (ufo.canEatObject(ufo.beam.capturedObject)) {
             ufo.eatObject(ufo.beam.capturedObject);
             const chunkKey = getChunkKeyForPosition(objPos.x, objPos.y);
             interactiveObjectManager.removeObject(ufo.beam.capturedObject, chunkKey);
             ufo.beam.releaseObject();
+            console.log("Object eaten and removed from game");
         } else {
             const throwVelocity = {
                 x: mouseVelocity.x * 0.5,
@@ -289,6 +304,7 @@ function handleMouseUp(e) {
             if (releasedObject) {
                 const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
                 interactiveObjectManager.addObject(releasedObject, chunkKey);
+                console.log("Object released with velocity:", throwVelocity);
             }
         }
     }
@@ -307,8 +323,8 @@ function updateBeamFromMouse(mousePosition) {
 
     if (distance > ufoRadius) {
         ufo.setBeamDirection(dx / distance, dy / distance);
-        ufo.setBeamLength(distance - ufoRadius);
-        console.log(`Beam directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
+        ufo.setBeamLength(Math.min(distance - ufoRadius, ufo.beam.maxLength));
+        console.log(`Beam directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(Math.min(distance - ufoRadius, ufo.beam.maxLength)).toFixed(2)}`);
     } else {
         ufo.setBeamLength(0);
         console.log('Beam fully retracted');
