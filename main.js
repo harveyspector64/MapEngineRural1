@@ -285,8 +285,6 @@ function handleMouseMove(e) {
 
 
 // Call this function when the beam is deactivated (e.g., in handleMouseUp)
-// main.js
-
 function handleMouseUp(e) {
     isMouseDown = false;
     if (ufo.beam.capturedObject) {
@@ -306,14 +304,14 @@ function handleMouseUp(e) {
             console.log("Object eaten and removed from game");
         } else {
             const ufoVelocity = ufo.getVelocity();
-            const throwStrength = 10; // Increased for more dramatic throws
+            const throwStrength = 10;
             const throwVelocity = {
-                x: (mouseVelocity.x + ufoVelocity.x) * throwStrength,
-                y: (mouseVelocity.y + ufoVelocity.y) * throwStrength
+                x: (isFinite(mouseVelocity.x) ? mouseVelocity.x : 0 + ufoVelocity.x) * throwStrength,
+                y: (isFinite(mouseVelocity.y) ? mouseVelocity.y : 0 + ufoVelocity.y) * throwStrength
             };
 
             // Add a vertical component to the throw for more interesting arcs
-            throwVelocity.y -= 500; // Adjust this value to change the arc height
+            throwVelocity.y -= 500;
 
             const releasedObject = ufo.beam.releaseObject(throwVelocity);
             if (releasedObject) {
