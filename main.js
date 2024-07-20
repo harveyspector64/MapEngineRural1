@@ -69,7 +69,7 @@ async function init() {
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
     joystick = new VirtualJoystick(canvas);
 
-    interactiveObjectManager = new InteractiveObjectManager();
+   interactiveObjectManager = new InteractiveObjectManager(chunkManager.chunkSize, renderer.tileSize);
 
     // Set initial camera position
     cameraX = ufo.x - canvas.width / 2;
