@@ -46,7 +46,7 @@ export class InteractiveObject {
     }
 
 checkChunkTransition(tileSize) {
-    const chunkSize = 64 * tileSize; // Assuming 64 tiles per chunk
+    const chunkSize = 64 * tileSize;
     const currentChunk = {
         x: Math.floor(this.x / chunkSize),
         y: Math.floor(this.y / chunkSize)
@@ -57,18 +57,22 @@ checkChunkTransition(tileSize) {
         this.lastChunk.y !== currentChunk.y) {
         if (isFinite(this.x) && isFinite(this.y)) {
             console.log(`Object ${this.type} moved from chunk ${JSON.stringify(this.lastChunk)} to ${JSON.stringify(currentChunk)}`);
+            
+            // Remove from old chunk and add to new chunk
+            if (this.lastChunk) {
+                const oldChunkKey = `${this.lastChunk.x},${this.lastChunk.y}`;
+                interactiveObjectManager.removeObject(this, oldChunkKey);
+            }
+            const newChunkKey = `${currentChunk.x},${currentChunk.y}`;
+            interactiveObjectManager.addObject(this, newChunkKey);
+            
             this.lastChunk = currentChunk;
-            // Here you would implement logic to update the object's chunk in your chunk management system
         } else {
             console.warn(`Object ${this.type} at invalid position: (${this.x}, ${this.y}). Attempting to recover.`);
-            // Attempt to recover the object by placing it in a valid position
             this.x = Math.max(Physics.WORLD_BOUNDS.minX, Math.min(this.x || 0, Physics.WORLD_BOUNDS.maxX));
             this.y = Math.max(Physics.WORLD_BOUNDS.minY, Math.min(this.y || 0, Physics.WORLD_BOUNDS.maxY));
-            this.velocity = { x: 0, y: 0 }; // Reset velocity
-            this.lastChunk = {
-                x: Math.floor(this.x / chunkSize),
-                y: Math.floor(this.y / chunkSize)
-            };
+            this.velocity = { x: 0, y: 0 };
+            this.lastChunk = currentChunk;
         }
     }
 }
