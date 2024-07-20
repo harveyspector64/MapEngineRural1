@@ -2,6 +2,13 @@
 
 import Physics from '../core/Physics.js';
 
+export const OBJECT_TYPES = {
+    COW: 'cow',
+    CANOE: 'canoe',
+    EMPTY_CANOE: 'emptyCanoe',
+    FISHERMAN: 'fisherman'
+};
+
 export class InteractiveObject {
     constructor(type, x, y, sprite) {
         this.type = type;
