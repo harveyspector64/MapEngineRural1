@@ -2,6 +2,13 @@
 
 import Physics from '../core/Physics.js';
 
+export const OBJECT_TYPES = {
+    COW: 'cow',
+    CANOE: 'canoe',
+    EMPTY_CANOE: 'emptyCanoe',
+    FISHERMAN: 'fisherman'
+};
+
 export class InteractiveObject {
     constructor(type, x, y, sprite) {
         this.type = type;
@@ -38,7 +45,7 @@ export class InteractiveObject {
         }
     }
 
-        checkChunkTransition(tileSize) {
+    checkChunkTransition(tileSize) {
         const chunkSize = 64 * tileSize; // Assuming 64 tiles per chunk
         const currentChunk = {
             x: Math.floor(this.x / chunkSize),
@@ -53,16 +60,6 @@ export class InteractiveObject {
             // Here you would implement logic to update the object's chunk in your chunk management system
         }
     }
-
-    setPosition(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    getPosition() {
-        return { x: this.x, y: this.y };
-    }
-}
 
     setPosition(x, y) {
         this.x = x;
