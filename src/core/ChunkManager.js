@@ -73,10 +73,15 @@ export default class ChunkManager {
         return visibleChunks;
     }
 
-    getChunk(x, y) {
-        const key = `${x},${y}`;
-        return this.loadedChunks.get(key) || this.recentlyUnloaded.get(key);
+getChunk(x, y) {
+    const key = `${x},${y}`;
+    let chunk = this.loadedChunks.get(key) || this.recentlyUnloaded.get(key);
+    if (!chunk) {
+        this.ensureChunkLoaded(x, y);
+        chunk = this.loadedChunks.get(key);
     }
+    return chunk;
+}
 
     generateChunk(x, y) {
         const chunkSeed = this.worldManager.getChunkSeed(x, y);
@@ -87,6 +92,15 @@ export default class ChunkManager {
     setZoom(zoom) {
         this.zoomLevel = zoom;
     }
+
+    ensureChunkLoaded(x, y) {
+    const key = `${x},${y}`;
+    if (!this.loadedChunks.has(key) && !this.recentlyUnloaded.has(key)) {
+        console.log(`Loading missing chunk at (${x}, ${y})`);
+        const chunk = this.generateChunk(x, y);
+        this.loadedChunks.set(key, chunk);
+    }
+}
 
     getTerrainAt(worldX, worldY) {
         const chunkSize = this.chunkSize * 16; // Assuming tileSize is 16
