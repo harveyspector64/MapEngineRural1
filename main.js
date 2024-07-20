@@ -41,10 +41,15 @@ let lastMousePosition = { x: 0, y: 0 };
 let lastMouseMoveTime = 0;
 let mouseVelocity = { x: 0, y: 0 };
 
+function getChunkKeyForPosition(x, y) {
+    const chunkSize = 64 * renderer.tileSize;
+    const chunkX = Math.floor(x / chunkSize);
+    const chunkY = Math.floor(y / chunkSize);
+    return `${chunkX},${chunkY}`;
+}
+
 // Set to store currently pressed keys
 const keys = new Set();
-
-const interactiveObjectManager = new InteractiveObjectManager(chunkManager.chunkSize, renderer.tileSize);
 
 // Initialize the game
 async function init() {
@@ -69,7 +74,7 @@ async function init() {
     ufo = new UFO(canvas.width / 2, canvas.height / 2);
     joystick = new VirtualJoystick(canvas);
 
-   interactiveObjectManager = new InteractiveObjectManager(chunkManager.chunkSize, renderer.tileSize);
+  interactiveObjectManager = new InteractiveObjectManager(64, renderer.tileSize);
 
     // Set initial camera position
     cameraX = ufo.x - canvas.width / 2;
@@ -642,13 +647,6 @@ function handleObjectThrown(object) {
     } else {
         console.error("Invalid object thrown:", object);
     }
-}
-
-function getChunkKeyForPosition(x, y) {
-    const chunkSize = chunkManager.chunkSize * renderer.tileSize;
-    const chunkX = Math.floor(x / chunkSize);
-    const chunkY = Math.floor(y / chunkSize);
-    return `${chunkX},${chunkY}`;
 }
 
 // Initialize the game
