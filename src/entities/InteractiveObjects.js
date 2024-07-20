@@ -71,10 +71,13 @@ export class InteractiveObjectManager {
         return this.objects.get(chunkKey) || [];
     }
 
-    updateObjects(deltaTime, chunkKey, getTerrain, tileSize) {
-        const chunkObjects = this.getObjectsInChunk(chunkKey);
-        chunkObjects.forEach(obj => obj.update(deltaTime, getTerrain, tileSize));
-    }
+updateObjects(deltaTime, chunkKey, getTerrain, tileSize, chunkManager) {
+    const chunkObjects = this.getObjectsInChunk(chunkKey);
+    chunkObjects.forEach(obj => {
+        obj.update(deltaTime, getTerrain, tileSize);
+        this.checkAndTransferObject(obj, chunkKey, chunkManager);
+    });
+}
 
     removeObject(object, chunkKey) {
         const chunkObjects = this.getObjectsInChunk(chunkKey);
@@ -86,6 +89,24 @@ export class InteractiveObjectManager {
             console.log(`Object not found in chunk ${chunkKey}:`, object);
         }
     }
+}
+
+// Add this method to the InteractiveObjectManager class
+
+checkAndTransferObject(object, oldChunkKey, chunkManager) {
+    const newChunkKey = this.getChunkKeyForPosition(object.x, object.y, chunkManager);
+    if (newChunkKey !== oldChunkKey) {
+        this.removeObject(object, oldChunkKey);
+        this.addObject(object, newChunkKey);
+        console.log(`Object transferred from chunk ${oldChunkKey} to ${newChunkKey}:`, object);
+    }
+}
+
+getChunkKeyForPosition(x, y, chunkManager) {
+    const chunkSize = chunkManager.chunkSize * 16; // Assuming tileSize is 16
+    const chunkX = Math.floor(x / chunkSize);
+    const chunkY = Math.floor(y / chunkSize);
+    return `${chunkX},${chunkY}`;
 }
 
 export function createInteractiveObject(type, x, y) {
