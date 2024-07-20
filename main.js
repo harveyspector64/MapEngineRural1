@@ -8,7 +8,7 @@ import WorldManager from './src/core/WorldManager.js';
 import UFO from './src/entities/UFO.js';
 import VirtualJoystick from './src/controls/VirtualJoystick.js';
 import MobileUIController from './src/controls/MobileUIController.js';
-import { InteractiveObjectManager } from './src/entities/InteractiveObjects.js';
+import { InteractiveObjectManager, createInteractiveObject, OBJECT_TYPES } from './src/entities/InteractiveObjects.js';
 import Physics from './src/core/Physics.js';
 
 // Get the canvas element and create a renderer
