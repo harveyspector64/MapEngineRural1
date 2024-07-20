@@ -2,13 +2,6 @@
 
 import Physics from '../core/Physics.js';
 
-export const OBJECT_TYPES = {
-    COW: 'cow',
-    CANOE: 'canoe',
-    EMPTY_CANOE: 'emptyCanoe',
-    FISHERMAN: 'fisherman'
-};
-
 export class InteractiveObject {
     constructor(type, x, y, sprite) {
         this.type = type;
@@ -30,10 +23,11 @@ export class InteractiveObject {
             }
 
             // Apply throwing physics
-            const updatedPosition = Physics.applyThrow(this, this.velocity, deltaTime);
-            this.x = updatedPosition.x;
-            this.y = updatedPosition.y;
-            this.rotation = updatedPosition.rotation;
+            const updatedState = Physics.applyThrow(this, this.velocity, deltaTime);
+            this.x = updatedState.x;
+            this.y = updatedState.y;
+            this.rotation = updatedState.rotation;
+            this.velocity = updatedState.velocity;
 
             // Check for terrain collision
             Physics.checkTerrainCollision(this, getTerrain, tileSize);
