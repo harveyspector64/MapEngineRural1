@@ -36,24 +36,23 @@ export default class ChunkManager {
             }
         });
 
-        let unloadedChunks = 0;
+        // Unload chunks that are no longer visible
         this.loadedChunks.forEach((chunk, key) => {
             const [x, y] = key.split(',').map(Number);
             if (!visibleChunks.some(vc => vc.x === x && vc.y === y)) {
                 this.recentlyUnloaded.set(key, chunk);
                 this.loadedChunks.delete(key);
-                unloadedChunks++;
             }
         });
 
         // Limit the size of recentlyUnloaded cache
-        while (this.recentlyUnloaded.size > 20) {
+        while (this.recentlyUnloaded.size > 50) { // Increased cache size
             const oldestKey = this.recentlyUnloaded.keys().next().value;
             this.recentlyUnloaded.delete(oldestKey);
         }
 
-        if (newChunks > 0 || reloadedChunks > 0 || unloadedChunks > 0) {
-            console.log(`Chunks updated: ${newChunks} new, ${reloadedChunks} reloaded, ${unloadedChunks} unloaded. Total: ${this.loadedChunks.size}`);
+        if (newChunks > 0 || reloadedChunks > 0) {
+            console.log(`Chunks updated: ${newChunks} new, ${reloadedChunks} reloaded. Total: ${this.loadedChunks.size}`);
         }
     }
 
