@@ -55,9 +55,14 @@ export class InteractiveObject {
         if (!this.lastChunk || 
             this.lastChunk.x !== currentChunk.x || 
             this.lastChunk.y !== currentChunk.y) {
-            console.log(`Object ${this.type} moved from chunk ${JSON.stringify(this.lastChunk)} to ${JSON.stringify(currentChunk)}`);
-            this.lastChunk = currentChunk;
-            // Here you would implement logic to update the object's chunk in your chunk management system
+            if (isFinite(currentChunk.x) && isFinite(currentChunk.y)) {
+                console.log(`Object ${this.type} moved from chunk ${JSON.stringify(this.lastChunk)} to ${JSON.stringify(currentChunk)}`);
+                this.lastChunk = currentChunk;
+                // Here you would implement logic to update the object's chunk in your chunk management system
+            } else {
+                console.warn(`Object ${this.type} moved to an invalid chunk position: ${JSON.stringify(currentChunk)}`);
+                // Handle the out-of-bounds object (e.g., remove it or place it back in a valid position)
+            }
         }
     }
 
