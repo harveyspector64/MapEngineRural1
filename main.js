@@ -296,9 +296,10 @@ function handleMouseUp(e) {
             ufo.beam.releaseObject();
             console.log("Object eaten and removed from game");
         } else {
+            const throwStrength = 5; // Adjust this value to change throw strength
             const throwVelocity = {
-                x: mouseVelocity.x * 0.5,
-                y: mouseVelocity.y * 0.5
+                x: mouseVelocity.x * throwStrength,
+                y: mouseVelocity.y * throwStrength
             };
             const releasedObject = ufo.beam.releaseObject(throwVelocity);
             if (releasedObject) {
