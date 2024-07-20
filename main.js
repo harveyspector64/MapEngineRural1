@@ -124,6 +124,7 @@ function addObjectsToChunk(chunk, chunkKey) {
     const chunkSize = chunkManager.chunkSize;
     const tileSize = renderer.tileSize;
     const chunkPixelSize = chunkSize * tileSize;
+    const buffer = tileSize * 2; // Buffer to keep objects away from chunk edges
 
     // Add cow groups
     const cowGroupChance = 0.4;
@@ -131,18 +132,18 @@ function addObjectsToChunk(chunk, chunkKey) {
         const groupCount = Math.floor(Math.random() * 2) + 1;
         for (let g = 0; g < groupCount; g++) {
             const groupSize = Math.floor(Math.random() * 3) + 2;
-            const groupX = Math.floor(Math.random() * (chunkSize - 4)) + 2; // Avoid edges
-            const groupY = Math.floor(Math.random() * (chunkSize - 4)) + 2; // Avoid edges
+            const groupX = Math.floor(Math.random() * (chunkSize - 4)) + 2;
+            const groupY = Math.floor(Math.random() * (chunkSize - 4)) + 2;
             
             for (let i = 0; i < groupSize; i++) {
-                const offsetX = Math.floor(Math.random() * 3) - 1; // -1 to 1
-                const offsetY = Math.floor(Math.random() * 3) - 1; // -1 to 1
+                const offsetX = Math.floor(Math.random() * 3) - 1;
+                const offsetY = Math.floor(Math.random() * 3) - 1;
                 const x = groupX + offsetX;
                 const y = groupY + offsetY;
                 
                 if (chunk.terrain[y][x] === TILES.GRASS) {
-                    const worldX = chunk.x * chunkPixelSize + x * tileSize + tileSize / 2;
-                    const worldY = chunk.y * chunkPixelSize + y * tileSize + tileSize / 2;
+                    const worldX = chunk.x * chunkPixelSize + x * tileSize + buffer + Math.random() * (tileSize - buffer * 2);
+                    const worldY = chunk.y * chunkPixelSize + y * tileSize + buffer + Math.random() * (tileSize - buffer * 2);
                     const cow = createInteractiveObject(OBJECT_TYPES.COW, worldX, worldY);
                     interactiveObjectManager.addObject(cow, chunkKey);
                 }
@@ -150,7 +151,7 @@ function addObjectsToChunk(chunk, chunkKey) {
         }
     }
 
-    // Add canoes to water tiles
+    // Add canoes to water tiles (similar changes for buffer)
     let waterTiles = [];
     for (let y = 0; y < chunkSize; y++) {
         for (let x = 0; x < chunkSize; x++) {
@@ -161,15 +162,15 @@ function addObjectsToChunk(chunk, chunkKey) {
     }
 
     if (waterTiles.length > 0) {
-        const canoeCount = Math.floor(Math.random() * 3) + 1; // 1-3 canoes per lake
+        const canoeCount = Math.floor(Math.random() * 3) + 1;
         for (let i = 0; i < canoeCount; i++) {
-            if (Math.random() < 0.7) { // 70% chance to place a canoe
+            if (Math.random() < 0.7) {
                 const tileIndex = Math.floor(Math.random() * waterTiles.length);
                 const {x, y} = waterTiles[tileIndex];
-                const worldX = chunk.x * chunkPixelSize + x * tileSize;
-                const worldY = chunk.y * chunkPixelSize + y * tileSize;
+                const worldX = chunk.x * chunkPixelSize + x * tileSize + buffer + Math.random() * (tileSize - buffer * 2);
+                const worldY = chunk.y * chunkPixelSize + y * tileSize + buffer + Math.random() * (tileSize - buffer * 2);
                 const canoe = createInteractiveObject(OBJECT_TYPES.CANOE, worldX, worldY);
-                canoe.isMoving = Math.random() < 0.5; // 50% chance for a canoe to be moving
+                canoe.isMoving = Math.random() < 0.5;
                 interactiveObjectManager.addObject(canoe, chunkKey);
             }
         }
@@ -305,13 +306,19 @@ function handleMouseUp(e) {
         } else {
             const ufoVelocity = ufo.getVelocity();
             const throwStrength = 10;
-            const throwVelocity = {
-                x: (isFinite(mouseVelocity.x) ? mouseVelocity.x : 0 + ufoVelocity.x) * throwStrength,
-                y: (isFinite(mouseVelocity.y) ? mouseVelocity.y : 0 + ufoVelocity.y) * throwStrength
+            const maxThrowVelocity = 1000;
+            let throwVelocity = {
+                x: (mouseVelocity.x + ufoVelocity.x) * throwStrength,
+                y: (mouseVelocity.y + ufoVelocity.y) * throwStrength
             };
 
-            // Add a vertical component to the throw for more interesting arcs
-            throwVelocity.y -= 500;
+            // Cap throw velocity
+            const velocityMagnitude = Math.sqrt(throwVelocity.x ** 2 + throwVelocity.y ** 2);
+            if (velocityMagnitude > maxThrowVelocity) {
+                const scale = maxThrowVelocity / velocityMagnitude;
+                throwVelocity.x *= scale;
+                throwVelocity.y *= scale;
+            }
 
             const releasedObject = ufo.beam.releaseObject(throwVelocity);
             if (releasedObject) {
