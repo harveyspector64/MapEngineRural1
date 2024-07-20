@@ -1,23 +1,32 @@
 // src/core/Physics.js
 
 export default class Physics {
+    static MAX_THROW_VELOCITY = 1000; // Maximum throw velocity
+    static FRICTION = 0.98; // Friction coefficient
+    static AIR_RESISTANCE = 0.995; // Air resistance coefficient
+
     static applyThrow(object, velocity, deltaTime) {
+        // Cap the throw velocity
+        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        if (speed > this.MAX_THROW_VELOCITY) {
+            const scale = this.MAX_THROW_VELOCITY / speed;
+            velocity.x *= scale;
+            velocity.y *= scale;
+        }
+
         // Apply throw velocity
         object.x += velocity.x * deltaTime;
         object.y += velocity.y * deltaTime;
 
-        // Apply minimal "gravity" (more like friction) for top-down perspective
-        const friction = 0.5; // Adjust this value to change the slowdown rate
-        velocity.x *= Math.pow(1 - friction, deltaTime);
-        velocity.y *= Math.pow(1 - friction, deltaTime);
+        // Apply friction and air resistance
+        velocity.x *= Math.pow(this.FRICTION * this.AIR_RESISTANCE, deltaTime * 60);
+        velocity.y *= Math.pow(this.FRICTION * this.AIR_RESISTANCE, deltaTime * 60);
 
         // Apply rotation based on velocity
         object.rotation += (Math.abs(velocity.x) + Math.abs(velocity.y)) * 0.01;
 
-        // Gradually slow down the object
-        const slowdown = 0.99;
-        velocity.x *= Math.pow(slowdown, deltaTime * 60);
-        velocity.y *= Math.pow(slowdown, deltaTime * 60);
+        // Ensure rotation stays within 0-360 degrees
+        object.rotation = object.rotation % (2 * Math.PI);
 
         return { x: object.x, y: object.y, rotation: object.rotation, velocity: velocity };
     }
@@ -44,11 +53,10 @@ export default class Physics {
                         object.x = (tileX + 0.5) * tileSize;
                         object.y = (tileY + 0.5) * tileSize;
                         object.velocity = { x: 0, y: 0 };
-                        object.rotation = 0;
                         return true;
                     } else if (tile !== 'grass' && tile !== 'dirt' && tile !== 'crop') {
                         // Object collides with non-passable terrain
-                        const bounceReduction = 0.7;
+                        const bounceReduction = 0.5;
                         object.velocity.x *= -bounceReduction;
                         object.velocity.y *= -bounceReduction;
                         // Adjust position to prevent sticking
@@ -82,5 +90,9 @@ export default class Physics {
         if (Math.random() < 0.02) {
             npc.moveDirection = Math.random() * Math.PI * 2;
         }
+
+        // Apply slight rotation for visual interest
+        npc.rotation += (Math.random() - 0.5) * 0.1;
+        npc.rotation = npc.rotation % (2 * Math.PI);
     }
 }
