@@ -252,7 +252,6 @@ function handleMouseDown(e) {
 }
 
 // Handle mouse movement
-// main.js
 
 function handleMouseMove(e) {
     const rect = canvas.getBoundingClientRect();
@@ -277,6 +276,24 @@ function handleMouseMove(e) {
 
     lastMousePosition = currentMousePosition;
     lastMouseMoveTime = currentTime;
+}
+
+function updateBeamFromMouse(mousePosition) {
+    const ufoPos = ufo.getPosition();
+    const dx = mousePosition.x - ufoPos.x;
+    const dy = mousePosition.y - ufoPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    const ufoRadius = 16;  // Assuming the UFO sprite is 32x32 pixels
+
+    if (distance > ufoRadius) {
+        ufo.setBeamDirection(dx / distance, dy / distance);
+        ufo.setBeamLength(Math.min(distance - ufoRadius, ufo.beam.maxLength));
+        console.log(`Beam directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(Math.min(distance - ufoRadius, ufo.beam.maxLength)).toFixed(2)}`);
+    } else {
+        ufo.setBeamLength(0);
+        console.log('Beam fully retracted');
+    }
 }
 
 function updateBeamFromMouse(mousePosition) {
