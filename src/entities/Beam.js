@@ -68,12 +68,7 @@ export default class Beam {
     update(deltaTime) {
         if (this.capturedObject) {
             const ufoPos = this.ufo.getPosition();
-            const targetX = ufoPos.x + this.direction.x * this.length;
-            const targetY = ufoPos.y + this.direction.y * this.length;
-
-            const lerpFactor = 1 - Math.pow(1 - this.captureStrength, deltaTime * 60);
-            this.capturedObject.x += (targetX - this.capturedObject.x) * lerpFactor;
-            this.capturedObject.y += (targetY - this.capturedObject.y) * lerpFactor;
+            Physics.applyBeamForce(this.capturedObject, ufoPos, this.captureStrength, deltaTime);
 
             const distToUfo = Math.sqrt(
                 Math.pow(this.capturedObject.x - ufoPos.x, 2) +
