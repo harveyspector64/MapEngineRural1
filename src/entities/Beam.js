@@ -1,5 +1,7 @@
 // src/entities/Beam.js
 
+import Physics from '../core/Physics.js';
+
 export default class Beam {
     constructor(ufo) {
         this.ufo = ufo;
@@ -84,8 +86,19 @@ export default class Beam {
                         this.onObjectEaten(this.capturedObject);
                     }
                     this.capturedObject = null;
+                } else {
+                    // If the UFO couldn't eat the object, release it
+                    this.releaseObject();
                 }
             }
+        }
+
+        // Update beam length based on UFO movement
+        if (this.isActive) {
+            const ufoVelocity = this.ufo.getVelocity();
+            const velocityMagnitude = Math.sqrt(ufoVelocity.x * ufoVelocity.x + ufoVelocity.y * ufoVelocity.y);
+            const lengthChange = velocityMagnitude * deltaTime * 0.5; // Adjust this factor to change beam responsiveness
+            this.setLength(this.length + lengthChange);
         }
     }
 
