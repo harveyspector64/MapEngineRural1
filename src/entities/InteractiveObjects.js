@@ -2,6 +2,13 @@
 
 import Physics from '../core/Physics.js';
 
+export const OBJECT_TYPES = {
+    COW: 'cow',
+    CANOE: 'canoe',
+    EMPTY_CANOE: 'emptyCanoe',
+    FISHERMAN: 'fisherman'
+};
+
 export class InteractiveObject {
     constructor(type, x, y, sprite) {
         this.type = type;
@@ -77,10 +84,8 @@ export class InteractiveObject {
 }
 
 export class InteractiveObjectManager {
-    constructor(chunkSize, tileSize) {
+    constructor() {
         this.objects = new Map();
-        this.chunkSize = chunkSize;
-        this.tileSize = tileSize;
     }
 
     addObject(object, chunkKey) {
@@ -99,15 +104,17 @@ export class InteractiveObjectManager {
         return this.objects.get(chunkKey) || [];
     }
 
-    updateObjects(deltaTime, chunkKey, getTerrain) {
+    updateObjects(deltaTime, chunkKey, getTerrain, tileSize) {
         const chunkObjects = this.getObjectsInChunk(chunkKey);
         chunkObjects.forEach(obj => {
-            obj.update(deltaTime, getTerrain, this.tileSize);
-            
-            // Check if object has moved to a new chunk
-            const newChunkKey = this.getChunkKeyForPosition(obj.x, obj.y);
-            if (newChunkKey !== chunkKey) {
-                this.removeObject(obj, chunkKey);
+            const chunkTransition = obj.update(deltaTime, getTerrain, tileSize);
+            if (chunkTransition) {
+                const { oldChunk, newChunk } = chunkTransition;
+                if (oldChunk) {
+                    const oldChunkKey = `${oldChunk.x},${oldChunk.y}`;
+                    this.removeObject(obj, oldChunkKey);
+                }
+                const newChunkKey = `${newChunk.x},${newChunk.y}`;
                 this.addObject(obj, newChunkKey);
             }
         });
@@ -126,12 +133,6 @@ export class InteractiveObjectManager {
 
     getAllObjects() {
         return Array.from(this.objects.values()).flat();
-    }
-
-    getChunkKeyForPosition(x, y) {
-        const chunkX = Math.floor(x / (this.chunkSize * this.tileSize));
-        const chunkY = Math.floor(y / (this.chunkSize * this.tileSize));
-        return `${chunkX},${chunkY}`;
     }
 }
 
