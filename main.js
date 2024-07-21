@@ -39,6 +39,8 @@ let lastTimestamp = 0;
 let lastMousePosition = { x: 0, y: 0 };
 let lastMouseMoveTime = 0;
 let mouseVelocity = { x: 0, y: 0 };
+let initialMousePosition = { x: 0, y: 0 };
+
 
 // Set to store currently pressed keys
 const keys = new Set();
@@ -228,13 +230,24 @@ function handleWheel(e) {
 }
 
 // Handle mouse button press
-// Modify the mousedown event listener
 function handleMouseDown(e) {
     if (e.button === 0) { // Left click
         e.preventDefault();
         isMouseDown = true;
+        
+        // Store the initial mouse position
+        const rect = canvas.getBoundingClientRect();
+        initialMousePosition = {
+            x: (e.clientX - rect.left) / zoomLevel + cameraX,
+            y: (e.clientY - rect.top) / zoomLevel + cameraY
+        };
+        
         ufo.activateBeam();
-        updateBeamFromMouse(e);
+        
+        // Use the initial mouse position to set the beam direction
+        updateBeamFromMouse(initialMousePosition);
+        
+        console.log("Beam activated at initial position:", initialMousePosition);
     }
 }
 
@@ -307,8 +320,8 @@ function updateBeamFromMouse(mousePosition) {
 
     if (distance > ufoRadius) {
         ufo.setBeamDirection(dx / distance, dy / distance);
-        ufo.setBeamLength(distance - ufoRadius);
-        console.log(`Beam directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(distance - ufoRadius).toFixed(2)}`);
+        ufo.setBeamLength(Math.min(distance - ufoRadius, ufo.beam.maxLength));
+        console.log(`Beam directed to (${dx.toFixed(2)}, ${dy.toFixed(2)}), length: ${(Math.min(distance - ufoRadius, ufo.beam.maxLength)).toFixed(2)}`);
     } else {
         ufo.setBeamLength(0);
         console.log('Beam fully retracted');
