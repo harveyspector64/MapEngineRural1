@@ -36,6 +36,7 @@ export class InteractiveObject {
             this.y = updatedState.y;
             this.rotation = updatedState.rotation;
             this.velocity = updatedState.velocity;
+            console.log(`Object ${this.type} updated: position (${this.x.toFixed(2)}, ${this.y.toFixed(2)}), velocity (${this.velocity.x.toFixed(2)}, ${this.velocity.y.toFixed(2)})`);
 
             // Check for terrain collision
             Physics.checkTerrainCollision(this, getTerrain, tileSize);
