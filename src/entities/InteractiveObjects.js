@@ -72,6 +72,7 @@ export class InteractiveObject {
         this.x += Math.cos(windDirection) * windStrength * deltaTime;
         this.y += Math.sin(windDirection) * windStrength * deltaTime;
     }
+
     setPosition(x, y) {
         this.x = x;
         this.y = y;
