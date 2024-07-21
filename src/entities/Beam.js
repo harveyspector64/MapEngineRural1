@@ -83,10 +83,13 @@ export default class Beam {
             // Check if object is fully retracted
             if (distToUfo <= this.ufoRadius && this.length <= this.minLength) {
                 console.log("Object fully retracted into UFO");
-                if (typeof this.onObjectAbducted === 'function') {
-                    this.onObjectAbducted(this.capturedObject);
+                if (this.ufo.eatObject(this.capturedObject)) {
+                    console.log("Object eaten by UFO");
+                    if (typeof this.onObjectEaten === 'function') {
+                        this.onObjectEaten(this.capturedObject);
+                    }
+                    this.capturedObject = null;
                 }
-                this.capturedObject = null;
             }
         }
     }
