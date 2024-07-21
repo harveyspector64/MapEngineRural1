@@ -52,6 +52,7 @@ export class InteractiveObject {
             // Check for terrain collision
             Physics.checkTerrainCollision(this, getTerrain, tileSize);
         }
+        // When being abducted, position is controlled by the beam
     }
 
     applyEnvironmentalEffects(deltaTime, getTerrain, tileSize) {
