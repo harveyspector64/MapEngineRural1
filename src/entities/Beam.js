@@ -49,21 +49,23 @@ export default class Beam {
         }
     }
 
-    releaseObject(throwVelocity = { x: 0, y: 0 }) {
-        if (this.capturedObject) {
-            console.log("Object released:", this.capturedObject);
-            this.capturedObject.isBeingAbducted = false;
-            
-            // Apply throw velocity
-            this.capturedObject.velocity.x = throwVelocity.x;
-            this.capturedObject.velocity.y = throwVelocity.y;
-            
-            const releasedObject = this.capturedObject;
-            this.capturedObject = null;
-            return releasedObject;
-        }
-        return null;
+releaseObject(throwVelocity = { x: 0, y: 0 }) {
+    if (this.capturedObject) {
+        console.log("Object released:", this.capturedObject);
+        this.capturedObject.isBeingAbducted = false;
+        
+        // Apply throw velocity
+        this.capturedObject.velocity = {
+            x: throwVelocity.x,
+            y: throwVelocity.y
+        };
+        
+        const releasedObject = this.capturedObject;
+        this.capturedObject = null;
+        return releasedObject;
     }
+    return null;
+}
 
     update(deltaTime) {
         if (this.capturedObject) {
