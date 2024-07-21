@@ -304,12 +304,11 @@ function handleMouseUp(e) {
             ufo.beam.releaseObject();
             console.log("Object eaten and removed from game");
         } else {
-            const ufoVelocity = ufo.getVelocity();
-            const throwStrength = 10;
-            const maxThrowVelocity = 1000;
+            const throwStrength = 5;
+            const maxThrowVelocity = 500;
             let throwVelocity = {
-                x: (mouseVelocity.x + ufoVelocity.x) * throwStrength,
-                y: (mouseVelocity.y + ufoVelocity.y) * throwStrength
+                x: mouseVelocity.x * throwStrength,
+                y: mouseVelocity.y * throwStrength
             };
 
             // Cap throw velocity
