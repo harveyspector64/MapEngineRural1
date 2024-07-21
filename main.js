@@ -473,6 +473,7 @@ function updateDebugInfo() {
         Recently Unloaded: ${chunkManager.recentlyUnloaded.size}<br>
         FPS: ${(1000 / (performance.now() - lastTimestamp)).toFixed(2)}<br>
         Beam Active: ${ufo.beam.isActive}<br>
+        Eaten Objects: ${ufo.eatenObjects.length}<br>
         Captured Object: ${ufo.beam.capturedObject ? ufo.beam.capturedObject.type : 'None'}
     `;
 }
