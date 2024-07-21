@@ -15,10 +15,10 @@ export default class UFO {
         this.maxSpeed = 35;
         this.friction = 0.82;
         this.beam = new Beam(this);
-        this.eatRadius = this.radius * 1.5; // Increased eat radius for more forgiving detection
+        this.eatRadius = 32; // Adjusted eat radius for more consistent detection
         this.radius = 16; // Assuming UFO sprite is 32x32 pixels
         this.isFlashing = false;
-        this.eatenObjects = []; // New property to store eaten objects
+        this.eatenObjects = []; // Rename from capturedObjects to eatenObjects
     }
 
     update(deltaTime) {
@@ -90,11 +90,14 @@ export default class UFO {
     }
 
     eatObject(object) {
-        console.log("UFO ate object:", object);
-        this.eatenObjects.push(object);
-        this.flashEffect();
-        // You can add any additional effects or scoring here
-        console.log(`Total objects eaten: ${this.eatenObjects.length}`);
+        if (this.canEatObject(object)) {
+            console.log("UFO ate object:", object);
+            this.eatenObjects.push(object);
+            this.flashEffect();
+            console.log(`Total objects eaten: ${this.eatenObjects.length}`);
+            return true;
+        }
+        return false;
     }
 
     flashEffect() {
