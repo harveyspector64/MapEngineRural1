@@ -288,11 +288,14 @@ function handleMouseUp(e) {
             Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
         );
 
+        console.log(`Object release: distToUfo = ${distToUfo.toFixed(2)}, object type = ${ufo.beam.capturedObject.type}`);
+
         if (ufo.canEatObject(ufo.beam.capturedObject)) {
             ufo.eatObject(ufo.beam.capturedObject);
             const chunkKey = getChunkKeyForPosition(objPos.x, objPos.y);
             interactiveObjectManager.removeObject(ufo.beam.capturedObject, chunkKey);
             ufo.beam.releaseObject();
+            console.log("Object eaten and removed from game");
         } else {
             const throwVelocity = {
                 x: mouseVelocity.x * 0.5,
@@ -302,6 +305,7 @@ function handleMouseUp(e) {
             if (releasedObject) {
                 const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
                 interactiveObjectManager.addObject(releasedObject, chunkKey);
+                console.log("Object released with velocity:", throwVelocity);
             }
         }
     }
