@@ -69,9 +69,13 @@ export default class Beam {
 
     update(deltaTime) {
         if (this.capturedObject) {
-            const ufoPos = this.ufo.getPosition();
-            Physics.applyBeamForce(this.capturedObject, ufoPos, this.captureStrength, deltaTime);
+            const endPoint = this.getEndPoint();
+            
+            // Update captured object's position to match beam end point
+            this.capturedObject.x = endPoint.x;
+            this.capturedObject.y = endPoint.y;
 
+            const ufoPos = this.ufo.getPosition();
             const distToUfo = Math.sqrt(
                 Math.pow(this.capturedObject.x - ufoPos.x, 2) +
                 Math.pow(this.capturedObject.y - ufoPos.y, 2)
@@ -86,9 +90,6 @@ export default class Beam {
                         this.onObjectEaten(this.capturedObject);
                     }
                     this.capturedObject = null;
-                } else {
-                    // If the UFO couldn't eat the object, release it
-                    this.releaseObject();
                 }
             }
         }
