@@ -2,13 +2,6 @@
 
 import Physics from '../core/Physics.js';
 
-export const OBJECT_TYPES = {
-    COW: 'cow',
-    CANOE: 'canoe',
-    EMPTY_CANOE: 'emptyCanoe',
-    FISHERMAN: 'fisherman'
-};
-
 export class InteractiveObject {
     constructor(type, x, y, sprite) {
         this.type = type;
@@ -41,41 +34,37 @@ export class InteractiveObject {
             Physics.checkTerrainCollision(this, getTerrain, tileSize);
 
             // Check if object has moved to a new chunk
-            this.checkChunkTransition(tileSize);
+            return this.checkChunkTransition(tileSize);
         }
+        return false;
     }
 
-checkChunkTransition(tileSize) {
-    const chunkSize = 64 * tileSize;
-    const currentChunk = {
-        x: Math.floor(this.x / chunkSize),
-        y: Math.floor(this.y / chunkSize)
-    };
+    checkChunkTransition(tileSize) {
+        const chunkSize = 64 * tileSize;
+        const currentChunk = {
+            x: Math.floor(this.x / chunkSize),
+            y: Math.floor(this.y / chunkSize)
+        };
 
-    if (!this.lastChunk || 
-        this.lastChunk.x !== currentChunk.x || 
-        this.lastChunk.y !== currentChunk.y) {
-        if (isFinite(this.x) && isFinite(this.y)) {
-            console.log(`Object ${this.type} moved from chunk ${JSON.stringify(this.lastChunk)} to ${JSON.stringify(currentChunk)}`);
-            
-            // Remove from old chunk and add to new chunk
-            if (this.lastChunk) {
-                const oldChunkKey = `${this.lastChunk.x},${this.lastChunk.y}`;
-                interactiveObjectManager.removeObject(this, oldChunkKey);
+        if (!this.lastChunk || 
+            this.lastChunk.x !== currentChunk.x || 
+            this.lastChunk.y !== currentChunk.y) {
+            if (isFinite(this.x) && isFinite(this.y)) {
+                console.log(`Object ${this.type} moved from chunk ${JSON.stringify(this.lastChunk)} to ${JSON.stringify(currentChunk)}`);
+                const oldChunk = this.lastChunk;
+                this.lastChunk = currentChunk;
+                return { oldChunk, newChunk: currentChunk };
+            } else {
+                console.warn(`Object ${this.type} at invalid position: (${this.x}, ${this.y}). Attempting to recover.`);
+                this.x = Math.max(Physics.WORLD_BOUNDS.minX, Math.min(this.x || 0, Physics.WORLD_BOUNDS.maxX));
+                this.y = Math.max(Physics.WORLD_BOUNDS.minY, Math.min(this.y || 0, Physics.WORLD_BOUNDS.maxY));
+                this.velocity = { x: 0, y: 0 };
+                this.lastChunk = currentChunk;
+                return { oldChunk: null, newChunk: currentChunk };
             }
-            const newChunkKey = `${currentChunk.x},${currentChunk.y}`;
-            interactiveObjectManager.addObject(this, newChunkKey);
-            
-            this.lastChunk = currentChunk;
-        } else {
-            console.warn(`Object ${this.type} at invalid position: (${this.x}, ${this.y}). Attempting to recover.`);
-            this.x = Math.max(Physics.WORLD_BOUNDS.minX, Math.min(this.x || 0, Physics.WORLD_BOUNDS.maxX));
-            this.y = Math.max(Physics.WORLD_BOUNDS.minY, Math.min(this.y || 0, Physics.WORLD_BOUNDS.maxY));
-            this.velocity = { x: 0, y: 0 };
-            this.lastChunk = currentChunk;
         }
+        return null;
     }
-}
 
     setPosition(x, y) {
         this.x = x;
@@ -86,8 +75,6 @@ checkChunkTransition(tileSize) {
         return { x: this.x, y: this.y };
     }
 }
-
-// src/entities/InteractiveObjects.js
 
 export class InteractiveObjectManager {
     constructor(chunkSize, tileSize) {
