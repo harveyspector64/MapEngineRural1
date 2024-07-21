@@ -6,20 +6,27 @@ export default class Physics {
         object.x += velocity.x * deltaTime;
         object.y += velocity.y * deltaTime;
 
-        // Apply gravity (adjust this value to change the gravity strength)
-        const gravity = 9.8 * 50; // Increased for more visible effect
-        object.y += 0.5 * gravity * deltaTime * deltaTime;
-
-        // Apply air resistance
-        const airResistance = 0.99;
-        velocity.x *= Math.pow(airResistance, deltaTime * 60);
-        velocity.y *= Math.pow(airResistance, deltaTime * 60);
+        // Apply friction based on object type and terrain
+        const frictionCoefficient = this.getFrictionCoefficient(object.type);
+        velocity.x *= Math.pow(frictionCoefficient, deltaTime * 60);
+        velocity.y *= Math.pow(frictionCoefficient, deltaTime * 60);
 
         // Apply rotation based on velocity
         object.rotation += (Math.abs(velocity.x) + Math.abs(velocity.y)) * 0.01;
 
         return { x: object.x, y: object.y, rotation: object.rotation };
     }
+
+    static getFrictionCoefficient(objectType) {
+        switch (objectType) {
+            case OBJECT_TYPES.COW: return 0.95;
+            case OBJECT_TYPES.CANOE: return 0.99; // Less friction for water
+            case OBJECT_TYPES.EMPTY_CANOE: return 0.99;
+            case OBJECT_TYPES.FISHERMAN: return 0.9;
+            default: return 0.98;
+        }
+    }
+
 
     static checkTerrainCollision(object, getTerrain, tileSize) {
         if (!object || typeof object.x !== 'number' || typeof object.y !== 'number') {
@@ -77,6 +84,26 @@ export default class Physics {
         // Randomly change direction occasionally
         if (Math.random() < 0.02) {
             npc.moveDirection = Math.random() * Math.PI * 2;
+        }
+    }
+        static applyBeamForce(object, ufoPosition, beamStrength, deltaTime) {
+        const dx = ufoPosition.x - object.x;
+        const dy = ufoPosition.y - object.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0) {
+            const forceMagnitude = beamStrength / (distance * distance);
+            const forceX = (dx / distance) * forceMagnitude;
+            const forceY = (dy / distance) * forceMagnitude;
+            
+            // Apply force based on object mass
+            object.velocity.x += (forceX / object.mass) * deltaTime;
+            object.velocity.y += (forceY / object.mass) * deltaTime;
+            
+            // Add slight wobble
+            const wobbleStrength = 0.5;
+            object.velocity.x += (Math.random() - 0.5) * wobbleStrength;
+            object.velocity.y += (Math.random() - 0.5) * wobbleStrength;
         }
     }
 }
