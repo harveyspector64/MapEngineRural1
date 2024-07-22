@@ -289,23 +289,50 @@ function handleMouseMove(e) {
 function handleMouseUp(e) {
     isMouseDown = false;
     if (ufo.beam.capturedObject) {
-        const ufoVelocity = ufo.getVelocity();
-        const beamDirection = ufo.beam.direction;
-        const throwStrength = 10; // Adjust this value to change throw strength
+        const ufoPos = ufo.getPosition();
+        const objPos = ufo.beam.capturedObject.getPosition();
+        const distToUfo = Math.sqrt(
+            Math.pow(objPos.x - ufoPos.x, 2) + Math.pow(objPos.y - ufoPos.y, 2)
+        );
 
-        const throwVelocity = {
-            x: (ufoVelocity.x + beamDirection.x * throwStrength),
-            y: (ufoVelocity.y + beamDirection.y * throwStrength)
-        };
+        console.log(`Object release: distToUfo = ${distToUfo.toFixed(2)}, object type = ${ufo.beam.capturedObject.type}`);
 
-        const releasedObject = ufo.beam.releaseObject(throwVelocity);
-        if (releasedObject) {
-            const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
-            interactiveObjectManager.addObject(releasedObject, chunkKey);
-            console.log("Object released with velocity:", throwVelocity);
+        if (ufo.canEatObject(ufo.beam.capturedObject)) {
+            ufo.eatObject(ufo.beam.capturedObject);
+            const chunkKey = getChunkKeyForPosition(objPos.x, objPos.y);
+            interactiveObjectManager.removeObject(ufo.beam.capturedObject, chunkKey);
+            ufo.beam.releaseObject();
+            console.log("Object eaten and removed from game");
+        } else {
+            const throwStrength = 5;
+            const maxThrowVelocity = 500;
+            let throwVelocity = {
+                x: mouseVelocity.x * throwStrength,
+                y: mouseVelocity.y * throwStrength
+            };
+
+            // Cap throw velocity
+            const velocityMagnitude = Math.sqrt(throwVelocity.x ** 2 + throwVelocity.y ** 2);
+            if (velocityMagnitude > maxThrowVelocity) {
+                const scale = maxThrowVelocity / velocityMagnitude;
+                throwVelocity.x *= scale;
+                throwVelocity.y *= scale;
+            }
+
+            const releasedObject = ufo.beam.releaseObject(throwVelocity);
+            if (releasedObject) {
+                // Update object position based on UFO position and beam direction
+                const beamEndPoint = ufo.beam.getEndPoint();
+                releasedObject.setPosition(beamEndPoint.x, beamEndPoint.y);
+
+                const chunkKey = getChunkKeyForPosition(releasedObject.x, releasedObject.y);
+                interactiveObjectManager.addObject(releasedObject, chunkKey);
+                console.log("Object released with velocity:", throwVelocity);
+            }
         }
     }
     ufo.deactivateBeam();
+    console.log('Beam deactivated');
 }
 
 // Update beam position and length based on mouse position
