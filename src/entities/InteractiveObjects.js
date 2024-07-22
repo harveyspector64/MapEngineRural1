@@ -59,7 +59,6 @@ export class InteractiveObject {
         }
         return null;
     }
-}
 
     setPosition(x, y) {
         this.x = x;
