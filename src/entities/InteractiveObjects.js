@@ -24,28 +24,25 @@ export class InteractiveObject {
         this.lastChunk = null;
     }
 
-update(deltaTime, getTerrain, tileSize) {
-    if (!this.isBeingAbducted) {
-        if (this.isMoving) {
-            Physics.updateNPCMovement(this, deltaTime, getTerrain, tileSize);
+    update(deltaTime, getTerrain, tileSize) {
+        if (!this.isBeingAbducted) {
+            if (this.isMoving) {
+                Physics.updateNPCMovement(this, deltaTime, getTerrain, tileSize);
+            }
+
+            const updatedState = Physics.applyThrow(this, this.velocity, deltaTime);
+            this.x = updatedState.x;
+            this.y = updatedState.y;
+            this.rotation = updatedState.rotation;
+            this.velocity = updatedState.velocity;
+
+            Physics.checkTerrainCollision(this, getTerrain, tileSize);
+
+            return this.checkChunkTransition(tileSize);
         }
-
-        // Apply throwing physics
-        const updatedState = Physics.applyThrow(this, this.velocity, deltaTime);
-        this.x = updatedState.x;
-        this.y = updatedState.y;
-        this.rotation = updatedState.rotation;
-        this.velocity = updatedState.velocity;
-        console.log(`Object ${this.type} updated: position (${this.x.toFixed(2)}, ${this.y.toFixed(2)}), velocity (${this.velocity.x.toFixed(2)}, ${this.velocity.y.toFixed(2)})`);
-
-        // Check for terrain collision
-        Physics.checkTerrainCollision(this, getTerrain, tileSize);
-
-        // Check if object has moved to a new chunk
-        return this.checkChunkTransition(tileSize);
+        return false;
     }
-    return false;
-}
+
     checkChunkTransition(tileSize) {
         const chunkSize = 64 * tileSize;
         const currentChunk = {
@@ -56,22 +53,13 @@ update(deltaTime, getTerrain, tileSize) {
         if (!this.lastChunk || 
             this.lastChunk.x !== currentChunk.x || 
             this.lastChunk.y !== currentChunk.y) {
-            if (isFinite(this.x) && isFinite(this.y)) {
-                console.log(`Object ${this.type} moved from chunk ${JSON.stringify(this.lastChunk)} to ${JSON.stringify(currentChunk)}`);
-                const oldChunk = this.lastChunk;
-                this.lastChunk = currentChunk;
-                return { oldChunk, newChunk: currentChunk };
-            } else {
-                console.warn(`Object ${this.type} at invalid position: (${this.x}, ${this.y}). Attempting to recover.`);
-                this.x = Math.max(Physics.WORLD_BOUNDS.minX, Math.min(this.x || 0, Physics.WORLD_BOUNDS.maxX));
-                this.y = Math.max(Physics.WORLD_BOUNDS.minY, Math.min(this.y || 0, Physics.WORLD_BOUNDS.maxY));
-                this.velocity = { x: 0, y: 0 };
-                this.lastChunk = currentChunk;
-                return { oldChunk: null, newChunk: currentChunk };
-            }
+            const oldChunk = this.lastChunk;
+            this.lastChunk = currentChunk;
+            return { oldChunk, newChunk: currentChunk };
         }
         return null;
     }
+}
 
     setPosition(x, y) {
         this.x = x;
