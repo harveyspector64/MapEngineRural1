@@ -50,7 +50,6 @@ export default class Physics {
         return { x: object.x, y: object.y, rotation: object.rotation, velocity: velocity };
     }
 
-
     static checkTerrainCollision(object, getTerrain, tileSize) {
         if (!object || typeof object.x !== 'number' || typeof object.y !== 'number') {
             console.warn('Invalid object passed to checkTerrainCollision:', object);
