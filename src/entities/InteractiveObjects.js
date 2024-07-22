@@ -31,10 +31,16 @@ export class InteractiveObject {
             }
 
             const updatedState = Physics.applyThrow(this, this.velocity, deltaTime);
-            this.x = updatedState.x;
-            this.y = updatedState.y;
-            this.rotation = updatedState.rotation;
-            this.velocity = updatedState.velocity;
+            if (!isNaN(updatedState.x) && !isNaN(updatedState.y)) {
+                this.x = updatedState.x;
+                this.y = updatedState.y;
+                this.rotation = updatedState.rotation;
+                this.velocity = updatedState.velocity;
+            } else {
+                console.warn("Invalid position update for object:", this);
+                // Reset velocity to prevent further invalid updates
+                this.velocity = { x: 0, y: 0 };
+            }
 
             Physics.checkTerrainCollision(this, getTerrain, tileSize);
 
@@ -42,7 +48,6 @@ export class InteractiveObject {
         }
         return false;
     }
-
     checkChunkTransition(tileSize) {
         const chunkSize = 64 * tileSize;
         const currentChunk = {
