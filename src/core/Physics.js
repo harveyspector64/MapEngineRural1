@@ -1,10 +1,8 @@
 // src/core/Physics.js
 
 export default class Physics {
-    static MAX_VELOCITY = 2000;
-    static FRICTION = 0.995;
-    static AIR_RESISTANCE = 0.9975;
-    static GRAVITY = 500;
+    static MAX_VELOCITY = 500;
+    static FRICTION = 0.98;
     static WORLD_BOUNDS = {
         minX: -100000,
         maxX: 100000,
@@ -17,19 +15,9 @@ export default class Physics {
         object.x += velocity.x * deltaTime;
         object.y += velocity.y * deltaTime;
 
-        // Apply gravity
-        velocity.y += this.GRAVITY * deltaTime;
-
-        // Apply air resistance
-        velocity.x *= Math.pow(this.AIR_RESISTANCE, deltaTime * 60);
-        velocity.y *= Math.pow(this.AIR_RESISTANCE, deltaTime * 60);
-
-        // Apply friction (ground resistance)
-        if (object.y >= this.WORLD_BOUNDS.minY) {
-            velocity.x *= Math.pow(this.FRICTION, deltaTime * 60);
-            object.y = Math.max(object.y, this.WORLD_BOUNDS.minY);
-            velocity.y = Math.max(velocity.y, 0);
-        }
+        // Apply friction
+        velocity.x *= Math.pow(this.FRICTION, deltaTime * 60);
+        velocity.y *= Math.pow(this.FRICTION, deltaTime * 60);
 
         // Cap velocity
         const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
@@ -44,18 +32,12 @@ export default class Physics {
         object.y = Math.max(this.WORLD_BOUNDS.minY, Math.min(object.y, this.WORLD_BOUNDS.maxY));
 
         // Apply rotation based on velocity
-        object.rotation += (Math.abs(velocity.x) + Math.abs(velocity.y)) * 0.01;
-        object.rotation %= 2 * Math.PI;
+        object.rotation = Math.atan2(velocity.y, velocity.x);
 
         return { x: object.x, y: object.y, rotation: object.rotation, velocity: velocity };
     }
 
     static checkTerrainCollision(object, getTerrain, tileSize) {
-        if (!object || typeof object.x !== 'number' || typeof object.y !== 'number') {
-            console.warn('Invalid object passed to checkTerrainCollision:', object);
-            return false;
-        }
-
         const tileX = Math.floor(object.x / tileSize);
         const tileY = Math.floor(object.y / tileSize);
 
@@ -66,23 +48,14 @@ export default class Physics {
                 const checkY = tileY + dy;
 
                 const tile = getTerrain(checkX, checkY);
-                if (tile) {
-                    if (tile === 'water') {
-                        // Object lands on water
-                        object.x = (tileX + 0.5) * tileSize;
-                        object.y = (tileY + 0.5) * tileSize;
-                        object.velocity = { x: 0, y: 0 };
-                        return true;
-                    } else if (tile !== 'grass' && tile !== 'dirt' && tile !== 'crop') {
-                        // Object collides with non-passable terrain
-                        const bounceReduction = 0.5;
-                        object.velocity.x *= -bounceReduction;
-                        object.velocity.y *= -bounceReduction;
-                        // Adjust position to prevent sticking
-                        object.x += object.velocity.x * 0.1;
-                        object.y += object.velocity.y * 0.1;
-                        return true;
-                    }
+                if (tile && tile !== 'grass' && tile !== 'dirt' && tile !== 'crop') {
+                    // Collision detected, adjust position and reverse velocity
+                    const bounceReduction = 0.5;
+                    object.velocity.x *= -bounceReduction;
+                    object.velocity.y *= -bounceReduction;
+                    object.x += object.velocity.x * 0.1;
+                    object.y += object.velocity.y * 0.1;
+                    return true;
                 }
             }
         }
@@ -96,22 +69,17 @@ export default class Physics {
         const newX = npc.x + Math.cos(npc.moveDirection) * speed;
         const newY = npc.y + Math.sin(npc.moveDirection) * speed;
 
-        // Check if the new position is valid (not colliding with obstacles)
         if (!this.checkTerrainCollision({ x: newX, y: newY, velocity: { x: 0, y: 0 } }, getTerrain, tileSize)) {
             npc.x = newX;
             npc.y = newY;
         } else {
-            // If collision occurred, change direction
             npc.moveDirection = Math.random() * Math.PI * 2;
         }
 
-        // Randomly change direction occasionally
         if (Math.random() < 0.02) {
             npc.moveDirection = Math.random() * Math.PI * 2;
         }
 
-        // Apply slight rotation for visual interest
-        npc.rotation += (Math.random() - 0.5) * 0.1;
-        npc.rotation = npc.rotation % (2 * Math.PI);
+        npc.rotation = npc.moveDirection;
     }
 }
