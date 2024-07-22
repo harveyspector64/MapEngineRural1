@@ -1,40 +1,56 @@
-// src/core/Physics.js
+// In src/core/Physics.js
 
 export default class Physics {
-    static MAX_VELOCITY = 500;
+    static MAX_VELOCITY = 1000;
     static FRICTION = 0.98;
-    static WORLD_BOUNDS = {
-        minX: -100000,
-        maxX: 100000,
-        minY: -100000,
-        maxY: 100000
-    };
+    static AIR_RESISTANCE = 0.995;
 
-    static applyThrow(object, velocity, deltaTime) {
-        // Apply throw velocity
-        object.x += velocity.x * deltaTime;
-        object.y += velocity.y * deltaTime;
+    static applyThrow(object, initialVelocity, deltaTime) {
+        // Apply initial velocity
+        object.x += initialVelocity.x * deltaTime;
+        object.y += initialVelocity.y * deltaTime;
 
-        // Apply friction
-        velocity.x *= Math.pow(this.FRICTION, deltaTime * 60);
-        velocity.y *= Math.pow(this.FRICTION, deltaTime * 60);
+        // Apply air resistance
+        object.velocity = {
+            x: object.velocity.x * Math.pow(this.AIR_RESISTANCE, deltaTime * 60),
+            y: object.velocity.y * Math.pow(this.AIR_RESISTANCE, deltaTime * 60)
+        };
 
-        // Cap velocity
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        if (speed > this.MAX_VELOCITY) {
-            const scale = this.MAX_VELOCITY / speed;
-            velocity.x *= scale;
-            velocity.y *= scale;
+        // Apply friction if object is on the ground
+        if (this.isOnGround(object)) {
+            object.velocity.x *= Math.pow(this.FRICTION, deltaTime * 60);
+            object.velocity.y *= Math.pow(this.FRICTION, deltaTime * 60);
         }
 
-        // Keep object within world bounds
-        object.x = Math.max(this.WORLD_BOUNDS.minX, Math.min(object.x, this.WORLD_BOUNDS.maxX));
-        object.y = Math.max(this.WORLD_BOUNDS.minY, Math.min(object.y, this.WORLD_BOUNDS.maxY));
+        // Update position based on current velocity
+        object.x += object.velocity.x * deltaTime;
+        object.y += object.velocity.y * deltaTime;
 
-        // Apply rotation based on velocity
-        object.rotation = Math.atan2(velocity.y, velocity.x);
+        // Cap velocity
+        const speed = Math.sqrt(object.velocity.x ** 2 + object.velocity.y ** 2);
+        if (speed > this.MAX_VELOCITY) {
+            const scale = this.MAX_VELOCITY / speed;
+            object.velocity.x *= scale;
+            object.velocity.y *= scale;
+        }
 
-        return { x: object.x, y: object.y, rotation: object.rotation, velocity: velocity };
+        // Update rotation based on movement direction
+        if (speed > 1) {
+            object.rotation = Math.atan2(object.velocity.y, object.velocity.x);
+        }
+
+        return {
+            x: object.x,
+            y: object.y,
+            rotation: object.rotation,
+            velocity: object.velocity
+        };
+    }
+
+    static isOnGround(object) {
+        // Implement ground detection logic here
+        // For now, we'll assume objects are always on the ground in this 2D top-down view
+        return true;
     }
 
     static checkTerrainCollision(object, getTerrain, tileSize) {
