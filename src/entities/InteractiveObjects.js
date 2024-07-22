@@ -24,29 +24,28 @@ export class InteractiveObject {
         this.lastChunk = null;
     }
 
-    update(deltaTime, getTerrain, tileSize) {
-        if (!this.isBeingAbducted) {
-            if (this.isMoving) {
-                Physics.updateNPCMovement(this, deltaTime, getTerrain, tileSize);
-            }
-
-            // Apply throwing physics
-            const updatedState = Physics.applyThrow(this, this.velocity, deltaTime);
-            this.x = updatedState.x;
-            this.y = updatedState.y;
-            this.rotation = updatedState.rotation;
-            this.velocity = updatedState.velocity;
-            console.log(`Object ${this.type} updated: position (${this.x.toFixed(2)}, ${this.y.toFixed(2)}), velocity (${this.velocity.x.toFixed(2)}, ${this.velocity.y.toFixed(2)})`);
-
-            // Check for terrain collision
-            Physics.checkTerrainCollision(this, getTerrain, tileSize);
-
-            // Check if object has moved to a new chunk
-            return this.checkChunkTransition(tileSize);
+update(deltaTime, getTerrain, tileSize) {
+    if (!this.isBeingAbducted) {
+        if (this.isMoving) {
+            Physics.updateNPCMovement(this, deltaTime, getTerrain, tileSize);
         }
-        return false;
-    }
 
+        // Apply throwing physics
+        const updatedState = Physics.applyThrow(this, this.velocity, deltaTime);
+        this.x = updatedState.x;
+        this.y = updatedState.y;
+        this.rotation = updatedState.rotation;
+        this.velocity = updatedState.velocity;
+        console.log(`Object ${this.type} updated: position (${this.x.toFixed(2)}, ${this.y.toFixed(2)}), velocity (${this.velocity.x.toFixed(2)}, ${this.velocity.y.toFixed(2)})`);
+
+        // Check for terrain collision
+        Physics.checkTerrainCollision(this, getTerrain, tileSize);
+
+        // Check if object has moved to a new chunk
+        return this.checkChunkTransition(tileSize);
+    }
+    return false;
+}
     checkChunkTransition(tileSize) {
         const chunkSize = 64 * tileSize;
         const currentChunk = {
